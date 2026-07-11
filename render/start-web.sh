@@ -3,7 +3,7 @@ set -euo pipefail
 
 mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache
 
-php artisan migrate --force
+php artisan migrate --seed --force
 
 php artisan config:cache
 php artisan route:cache
