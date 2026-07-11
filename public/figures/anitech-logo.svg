@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="20" x2="180" y2="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#184B39"/>
+      <stop offset="1" stop-color="#267153"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="59" y1="46" x2="141" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3C55A"/>
+      <stop offset="1" stop-color="#D5961B"/>
+    </linearGradient>
+    <linearGradient id="textDark" x1="215" y1="62" x2="554" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10382B"/>
+      <stop offset="1" stop-color="#1F5F46"/>
+    </linearGradient>
+    <linearGradient id="textGold" x1="476" y1="82" x2="661" y2="155" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3C55A"/>
+      <stop offset="1" stop-color="#C98512"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="220" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#10382B" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="20" y="20" width="160" height="160" rx="42" fill="url(#bg)"/>
+    <circle cx="100" cy="100" r="54" fill="#EAF5EF" fill-opacity="0.11"/>
+    <path d="M70 132C70 98.587 97.087 71.5 130.5 71.5H144L112 103.5H144C144 136.913 116.913 164 83.5 164H70V132Z" fill="#F7FBF8"/>
+    <path d="M61 83C70.255 83 77.75 90.4952 77.75 99.75C77.75 109.875 70.255 117.37 61 126.75V83Z" fill="url(#gold)"/>
+    <path d="M58 139.5H88" stroke="#F3C55A" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <text x="220" y="118" fill="url(#textDark)" font-family="'Space Grotesk', 'Trebuchet MS', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Ani</text>
+    <text x="428" y="118" fill="url(#textGold)" font-family="'Space Grotesk', 'Trebuchet MS', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Tech</text>
+    <text x="224" y="154" fill="#557267" font-family="'DM Sans', Arial, sans-serif" font-size="24" font-weight="600" letter-spacing="5">AGRICULTURE SYSTEM</text>
+  </g>
+</svg>

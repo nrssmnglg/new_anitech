@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220" fill="none">
+  <defs>
+    <linearGradient id="m-dark" x1="216" y1="58" x2="534" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D2F3F"/>
+      <stop offset="1" stop-color="#15566C"/>
+    </linearGradient>
+    <linearGradient id="m-accent" x1="66" y1="50" x2="153" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62C2C6"/>
+      <stop offset="1" stop-color="#2A8B90"/>
+    </linearGradient>
+  </defs>
+  <rect x="22" y="22" width="156" height="156" rx="40" fill="#F3FAFB"/>
+  <rect x="22" y="22" width="156" height="156" rx="40" stroke="#D7ECEE" stroke-width="8"/>
+  <path d="M60 128C60 90.4446 90.4446 60 128 60H140L106.5 93.5H140C140 131.055 109.555 161.5 72 161.5H60V128Z" fill="url(#m-dark)"/>
+  <path d="M55 79C65.4934 79 74 87.5066 74 98C74 109.486 65.4934 117.993 55 128.75V79Z" fill="url(#m-accent)"/>
+  <path d="M54 139H89" stroke="#62C2C6" stroke-width="8" stroke-linecap="round"/>
+  <text x="216" y="114" fill="url(#m-dark)" font-family="'Space Grotesk', Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="-2">AniTech</text>
+  <text x="220" y="150" fill="#5D7B84" font-family="'DM Sans', Arial, sans-serif" font-size="22" font-weight="600" letter-spacing="4">MODERN AGRI PLATFORM</text>
+</svg>

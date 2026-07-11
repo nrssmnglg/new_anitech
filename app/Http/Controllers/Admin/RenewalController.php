@@ -1,0 +1,1287 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Enums\AssessmentStatus;
+use App\Enums\RenewalStatus;
+use App\Exports\RenewalMasterlistExport;
+use App\Exports\RenewalSummaryExport;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ReviewRenewalRequest;
+use App\Http\Requests\Admin\StorePaymentRequest;
+use App\Http\Requests\Admin\StoreRenewalRequest;
+use App\Http\Requests\Admin\VerifyFarmerDocumentRequest;
+use App\Models\AuditLog;
+use App\Models\Barangay;
+use App\Models\Farmer;
+use App\Models\FarmerDocument;
+use App\Models\FeeSchedule;
+use App\Models\MembershipLedger;
+use App\Models\RenewalRequest;
+use App\Models\User;
+use App\Services\Analytics\AnalyticsService;
+use App\Services\Documents\FarmerDocumentService;
+use App\Services\Farmers\FarmerRegistryService;
+use App\Services\Membership\FeeCalculatorService;
+use App\Services\Membership\RenewalRequestService;
+use App\Services\Notifications\RenewalReminderService;
+use App\Services\Reports\Pdf\RenewalSummaryPdfService;
+use App\Services\Reports\Pdf\StoredPdfExportService;
+use DomainException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class RenewalController extends Controller
+{
+    public function __construct(
+        private readonly RenewalRequestService $renewalRequestService,
+        private readonly FarmerDocumentService $farmerDocumentService,
+        private readonly FarmerRegistryService $farmerRegistryService,
+        private readonly FeeCalculatorService $feeCalculatorService,
+        private readonly RenewalReminderService $renewalReminderService,
+        private readonly RenewalSummaryPdfService $renewalSummaryPdfService,
+        private readonly StoredPdfExportService $storedPdfExportService,
+        private readonly AnalyticsService $analyticsService,
+    ) {
+    }
+
+    public function index(Request $request): InertiaResponse
+    {
+        $activeSection = $request->query('section') === 'records' ? 'records' : 'queue';
+        $recordFilters = $this->recordFilters($request);
+        $queueYear = now()->year;
+
+        $this->renewalReminderService->syncInactiveLapsedFarmers($queueYear);
+        $renewalsQuery = $this->renewalReminderService->eligibleFarmerQuery($queueYear);
+        $renewals = null;
+        $availableYears = collect();
+        $availableBarangays = collect();
+        $sourceOptions = [];
+        $statusOptions = [];
+
+        if ($activeSection === 'queue') {
+            $renewals = (clone $renewalsQuery)
+                ->with([
+                    'profile:farmer_id,first_name,middle_name,last_name,suffix',
+                    'memberType:id,code,name',
+                ])
+                ->orderByDesc('registered_at')
+                ->orderByDesc('id')
+                ->paginate(12, ['*'], 'queue_page')
+                ->withQueryString();
+
+            $reminderMap = $this->renewalReminderMap($renewals->getCollection(), $queueYear);
+            $renewals->through(fn (Farmer $farmer): array => $this->serializeEligibleFarmerRow(
+                $farmer,
+                $queueYear,
+                $reminderMap[$farmer->id] ?? null
+            ));
+        }
+
+        $renewalRecords = null;
+
+        if ($activeSection === 'records') {
+            $recordsQuery = $this->renewalFarmersQuery($recordFilters);
+            $renewalRecords = (clone $recordsQuery)
+                ->latest('id')
+                ->paginate(12, ['*'], 'records_page')
+                ->withQueryString();
+
+            $renewalRecords->through(fn (Farmer $farmer): array => $this->serializeRenewalFarmerRow($farmer));
+
+            $availableYears = RenewalRequest::query()
+                ->select('year')
+                ->distinct()
+                ->orderByDesc('year')
+                ->pluck('year');
+            $availableBarangays = Barangay::query()->orderBy('name')->get(['id', 'name']);
+            $sourceOptions = [
+                'walk_in' => 'Walk-In',
+                'mobile' => 'Mobile',
+            ];
+            $statusOptions = collect(RenewalStatus::cases())
+                ->mapWithKeys(fn (RenewalStatus $status): array => [$status->value => $status->label()])
+                ->all();
+        }
+
+        return Inertia::render('Admin/Renewals/Index', [
+            'activeSection' => $activeSection,
+            'renewals' => $renewals,
+            'renewalRecords' => $renewalRecords,
+            'recordFilters' => [
+                'record_search' => (string) ($recordFilters['record_search'] ?? ''),
+                'record_year' => (string) ($recordFilters['record_year'] ?? ''),
+                'record_barangay_id' => (string) ($recordFilters['record_barangay_id'] ?? ''),
+                'record_source' => (string) ($recordFilters['record_source'] ?? ''),
+                'record_status' => (string) ($recordFilters['record_status'] ?? ''),
+            ],
+            'filterOptions' => [
+                'years' => $availableYears
+                    ->map(fn ($year): array => ['value' => (string) $year, 'label' => (string) $year])
+                    ->values()
+                    ->all(),
+                'barangays' => $availableBarangays
+                    ->map(fn (Barangay $barangay): array => ['id' => $barangay->id, 'name' => $barangay->name])
+                    ->values()
+                    ->all(),
+                'sources' => collect($sourceOptions)
+                    ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+                    ->values()
+                    ->all(),
+                'statuses' => collect(['pending' => 'Pending'] + $statusOptions)
+                    ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+                    ->values()
+                    ->all(),
+            ],
+            'summary' => [
+                'queueCount' => (clone $renewalsQuery)->count(),
+                'recordsCount' => (clone $this->renewalFarmersQuery($recordFilters))->count(),
+            ],
+            'urls' => [
+                'queue' => route('admin.renewals.index'),
+                'records' => route('admin.renewals.index', ['section' => 'records']),
+                'report' => route('admin.renewals.summary-report'),
+                'farmers' => route('admin.farmers.index'),
+                'quickAction' => route('admin.tasks.quick-action'),
+            ],
+            'pageTitle' => $activeSection === 'records' ? 'Renewal Records' : 'Renewal Processing',
+            'pageSubtitle' => $activeSection === 'records'
+                ? 'Browse and filter renewal history across all sources.'
+                : 'List of active farmers who still need renewal for the current year.',
+        ]);
+    }
+
+    public function summaryReport(Request $request): View|BinaryFileResponse|StreamedResponse
+    {
+        $recordFilters = $this->recordFilters($request);
+        $reportYear = (int) ($recordFilters['record_year'] ?: now()->year);
+        $recordFilters['record_year'] = (string) $reportYear;
+        $format = strtolower((string) $request->query('format', 'html'));
+
+        $feeSchedule = FeeSchedule::query()
+            ->where('year', $reportYear)
+            ->first()
+            ?? FeeSchedule::query()->where('is_active', true)->orderByDesc('year')->first();
+
+        $renewalRecords = $this->renewalRecordsQuery($recordFilters, $this->renewalReportRelations())
+            ->latest('year')
+            ->latest('id')
+            ->get();
+
+        $selectedBarangay = filled($recordFilters['record_barangay_id'])
+            ? Barangay::query()->find($recordFilters['record_barangay_id'], ['id', 'name'])
+            : null;
+
+        if ($selectedBarangay) {
+            $selectedColumns = $this->selectedMasterlistColumns($request);
+            $masterlistRows = $this->buildMasterlistRows($renewalRecords, $feeSchedule);
+            $totals = [
+                'annual_due' => $masterlistRows->sum('annual_due'),
+                'mortuary_fee' => $masterlistRows->sum('mortuary_fee'),
+                'membership_fee' => $masterlistRows->sum('membership_fee'),
+                'total_amount' => $masterlistRows->sum('total_amount'),
+                'new_member_count' => $masterlistRows->sum('is_new_member'),
+                'old_member_count' => $masterlistRows->sum(fn (array $row): int => $row['is_new_member'] ? 0 : 1),
+                'with_mortuary_count' => $masterlistRows->sum(fn (array $row): int => $row['has_mortuary'] ? 1 : 0),
+                'without_mortuary_count' => $masterlistRows->sum(fn (array $row): int => $row['has_mortuary'] ? 0 : 1),
+                'total_member_count' => $masterlistRows->count(),
+            ];
+
+            if ($format === 'xlsx') {
+                $fileName = 'Barangay-Masterlist-' . now()->format('m-d-Y') . '.xlsx';
+
+                return Excel::download(new RenewalMasterlistExport($masterlistRows, $totals, $selectedColumns), $fileName);
+            }
+
+            if ($format === 'pdf') {
+                $fileName = 'Barangay-Masterlist-' . now()->format('m-d-Y') . '.pdf';
+                $pdfContent = $this->renewalSummaryPdfService->buildMasterlist(
+                    $masterlistRows,
+                    $totals,
+                    $selectedColumns,
+                    (string) ($selectedBarangay->name ?? 'N/A'),
+                    'No association recorded',
+                    now()->format('F d, Y h:i A'),
+                    $reportYear
+                );
+                $export = $this->storedPdfExportService->store(
+                    'renewal_barangay_masterlist',
+                    $fileName,
+                    $pdfContent,
+                    $recordFilters,
+                    $request->user()?->id
+                );
+
+                return Storage::disk($export->disk)->download($export->path, $export->file_name);
+            }
+
+            return view('admin.renewals.barangay-masterlist-report', [
+                'generatedAt' => now(),
+                'reportYear' => $reportYear,
+                'recordFilters' => $recordFilters,
+                'selectedBarangay' => $selectedBarangay,
+                'masterlistRows' => $masterlistRows,
+                'totals' => $totals,
+                'selectedColumns' => collect($selectedColumns)
+                    ->mapWithKeys(fn (string $column): array => [$column => RenewalMasterlistExport::availableColumns()[$column]])
+                    ->all(),
+            ]);
+        }
+
+        $selectedColumns = $this->selectedSummaryColumns($request);
+        $summaryRows = $this->buildSummaryRows($renewalRecords, $feeSchedule);
+        $totals = [
+            'farmers' => $summaryRows->sum('farmer_count'),
+            'annual_due' => $summaryRows->sum('annual_due'),
+            'mortuary_fee' => $summaryRows->sum('mortuary_fee'),
+            'membership_fee' => $summaryRows->sum('membership_fee'),
+            'total_amount' => $summaryRows->sum('total_amount'),
+            'membership_count' => $summaryRows->sum('membership_count'),
+            'without_mortuary_count' => $summaryRows->sum('without_mortuary_count'),
+            'female_count' => $summaryRows->sum('female_count'),
+            'male_count' => $summaryRows->sum('male_count'),
+        ];
+
+        if ($format === 'xlsx') {
+            $fileName = 'Renewal-Summary-' . now()->format('m-d-Y') . '.xlsx';
+
+            return Excel::download(new RenewalSummaryExport($summaryRows, $totals, $selectedColumns), $fileName);
+        }
+
+        if ($format === 'pdf') {
+            $fileName = 'Renewal-Summary-' . now()->format('m-d-Y') . '.pdf';
+            $pdfContent = $this->renewalSummaryPdfService->buildSummary(
+                $summaryRows,
+                $totals,
+                $selectedColumns,
+                'Renewal Summary CY ' . $reportYear,
+                now()->format('F d, Y h:i A'),
+                $reportYear
+            );
+            $export = $this->storedPdfExportService->store(
+                'renewal_summary',
+                $fileName,
+                $pdfContent,
+                $recordFilters,
+                $request->user()?->id
+            );
+
+            return Storage::disk($export->disk)->download($export->path, $export->file_name);
+        }
+
+        return view('admin.renewals.summary-report', [
+            'generatedAt' => now(),
+            'reportYear' => $reportYear,
+            'recordFilters' => $recordFilters,
+            'summaryRows' => $summaryRows,
+            'totals' => $totals,
+            'selectedColumns' => collect($selectedColumns)
+                ->mapWithKeys(fn (string $column): array => [$column => RenewalSummaryExport::availableColumns()[$column]])
+                ->all(),
+        ]);
+    }
+
+    public function create(Request $request): InertiaResponse
+    {
+        $farmerId = $request->integer('farmer_id');
+        abort_unless($farmerId, 404);
+        $year = (int) $request->integer('year', now()->year);
+
+        $farmer = Farmer::query()
+            ->with([
+                'profile',
+                'memberType:id,code,name',
+            ])
+            ->findOrFail($farmerId);
+
+        if ($this->hasRecordedAnnualDue($farmer, $year)) {
+            throw ValidationException::withMessages([
+                'renewal' => 'Annual due is already recorded for ' . $year . '. Renewal cannot be created again.',
+            ]);
+        }
+
+        return Inertia::render('Admin/Renewals/Create', [
+            'farmer' => [
+                'id' => $farmer->id,
+                'fullName' => $farmer->full_name,
+                'farmerCode' => $farmer->farmer_code,
+                'memberType' => $farmer->memberType ? [
+                    'code' => $farmer->memberType->code,
+                    'name' => $farmer->memberType->name,
+                ] : null,
+            ],
+            'defaultYear' => $year,
+            'storeUrl' => route('admin.renewals.store'),
+            'indexUrl' => route('admin.farmers.index'),
+            'showFarmerUrl' => route('admin.farmers.show', $farmer),
+        ]);
+    }
+
+    public function store(StoreRenewalRequest $request): RedirectResponse
+    {
+        $renewal = null;
+        $farmer = Farmer::query()->findOrFail($request->validated('farmer_id'));
+        $year = (int) $request->validated('year');
+
+        if ($this->hasRecordedAnnualDue($farmer, $year)) {
+            throw ValidationException::withMessages([
+                'renewal' => 'Annual due is already recorded for ' . $year . '. Renewal cannot be created again.',
+            ]);
+        }
+
+        try {
+            $renewal = $this->renewalRequestService->create([
+                'farmer_id' => $farmer->id,
+                'year' => $year,
+                'source' => 'walk_in',
+                'remarks' => $request->validated('remarks'),
+            ]);
+        } catch (DomainException $exception) {
+            throw ValidationException::withMessages([
+                'renewal' => $exception->getMessage(),
+            ]);
+        }
+
+        $this->analyticsService->track('renewal_created', [
+            'module' => 'renewals',
+            'properties' => [
+                'renewal_id' => $renewal->id,
+                'source' => $renewal->source,
+                'year' => $renewal->year,
+            ],
+        ]);
+
+        return redirect()
+            ->route('admin.renewals.show', $renewal)
+            ->with('success', 'Walk-in renewal created. Continue with payment processing.');
+    }
+
+    public function show(Request $request, RenewalRequest $renewal): InertiaResponse
+    {
+        $renewal->load([
+            'farmer.profile',
+            'farmer.barangay:id,name',
+            'farmer.association:id,name',
+            'farmer.memberType:id,code,name',
+            'documents.documentType:id,code,name',
+            'documents.verifier:id,name',
+            'paymentAssessments.payments',
+            'reviewer:id,name',
+            'internalNotes.creator:id,name',
+        ]);
+        $renewalHistory = collect();
+        $renewalPaymentHistory = collect();
+
+        if ($renewal->farmer) {
+            $renewalHistory = RenewalRequest::query()
+                ->with([
+                    'paymentAssessments:id,membership_transaction_id,status,total_amount_due',
+                    'paymentAssessments.payments:id,payment_assessment_id,reference_no,amount_paid,paid_at',
+                ])
+                ->where('farmer_id', $renewal->farmer->id)
+                ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
+                    $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
+                })
+                ->latest('year')
+                ->latest('id')
+                ->get();
+
+            $this->applyQueueAmounts($renewalHistory);
+
+            $renewalPaymentHistory = RenewalRequest::query()
+                ->with([
+                    'paymentAssessments:id,membership_transaction_id,status,total_amount_due,annual_due,mortuary_fee',
+                    'paymentAssessments.payments',
+                ])
+                ->where('farmer_id', $renewal->farmer->id)
+                ->latest('year')
+                ->latest('id')
+                ->get()
+                ->flatMap(function (RenewalRequest $paymentRenewal): Collection {
+                    return $paymentRenewal->paymentAssessments->flatMap(function ($assessment) use ($paymentRenewal): Collection {
+                        return collect($assessment->payments ?? [])->map(function ($payment) use ($paymentRenewal): array {
+                            return [
+                                'id' => $payment->id,
+                                'renewalYear' => $paymentRenewal->year,
+                                'paidAt' => optional($payment->paid_at)->format('M d, Y h:i A'),
+                                'paidAtRaw' => optional($payment->paid_at)->timestamp ?? 0,
+                                'method' => strtoupper((string) ($payment->payment_method ?? $payment->paymentMethod?->code ?? '')),
+                                'referenceNo' => $payment->reference_no,
+                                'statusLabel' => $payment->status?->label() ?? 'Verified',
+                                'amountPaid' => (float) $payment->amount_paid,
+                                'breakdown' => [
+                                    'membershipFee' => 0.0,
+                                    'annualDue' => (float) ($payment->annual_due ?? 0),
+                                    'mortuaryFee' => (float) ($payment->mortuary_fee ?? 0),
+                                ],
+                            ];
+                        });
+                    });
+                })
+                ->sortByDesc('paidAtRaw')
+                ->values();
+        }
+
+        $documents = $this->farmerDocumentService->ensureRenewalChecklist($renewal)
+            ->map(function (FarmerDocument $document): FarmerDocument {
+                $document->setAttribute('ready_for_verification', $this->farmerDocumentService->readyForVerification($document));
+                $document->setAttribute('upload_present', $this->farmerDocumentService->uploadPresent($document));
+                $document->setAttribute('is_expired', $this->farmerDocumentService->isExpired($document));
+                $document->setAttribute('expires_at', optional($this->farmerDocumentService->expiresAt($document))?->format('M d, Y'));
+                $document->setAttribute('needs_resubmission', $this->farmerDocumentService->requiresResubmission($document));
+                $document->setAttribute('validation_notes', $this->farmerDocumentService->validationNotes($document));
+
+                return $document;
+            })->values();
+
+        $assessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+        $paymentPreview = null;
+
+        if (! $assessment && $renewal->farmer?->memberType?->code) {
+            $paymentPreview = $this->feeCalculatorService->calculateRenewal([
+                'member_type' => $renewal->farmer->memberType->code,
+            ]);
+        }
+
+        $payments = $assessment?->payments?->sortByDesc('paid_at') ?? collect();
+        $paymentHistoryPage = max(1, (int) $request->integer('payments_page', 1));
+        $paymentHistoryPerPage = 8;
+        $paymentSettled = in_array($assessment?->status, [
+            AssessmentStatus::PAID,
+            AssessmentStatus::OVERPAID,
+            AssessmentStatus::WAIVED,
+        ], true);
+        $requiredDocuments = $documents->where('is_required', true)->values();
+        $verifiedRequiredCount = $requiredDocuments->filter(fn (FarmerDocument $document) => $document->verification_status?->value === 'verified')->count();
+        $missingDocumentCount = $requiredDocuments->filter(fn (FarmerDocument $document) => ! (bool) $document->getAttribute('upload_present'))->count();
+        $expiredDocumentCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('is_expired'))->count();
+        $resubmissionCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('needs_resubmission'))->count();
+        $documentsComplete = $requiredDocuments->isEmpty() || $verifiedRequiredCount === $requiredDocuments->count();
+        $profile = $renewal->farmer?->profile;
+        $duplicateRisk = $renewal->farmer
+            ? $this->farmerRegistryService->findPotentialDuplicates([
+                'first_name' => $profile?->first_name,
+                'last_name' => $profile?->last_name,
+                'birth_date' => optional($profile?->birth_date)?->toDateString(),
+                'mobile_number' => $profile?->mobile_number,
+                'barangay_id' => $renewal->farmer?->barangay_id,
+            ], $renewal->farmer, 1)->isNotEmpty()
+            : false;
+        $invalidMobileNumber = $this->farmerRegistryService->hasInvalidMobileNumber($profile?->mobile_number);
+        $recordWarnings = collect();
+
+        if ($missingDocumentCount > 0 || $expiredDocumentCount > 0 || $resubmissionCount > 0) {
+            $recordWarnings->push([
+                'key' => 'missing_documents',
+                'type' => 'danger',
+                'label' => 'Missing Documents',
+                'message' => trim(collect([
+                    $missingDocumentCount > 0 ? $missingDocumentCount . ' required document(s) still missing.' : null,
+                    $expiredDocumentCount > 0 ? $expiredDocumentCount . ' document(s) expired.' : null,
+                    $resubmissionCount > 0 ? $resubmissionCount . ' document(s) need resubmission.' : null,
+                ])->filter()->implode(' ')),
+            ]);
+        }
+
+        if ($duplicateRisk) {
+            $recordWarnings->push([
+                'key' => 'duplicate_risk',
+                'type' => 'warning',
+                'label' => 'Duplicate Risk',
+                'message' => 'This farmer record matches an existing duplicate pattern. Review the registry before completing renewal approval.',
+            ]);
+        }
+
+        if (! $paymentSettled && (float) ($assessment?->total_amount_due ?? ($paymentPreview['total'] ?? 0)) > 0) {
+            $recordWarnings->push([
+                'key' => 'unpaid_assessment',
+                'type' => 'danger',
+                'label' => 'Unpaid Assessment',
+                'message' => 'Renewal dues are not yet settled. Payment must be recorded before completion.',
+            ]);
+        }
+
+        if ($invalidMobileNumber) {
+            $recordWarnings->push([
+                'key' => 'invalid_mobile',
+                'type' => 'warning',
+                'label' => 'Invalid Mobile Number',
+                'message' => 'The farmer mobile number format is invalid and should be corrected before approval.',
+            ]);
+        }
+
+        $paymentHistoryItems = ($renewalPaymentHistory->isNotEmpty()
+            ? $renewalPaymentHistory->map(fn (array $payment): array => Arr::except($payment, ['paidAtRaw']))->values()
+            : $payments->map(fn ($payment): array => [
+                'id' => $payment->id,
+                'renewalYear' => $renewal->year,
+                'paidAt' => optional($payment->paid_at)->format('M d, Y h:i A'),
+                'method' => strtoupper((string) ($payment->payment_method ?? $payment->paymentMethod?->code ?? '')),
+                'referenceNo' => $payment->reference_no,
+                'statusLabel' => $payment->status?->label() ?? 'Verified',
+                'amountPaid' => (float) $payment->amount_paid,
+                'breakdown' => [
+                    'membershipFee' => 0.0,
+                    'annualDue' => (float) ($payment->annual_due ?? 0),
+                    'mortuaryFee' => (float) ($payment->mortuary_fee ?? 0),
+                ],
+            ])->values());
+
+        $paymentHistoryPaginator = new LengthAwarePaginator(
+            $paymentHistoryItems->forPage($paymentHistoryPage, $paymentHistoryPerPage)->values(),
+            $paymentHistoryItems->count(),
+            $paymentHistoryPerPage,
+            $paymentHistoryPage,
+            [
+                'path' => url()->current(),
+                'pageName' => 'payments_page',
+                'query' => request()->query(),
+            ]
+        );
+
+        return Inertia::render('Admin/Renewals/Show', [
+            'renewal' => [
+                'id' => $renewal->id,
+                'applicationNo' => $renewal->application_no,
+                'year' => $renewal->year,
+                'status' => [
+                    'value' => $renewal->status?->value,
+                    'label' => $renewal->status?->label() ?? 'Pending',
+                ],
+                'source' => $renewal->source,
+                'submittedAt' => optional($renewal->submitted_at)->format('F d, Y h:i A'),
+                'reviewedAt' => optional($renewal->reviewed_at)->format('F d, Y h:i A'),
+                'rejectionReason' => $renewal->rejection_reason,
+                'accountability' => $this->accountability($renewal),
+            ],
+            'farmer' => [
+                'id' => $renewal->farmer?->id,
+                'fullName' => $renewal->farmer?->full_name,
+                'farmerCode' => $renewal->farmer?->farmer_code,
+                'memberType' => $renewal->farmer?->memberType ? [
+                    'code' => $renewal->farmer->memberType->code,
+                    'name' => $renewal->farmer->memberType->name,
+                ] : null,
+                'barangay' => $renewal->farmer?->barangay?->name,
+                'association' => $renewal->farmer?->association?->name,
+                'mobileNumber' => $renewal->farmer?->profile?->mobile_number,
+                'address' => $renewal->farmer?->profile?->address,
+            ],
+            'assessment' => [
+                'id' => $assessment?->id,
+                'status' => [
+                    'value' => $assessment?->status?->value,
+                    'label' => $assessment?->status?->label() ?? 'Pending',
+                ],
+                'totalAmountDue' => (float) ($assessment?->total_amount_due ?? ($paymentPreview['total'] ?? 0)),
+                'membershipFee' => 0.0,
+                'annualDue' => (float) ($assessment?->annual_due ?? ($paymentPreview['annual_due'] ?? 0)),
+                'mortuaryFee' => (float) ($assessment?->mortuary_fee ?? ($paymentPreview['mortuary_fee'] ?? 0)),
+            ],
+            'payments' => [
+                'data' => $paymentHistoryPaginator->items(),
+                'current_page' => $paymentHistoryPaginator->currentPage(),
+                'last_page' => $paymentHistoryPaginator->lastPage(),
+                'per_page' => $paymentHistoryPaginator->perPage(),
+                'total' => $paymentHistoryPaginator->total(),
+                'links' => $paymentHistoryPaginator->linkCollection()->toArray(),
+            ],
+            'renewalHistory' => $renewalHistory->map(function (RenewalRequest $historyRenewal) use ($renewal): array {
+                $latestAssessment = $historyRenewal->paymentAssessments->sortByDesc('id')->first();
+                $latestPayment = $latestAssessment?->payments?->sortByDesc('paid_at')->first();
+                $recordDate = $latestPayment?->paid_at ?? $historyRenewal->submitted_at;
+
+                return [
+                    'id' => $historyRenewal->id,
+                    'year' => $historyRenewal->year,
+                    'statusLabel' => $this->renewalStatusLabel($historyRenewal),
+                    'sourceLabel' => strtoupper(str_replace('_', ' ', (string) $historyRenewal->source)),
+                    'amountPaid' => (float) ($historyRenewal->getAttribute('queue_amount_paid') ?? 0),
+                    'amountToPay' => (float) ($historyRenewal->getAttribute('queue_amount_to_pay') ?? 0),
+                    'paymentReference' => $latestPayment?->reference_no,
+                    'settledAt' => optional($recordDate)->format('M d, Y h:i A'),
+                    'showUrl' => route('admin.renewals.show', $historyRenewal),
+                    'isCurrent' => (int) $historyRenewal->id === (int) $renewal->id,
+                ];
+            })->values()->all(),
+            'recordWarnings' => $recordWarnings->values()->all(),
+            'internalNotes' => $renewal->internalNotes
+                ->map(fn ($note): array => [
+                    'id' => $note->id,
+                    'body' => $note->body,
+                    'createdBy' => $note->creator?->name ?? 'Staff',
+                    'createdAt' => optional($note->created_at)->format('M d, Y h:i A'),
+                ])
+                ->values()
+                ->all(),
+            'documents' => $documents->map(fn (FarmerDocument $document): array => [
+                'id' => $document->id,
+                'label' => $document->document_type?->label() ?? 'Document',
+                'isRequired' => (bool) $document->is_required,
+                'uploadPresent' => (bool) $document->getAttribute('upload_present'),
+                'readyForVerification' => (bool) $document->getAttribute('ready_for_verification'),
+                'isReceived' => (bool) $document->is_received,
+                'verificationStatus' => [
+                    'value' => $document->verification_status?->value,
+                    'label' => $document->verification_status?->label() ?? 'Pending',
+                ],
+                'remarks' => $document->remarks,
+                'previewMimeType' => $document->getAttribute('upload_present')
+                    ? (Storage::disk('public')->mimeType((string) $document->file_path) ?: 'application/octet-stream')
+                    : null,
+                'isExpired' => (bool) $document->getAttribute('is_expired'),
+                'expiresAtLabel' => $document->getAttribute('expires_at'),
+                'needsResubmission' => (bool) $document->getAttribute('needs_resubmission'),
+                'validationNotes' => $document->getAttribute('validation_notes') ?? [],
+                'actions' => [
+                    'reviewUrl' => route('admin.renewals.documents.review', [$renewal, $document]),
+                    'viewUrl' => $document->getAttribute('upload_present')
+                        ? route('admin.renewals.documents.view', [$renewal, $document])
+                        : null,
+                ],
+            ])->values()->all(),
+            'flow' => [
+                'documentsComplete' => $documentsComplete,
+                'requiredCount' => $requiredDocuments->count(),
+                'verifiedCount' => $verifiedRequiredCount,
+                'missingCount' => $missingDocumentCount,
+                'expiredCount' => $expiredDocumentCount,
+                'resubmissionCount' => $resubmissionCount,
+                'paymentSettled' => $paymentSettled,
+                'step' => $paymentSettled ? 4 : ($documentsComplete ? 3 : 2),
+            ],
+            'urls' => [
+                'index' => route('admin.farmers.index'),
+                'recordPayment' => route('admin.renewals.payment.store', $renewal),
+                'farmerShow' => route('admin.farmers.show', $renewal->farmer()->firstOrFail()),
+                'review' => route('admin.renewals.review', $renewal),
+                'storeInternalNote' => route('admin.renewals.internal-notes.store', $renewal),
+            ],
+        ]);
+    }
+
+    public function review(ReviewRenewalRequest $request, RenewalRequest $renewal): RedirectResponse
+    {
+        try {
+            if ($request->validated('action') === 'approve') {
+                $this->renewalRequestService->approve($renewal, Auth::id());
+                $message = 'Renewal approved. Payment can now be completed in admin or the Farmer PWA.';
+                $this->analyticsService->track('renewal_approved', [
+                    'module' => 'renewals',
+                    'properties' => [
+                        'renewal_id' => $renewal->id,
+                        'source' => $renewal->source,
+                        'year' => $renewal->year,
+                    ],
+                ]);
+            } else {
+                $this->renewalRequestService->reject($renewal, (string) $request->validated('remarks'), Auth::id());
+                $message = 'Renewal rejected.';
+                $this->analyticsService->track('renewal_rejected', [
+                    'module' => 'renewals',
+                    'properties' => [
+                        'renewal_id' => $renewal->id,
+                        'source' => $renewal->source,
+                        'year' => $renewal->year,
+                    ],
+                ]);
+            }
+        } catch (DomainException $exception) {
+            throw ValidationException::withMessages([
+                'renewal' => $exception->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('admin.renewals.show', $renewal)->with('success', $message);
+    }
+
+    public function reviewDocument(VerifyFarmerDocumentRequest $request, RenewalRequest $renewal, FarmerDocument $document): RedirectResponse
+    {
+        if ((int) $document->membership_transaction_id !== (int) $renewal->id) {
+            abort(404);
+        }
+
+        try {
+            $action = $request->validated('action');
+            $remarks = $request->validated('remarks');
+
+            match ($action) {
+                'receive' => $this->renewalRequestService->markDocumentReceived($renewal, $document->id, true, Auth::id()),
+                'unreceive' => $this->renewalRequestService->markDocumentReceived($renewal, $document->id, false, Auth::id()),
+                'verify' => $this->renewalRequestService->verifyDocument($renewal, $document->id, Auth::id(), $remarks),
+                'reject' => $this->renewalRequestService->rejectDocument($renewal, $document->id, Auth::id(), $remarks),
+            };
+        } catch (DomainException $exception) {
+            throw ValidationException::withMessages([
+                'document' => $exception->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('admin.renewals.show', $renewal)->with('success', 'Renewal document checklist updated.');
+    }
+
+    public function recordPayment(StorePaymentRequest $request, RenewalRequest $renewal): RedirectResponse
+    {
+        try {
+            $result = $this->renewalRequestService->recordPayment($renewal, $request->validated(), Auth::id());
+        } catch (DomainException $exception) {
+            throw ValidationException::withMessages([
+                'payment' => $exception->getMessage(),
+            ]);
+        }
+
+        $this->analyticsService->track('renewal_payment_recorded', [
+            'module' => 'renewals',
+            'properties' => [
+                'renewal_id' => $renewal->id,
+                'source' => $renewal->source,
+                'year' => $renewal->year,
+                'assessment_status' => $result['summary']['assessment_status']->value,
+            ],
+        ]);
+
+        if (in_array($result['summary']['assessment_status'], [AssessmentStatus::PAID, AssessmentStatus::OVERPAID, AssessmentStatus::WAIVED], true)) {
+            return redirect()
+                ->route('admin.farmers.show', $renewal->farmer()->firstOrFail())
+                ->with('success', 'Renewal payment recorded and membership updated.');
+        }
+
+        return redirect()
+            ->route('admin.renewals.show', $renewal)
+            ->with('success', 'Payment recorded. The renewal still has an outstanding balance.');
+    }
+
+    public function viewDocument(RenewalRequest $renewal, FarmerDocument $document): StreamedResponse
+    {
+        if ((int) $document->membership_transaction_id !== (int) $renewal->id) {
+            abort(404);
+        }
+
+        if (! $this->farmerDocumentService->uploadPresent($document)) {
+            abort(404);
+        }
+
+        $disk = $document->disk ?: 'public';
+        $filename = $document->original_name ?: basename((string) $document->path);
+
+        return Storage::disk($disk)->response(
+            (string) $document->path,
+            $filename,
+            ['Content-Type' => $document->mime_type ?: 'application/octet-stream'],
+            'inline',
+        );
+    }
+
+    private function renewalListRelations(): array
+    {
+        return [
+            'farmer:id,farmer_code,member_type_id',
+            'farmer.profile:farmer_id,first_name,middle_name,last_name,suffix',
+            'farmer.memberType:id,code',
+            'paymentAssessments:id,membership_transaction_id,status,total_amount_due',
+            'paymentAssessments.payments:id,payment_assessment_id,reference_no,amount_paid,paid_at',
+            'reviewer:id,name',
+        ];
+    }
+
+    private function renewalReportRelations(): array
+    {
+        return [
+            'farmer:id,farmer_code,member_type_id,barangay_id',
+            'farmer.profile:farmer_id,first_name,middle_name,last_name,suffix,sex',
+            'farmer.barangay:id,name',
+            'farmer.memberType:id,code,requires_membership_fee',
+            'paymentAssessments:id,membership_transaction_id,status,total_amount_due',
+        ];
+    }
+
+    private function recordFilters(Request $request): array
+    {
+        return [
+            'record_search' => (string) $request->string('record_search'),
+            'record_year' => $request->filled('record_year') ? (string) $request->input('record_year') : '',
+            'record_barangay_id' => $request->filled('record_barangay_id') ? (string) $request->input('record_barangay_id') : '',
+            'record_source' => $request->filled('record_source') ? (string) $request->input('record_source') : '',
+            'record_status' => $request->filled('record_status') ? (string) $request->input('record_status') : '',
+        ];
+    }
+
+    private function renewalRecordsQuery(array $recordFilters, array $relations): Builder
+    {
+        return RenewalRequest::query()
+            ->with($relations)
+            ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
+                $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
+            })
+            ->when($recordFilters['record_search'] ?? null, function (Builder $query, string $search): void {
+                $query->whereHas('farmer', function (Builder $farmerQuery) use ($search): void {
+                    $farmerQuery
+                        ->where('farmer_code', 'like', "%{$search}%")
+                        ->orWhereHas('profile', function (Builder $profileQuery) use ($search): void {
+                            $profileQuery
+                                ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('middle_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
+            ->when($recordFilters['record_barangay_id'] ?? null, function (Builder $query, string $barangayId): void {
+                $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
+            })
+            ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
+            ->when(
+                $recordFilters['record_status'] ?? null,
+                function (Builder $query, string $status): void {
+                    if ($status === 'pending') {
+                        $query->whereIn('status', [
+                            RenewalStatus::SUBMITTED->value,
+                            RenewalStatus::UNDER_REVIEW->value,
+                        ]);
+
+                        return;
+                    }
+
+                    $query->where('status', $status);
+                }
+            );
+    }
+
+    private function renewalFarmersQuery(array $recordFilters): Builder
+    {
+        return Farmer::query()
+            ->with([
+                'profile:farmer_id,first_name,middle_name,last_name,suffix',
+                'memberType:id,code,name',
+                'renewalRequests' => function ($query): void {
+                    $query
+                        ->with([
+                            'paymentAssessments:id,membership_transaction_id,status,total_amount_due',
+                            'paymentAssessments.payments:id,payment_assessment_id,reference_no,amount_paid,paid_at',
+                            'reviewer:id,name',
+                        ])
+                        ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
+                            $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
+                        })
+                        ->latest('year')
+                        ->latest('id');
+                },
+            ])
+            ->whereHas('renewalRequests', function (Builder $query) use ($recordFilters): void {
+                $query
+                    ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
+                        $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
+                    })
+                    ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
+                    ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
+                    ->when(
+                        $recordFilters['record_status'] ?? null,
+                        function (Builder $query, string $status): void {
+                            if ($status === 'pending') {
+                                $query->whereIn('status', [
+                                    RenewalStatus::SUBMITTED->value,
+                                    RenewalStatus::UNDER_REVIEW->value,
+                                ]);
+
+                                return;
+                            }
+
+                            $query->where('status', $status);
+                        }
+                    );
+            })
+            ->when($recordFilters['record_search'] ?? null, function (Builder $query, string $search): void {
+                $query->where(function (Builder $farmerQuery) use ($search): void {
+                    $farmerQuery
+                        ->where('farmer_code', 'like', "%{$search}%")
+                        ->orWhereHas('profile', function (Builder $profileQuery) use ($search): void {
+                            $profileQuery
+                                ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('middle_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($recordFilters['record_barangay_id'] ?? null, fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId));
+    }
+
+    private function settledAssessmentStatuses(): array
+    {
+        return [
+            AssessmentStatus::PAID->value,
+            AssessmentStatus::OVERPAID->value,
+            AssessmentStatus::WAIVED->value,
+        ];
+    }
+
+    private function selectedSummaryColumns(Request $request): array
+    {
+        $available = array_keys(RenewalSummaryExport::availableColumns());
+        $requested = collect($request->input('columns', []))
+            ->map(fn ($value): string => (string) $value)
+            ->filter(fn (string $value): bool => in_array($value, $available, true))
+            ->values()
+            ->all();
+
+        return $requested !== [] ? $requested : array_keys(RenewalSummaryExport::availableColumns());
+    }
+
+    private function selectedMasterlistColumns(Request $request): array
+    {
+        $available = array_keys(RenewalMasterlistExport::availableColumns());
+        $requested = collect($request->input('columns', []))
+            ->map(fn ($value): string => (string) $value)
+            ->filter(fn (string $value): bool => in_array($value, $available, true))
+            ->values()
+            ->all();
+
+        return $requested !== [] ? $requested : array_keys(RenewalMasterlistExport::availableColumns());
+    }
+
+    private function buildSummaryRows(iterable $renewalRecords, ?FeeSchedule $feeSchedule): Collection
+    {
+        return $this->distinctRenewalsByFarmer($renewalRecords)
+            ->filter(fn ($renewal) => $renewal instanceof RenewalRequest && $renewal->farmer?->barangay?->name)
+            ->map(function (RenewalRequest $renewal) use ($feeSchedule): array {
+                $fees = $this->renewalFeeBreakdown($renewal, $feeSchedule);
+
+                return [
+                    'barangay' => (string) $renewal->farmer->barangay->name,
+                    'farmer_count' => 1,
+                    'annual_due' => $fees['annual_due'],
+                    'mortuary_fee' => $fees['mortuary_fee'],
+                    'membership_fee' => $fees['membership_fee'],
+                    'total_amount' => $fees['total_amount'],
+                    'membership_count' => $fees['membership_fee'] > 0 ? 1 : 0,
+                    'without_mortuary_count' => $fees['mortuary_fee'] <= 0 ? 1 : 0,
+                    'female_count' => strtolower((string) ($renewal->farmer?->profile?->sex ?? '')) === 'female' ? 1 : 0,
+                    'male_count' => strtolower((string) ($renewal->farmer?->profile?->sex ?? '')) === 'male' ? 1 : 0,
+                ];
+            })
+            ->groupBy('barangay')
+            ->map(function (Collection $rows, string $barangay): array {
+                return [
+                    'barangay' => $barangay,
+                    'farmer_count' => $rows->sum('farmer_count'),
+                    'annual_due' => round((float) $rows->sum('annual_due'), 2),
+                    'mortuary_fee' => round((float) $rows->sum('mortuary_fee'), 2),
+                    'membership_fee' => round((float) $rows->sum('membership_fee'), 2),
+                    'total_amount' => round((float) $rows->sum('total_amount'), 2),
+                    'membership_count' => $rows->sum('membership_count'),
+                    'without_mortuary_count' => $rows->sum('without_mortuary_count'),
+                    'female_count' => $rows->sum('female_count'),
+                    'male_count' => $rows->sum('male_count'),
+                ];
+            })
+            ->sortBy('barangay', SORT_NATURAL)
+            ->values();
+    }
+
+    private function buildMasterlistRows(iterable $renewalRecords, ?FeeSchedule $feeSchedule): Collection
+    {
+        return $this->distinctRenewalsByFarmer($renewalRecords)
+            ->filter(fn ($renewal) => $renewal instanceof RenewalRequest && $renewal->farmer)
+            ->map(function (RenewalRequest $renewal) use ($feeSchedule): array {
+                $fees = $this->renewalFeeBreakdown($renewal, $feeSchedule);
+                $memberTypeCode = strtoupper((string) ($renewal->farmer?->memberType?->code ?? ''));
+
+                return [
+                    'name' => $renewal->farmer?->full_name ?? 'Unknown Farmer',
+                    'annual_due' => $fees['annual_due'],
+                    'mortuary_fee' => $fees['mortuary_fee'],
+                    'membership_fee' => $fees['membership_fee'],
+                    'total_amount' => $fees['total_amount'],
+                    'remarks' => $memberTypeCode,
+                    'is_new_member' => in_array($memberTypeCode, ['NM', 'NSC'], true),
+                    'has_mortuary' => $fees['mortuary_fee'] > 0,
+                ];
+            })
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+    }
+
+    private function distinctRenewalsByFarmer(iterable $renewalRecords): Collection
+    {
+        return collect($renewalRecords)
+            ->filter(fn ($renewal): bool => $renewal instanceof RenewalRequest && $renewal->farmer !== null)
+            ->sortByDesc(fn (RenewalRequest $renewal): string => sprintf(
+                '%04d-%010d',
+                (int) $renewal->year,
+                (int) $renewal->id
+            ))
+            ->unique(fn (RenewalRequest $renewal): int => (int) $renewal->farmer->id)
+            ->values();
+    }
+
+    private function renewalFeeBreakdown(RenewalRequest $renewal, ?FeeSchedule $feeSchedule): array
+    {
+        $assessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+        $memberType = $renewal->farmer?->memberType;
+        $feePreview = null;
+        if ($memberType?->code) {
+            $context = ['member_type' => $memberType->code];
+
+            if ($feeSchedule) {
+                $context['fee_schedule'] = $feeSchedule->toArray();
+            }
+
+            $feePreview = $this->feeCalculatorService->calculateRenewal($context);
+        }
+
+        $annualDue = round((float) ($feePreview['annual_due'] ?? 0), 2);
+        $mortuaryFee = round((float) ($feePreview['mortuary_fee'] ?? 0), 2);
+        $membershipFee = 0.0;
+
+        return [
+            'annual_due' => $annualDue,
+            'mortuary_fee' => $mortuaryFee,
+            'membership_fee' => $membershipFee,
+            'total_amount' => round($annualDue + $mortuaryFee + $membershipFee, 2),
+        ];
+    }
+
+    private function applyQueueAmounts(iterable $renewals): void
+    {
+        foreach ($renewals as $renewal) {
+            if (! $renewal instanceof RenewalRequest) {
+                continue;
+            }
+
+            $assessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+            $amountPaid = (float) ($assessment?->payments?->sum('amount_paid') ?? 0);
+            $amountDue = (float) ($assessment?->total_amount_due ?? 0);
+
+            if ($amountDue <= 0 && $renewal->farmer?->memberType?->code) {
+                $amountDue = (float) ($this->feeCalculatorService->calculateRenewal([
+                    'member_type' => $renewal->farmer->memberType->code,
+                ])['total'] ?? 0);
+            }
+
+            $renewal->setAttribute('queue_amount_to_pay', max(0, round($amountDue - $amountPaid, 2)));
+            $renewal->setAttribute('queue_amount_paid', round($amountPaid, 2));
+        }
+    }
+
+    private function hasRecordedAnnualDue(Farmer $farmer, int $year): bool
+    {
+        return MembershipLedger::query()
+            ->whereHas('membershipTransaction', fn (Builder $query) => $query->where('farmer_id', $farmer->id))
+            ->where('year', $year)
+            ->where('amount_paid', '>', 0)
+            ->exists();
+    }
+
+    private function serializeRenewalRow(RenewalRequest $renewal, bool $includeRecordFields = false): array
+    {
+        $latestAssessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+        $latestPayment = $latestAssessment?->payments?->sortByDesc('paid_at')->first();
+        $recordDate = $latestPayment?->paid_at ?? $renewal->submitted_at;
+
+        return [
+            'id' => $renewal->id,
+            'recordKey' => (string) $renewal->getRouteKey(),
+            'farmer' => [
+                'fullName' => $renewal->farmer?->full_name ?? 'Unknown Farmer',
+                'farmerCode' => $renewal->farmer?->farmer_code ?? 'No code',
+                'memberType' => $renewal->farmer?->memberType ? [
+                    'code' => $renewal->farmer->memberType->code,
+                    'name' => $renewal->farmer->memberType->name ?? $renewal->farmer->memberType->code,
+                ] : null,
+            ],
+            'year' => $renewal->year,
+            'source' => $renewal->source,
+            'sourceLabel' => strtoupper(str_replace('_', ' ', (string) $renewal->source)),
+            'status' => [
+                'value' => $renewal->status?->value ?? 'submitted',
+                'label' => $this->renewalStatusLabel($renewal),
+            ],
+            'amountToPay' => (float) ($renewal->getAttribute('queue_amount_to_pay') ?? 0),
+            'amountPaid' => (float) ($renewal->getAttribute('queue_amount_paid') ?? 0),
+            'submittedAt' => optional($recordDate)->format('M d, Y h:i A'),
+            'paymentReference' => $latestPayment?->reference_no,
+            'actions' => [
+                'showUrl' => route('admin.renewals.show', $renewal),
+            ],
+            'accountability' => $this->accountability($renewal),
+            'quickActions' => [
+                'canReview' => true,
+                'canMarkComplete' => (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) && $renewal->source !== 'walk_in',
+                'canRequestCorrection' => Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false,
+                'canForwardToAdmin' => ! (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false),
+            ],
+            'record' => $includeRecordFields ? [
+                'submittedAt' => optional($recordDate)->format('M d, Y h:i A'),
+                'paymentReference' => $latestPayment?->reference_no,
+            ] : null,
+        ];
+    }
+
+    private function serializeRenewalFarmerRow(Farmer $farmer): array
+    {
+        $renewals = $farmer->renewalRequests instanceof Collection
+            ? $farmer->renewalRequests->values()
+            : collect();
+
+        $this->applyQueueAmounts($renewals);
+
+        /** @var RenewalRequest|null $latestRenewal */
+        $latestRenewal = $renewals->sortByDesc(fn (RenewalRequest $renewal) => sprintf(
+            '%04d-%010d',
+            (int) $renewal->year,
+            (int) $renewal->id
+        ))->first();
+
+        if (! $latestRenewal) {
+            return [
+                'id' => $farmer->id,
+                'recordKey' => '',
+                'farmer' => [
+                    'fullName' => $farmer->full_name ?? 'Unknown Farmer',
+                    'farmerCode' => $farmer->farmer_code ?? 'No code',
+                    'memberType' => $farmer->memberType ? [
+                        'code' => $farmer->memberType->code,
+                        'name' => $farmer->memberType->name ?? $farmer->memberType->code,
+                    ] : null,
+                ],
+                'years' => [],
+                'yearRangeLabel' => 'No settled renewals',
+                'sourceLabel' => 'N/A',
+                'status' => ['value' => 'pending', 'label' => 'Pending'],
+                'amountToPay' => 0.0,
+                'amountPaid' => 0.0,
+                'submittedAt' => null,
+                'paymentReference' => null,
+                'actions' => ['showUrl' => null],
+                'accountability' => null,
+                'quickActions' => [],
+                'record' => null,
+            ];
+        }
+
+        $baseRow = $this->serializeRenewalRow($latestRenewal, true);
+
+        return array_merge($baseRow, [
+            'id' => $farmer->id,
+            'recordKey' => $baseRow['recordKey'],
+            'years' => $renewals->pluck('year')->map(fn ($year): int => (int) $year)->unique()->sortDesc()->values()->all(),
+            'yearRangeLabel' => $renewals->pluck('year')->unique()->sortDesc()->values()->implode(', '),
+            'sourceLabel' => $renewals
+                ->pluck('source')
+                ->filter()
+                ->map(fn (string $source): string => strtoupper(str_replace('_', ' ', $source)))
+                ->unique()
+                ->values()
+                ->implode(', '),
+            'amountPaid' => round((float) $renewals->sum(fn (RenewalRequest $renewal): float => (float) ($renewal->getAttribute('queue_amount_paid') ?? 0)), 2),
+            'paymentReference' => $baseRow['paymentReference'],
+            'actions' => [
+                'showUrl' => route('admin.renewals.show', $latestRenewal),
+            ],
+            'accountability' => $this->accountability($latestRenewal),
+            'record' => [
+                'submittedAt' => $baseRow['submittedAt'],
+                'paymentReference' => $baseRow['paymentReference'],
+                'renewalCount' => $renewals->count(),
+            ],
+        ]);
+    }
+
+    private function renewalStatusLabel(RenewalRequest $renewal): string
+    {
+        return match ($renewal->status?->value) {
+            RenewalStatus::SUBMITTED->value,
+            RenewalStatus::UNDER_REVIEW->value => 'Pending',
+            default => $renewal->status?->label() ?? 'Pending',
+        };
+    }
+
+    private function serializeEligibleFarmerRow(Farmer $farmer, int $year, ?string $remindedAt = null): array
+    {
+        $feePreview = $farmer->memberType?->code
+            ? $this->feeCalculatorService->calculateRenewal([
+                'member_type' => $farmer->memberType->code,
+            ])
+            : null;
+
+        return [
+            'id' => $farmer->id,
+            'farmer' => [
+                'fullName' => $farmer->full_name ?: 'Unknown Farmer',
+                'farmerCode' => $farmer->farmer_code ?: 'No code',
+                'memberType' => $farmer->memberType ? [
+                    'code' => $farmer->memberType->code,
+                    'name' => $farmer->memberType->name,
+                ] : null,
+            ],
+            'year' => $year,
+            'status' => [
+                'value' => 'pending',
+                'label' => 'Needs Renewal',
+            ],
+            'amountToPay' => (float) ($feePreview['total'] ?? 0),
+            'reminder' => [
+                'sentAt' => $remindedAt,
+                'hasSent' => $remindedAt !== null,
+            ],
+            'actions' => [
+                'createUrl' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $year]),
+            ],
+        ];
+    }
+
+    private function accountability(RenewalRequest $renewal): array
+    {
+        $reviewerName = $renewal->reviewer?->name;
+        $latestActivity = AuditLog::query()
+            ->where('subject_type', $renewal->getMorphClass())
+            ->where('subject_id', $renewal->getKey())
+            ->latest('created_at')
+            ->first(['actor_name', 'created_at']);
+
+        return [
+            'lastUpdatedBy' => $latestActivity?->actor_name ?? $reviewerName ?? 'System',
+            'lastUpdatedAt' => optional($latestActivity?->created_at ?? $renewal->updated_at)->format('M d, Y h:i A'),
+            'assignedStaff' => $reviewerName,
+            'reviewedBy' => $reviewerName,
+        ];
+    }
+
+    private function renewalReminderMap(iterable $farmers, int $targetYear): array
+    {
+        $farmerIds = collect($farmers)->pluck('id')->map(fn ($id): int => (int) $id)->values()->all();
+
+        if ($farmerIds === []) {
+            return [];
+        }
+
+        return DB::table('notification_recipients as recipients')
+            ->join('notifications', 'notifications.id', '=', 'recipients.notification_id')
+            ->where('notifications.type', \App\Enums\NotificationType::RENEWAL_REMINDER->value)
+            ->where('notifications.payload->target_year', $targetYear)
+            ->whereIn('recipients.farmer_id', $farmerIds)
+            ->orderByDesc('notifications.created_at')
+            ->get([
+                'recipients.farmer_id',
+                'notifications.created_at',
+            ])
+            ->unique('farmer_id')
+            ->mapWithKeys(fn (object $row): array => [
+                (int) $row->farmer_id => optional(\Carbon\Carbon::parse($row->created_at))->format('M d, Y h:i A'),
+            ])
+            ->all();
+    }
+}

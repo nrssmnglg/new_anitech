@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220" fill="none">
+  <defs>
+    <linearGradient id="c-bg" x1="24" y1="20" x2="182" y2="186" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E7D4F"/>
+      <stop offset="1" stop-color="#67A85B"/>
+    </linearGradient>
+    <linearGradient id="c-gold" x1="52" y1="48" x2="150" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6C35D"/>
+      <stop offset="1" stop-color="#E79B30"/>
+    </linearGradient>
+  </defs>
+  <rect x="22" y="22" width="160" height="160" rx="44" fill="url(#c-bg)"/>
+  <circle cx="102" cy="102" r="56" fill="#FFFFFF" fill-opacity="0.12"/>
+  <path d="M69 129C69 95.8629 95.8629 69 129 69H144L111.5 101.5H144C144 134.637 117.137 161.5 84 161.5H69V129Z" fill="#F8FCF6"/>
+  <path d="M61 81C70.9411 81 79 89.0589 79 99C79 109.882 70.9411 117.941 61 128.75V81Z" fill="url(#c-gold)"/>
+  <path d="M56 140H92" stroke="#F6C35D" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="150" cy="63" r="12" fill="#F6C35D" fill-opacity="0.92"/>
+  <text x="220" y="108" fill="#22573E" font-family="'Baloo 2', 'Trebuchet MS', Arial, sans-serif" font-size="82" font-weight="700">AniTech</text>
+  <text x="220" y="146" fill="#6E8E58" font-family="'DM Sans', Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="4">FOR FARMERS AND COMMUNITIES</text>
+</svg>

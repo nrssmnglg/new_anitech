@@ -1,0 +1,3 @@
+<?php
+
+// Reactivation API routes.

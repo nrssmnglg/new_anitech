@@ -1,0 +1,304 @@
+.farmer-summary-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    grid-template-columns: 1fr;
+}
+
+.farmer-summary-card {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    padding: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background:
+        radial-gradient(circle at top right, rgba(141, 187, 97, 0.16), transparent 32%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbf9 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.farmer-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.1);
+}
+
+.farmer-summary-card:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--summary-from) 22%, white);
+    outline-offset: 3px;
+}
+
+.farmer-summary-card--active {
+    border-color: color-mix(in srgb, var(--summary-from) 30%, white);
+    box-shadow:
+        0 18px 32px rgba(15, 23, 42, 0.1),
+        0 0 0 3px color-mix(in srgb, var(--summary-from) 14%, white);
+}
+
+.farmer-summary-card__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.farmer-summary-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 auto;
+    border: 1px solid var(--summary-icon-border);
+    border-radius: 1rem;
+    background-image: linear-gradient(to bottom, var(--summary-icon-bg), #ffffff);
+    color: var(--summary-icon-color);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.farmer-summary-card__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.farmer-summary-card__label {
+    margin: 0;
+    color: #365346;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.farmer-summary-card__meta {
+    display: inline-block;
+    max-width: 22ch;
+    margin-top: 0.25rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+}
+
+.farmer-summary-card__value {
+    margin-top: 1rem;
+    color: #0f172a;
+    font-size: 2.35rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    text-align: center;
+}
+
+.farmer-summary-card--emerald {
+    --summary-from: #1b4d3e;
+    --summary-to: #8dbb61;
+    --summary-icon-border: rgba(27, 77, 62, 0.08);
+    --summary-icon-bg: #ecfdf5;
+    --summary-icon-color: #1b4d3e;
+}
+
+.farmer-summary-card--teal {
+    --summary-from: #0f766e;
+    --summary-to: #2dd4bf;
+    --summary-icon-border: rgba(15, 118, 110, 0.08);
+    --summary-icon-bg: #f0fdfa;
+    --summary-icon-color: #0f766e;
+}
+
+.farmer-summary-card--amber {
+    --summary-from: #b45309;
+    --summary-to: #fbbf24;
+    --summary-icon-border: rgba(180, 83, 9, 0.08);
+    --summary-icon-bg: #fffbeb;
+    --summary-icon-color: #b45309;
+}
+
+.farmer-summary-card--rose {
+    --summary-from: #be123c;
+    --summary-to: #fb7185;
+    --summary-icon-border: rgba(190, 18, 60, 0.08);
+    --summary-icon-bg: #fff1f2;
+    --summary-icon-color: #be123c;
+}
+
+.farmer-action-group {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    min-width: max-content;
+}
+
+.farmer-filter-form {
+    display: grid;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.farmer-filter-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.farmer-filter-form select {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.1;
+}
+
+.farmer-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.farmer-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    flex: 0 0 auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.8rem;
+    background: #ffffff;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.farmer-filter-btn:hover {
+    transform: translateY(-1px);
+}
+
+.farmer-filter-btn:focus-visible {
+    outline: 3px solid rgba(38, 99, 81, 0.14);
+    outline-offset: 3px;
+}
+
+.farmer-filter-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+@media (min-width: 1280px) {
+    .farmer-filter-form {
+        grid-template-columns: minmax(200px, 1.2fr) minmax(120px, 0.7fr) minmax(150px, 0.85fr) minmax(150px, 0.85fr) minmax(150px, 0.85fr) max-content;
+    }
+
+    .farmer-filter-actions {
+        flex-wrap: nowrap;
+        justify-self: end;
+    }
+}
+
+.farmer-filter-btn--reset {
+    border-color: #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+}
+
+.farmer-filter-btn--reset:hover {
+    background: #f8fafc;
+}
+
+.farmer-filter-btn--report {
+    border-color: #a7f3d0;
+    background: rgba(236, 253, 245, 0.92);
+    color: #047857;
+}
+
+.farmer-filter-btn--report:hover {
+    background: #d1fae5;
+}
+
+.farmer-filter-btn--apply {
+    border-color: #bbf7d0;
+    background: linear-gradient(180deg, #1b4d3e 0%, #266351 100%);
+    color: #ffffff;
+}
+
+.farmer-filter-btn--apply:hover {
+    background: linear-gradient(180deg, #245b48 0%, #2f735d 100%);
+    box-shadow: 0 8px 18px rgba(27, 77, 62, 0.16);
+}
+
+.farmer-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.farmer-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.farmer-action-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.farmer-action-btn--view {
+    border-color: #d1fae5;
+    background: rgba(236, 253, 245, 0.8);
+    color: #047857;
+}
+
+.farmer-action-btn--view:hover {
+    background: #d1fae5;
+}
+
+.farmer-action-btn--edit {
+    border-color: #dbeafe;
+    background: rgba(239, 246, 255, 0.8);
+    color: #0369a1;
+}
+
+.farmer-action-btn--edit:hover {
+    background: #dbeafe;
+}
+
+.farmer-action-btn--renewal {
+    border-color: #fde68a;
+    background: rgba(255, 251, 235, 0.8);
+    color: #b45309;
+}
+
+.farmer-action-btn--renewal:hover {
+    background: #fef3c7;
+}
+
+.farmer-action-btn--mortuary {
+    border-color: #fecdd3;
+    background: rgba(255, 241, 242, 0.8);
+    color: #be123c;
+}
+
+.farmer-action-btn--mortuary:hover {
+    background: #ffe4e6;
+}
+
+@media (min-width: 768px) {
+    .farmer-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .farmer-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220" fill="none">
+  <defs>
+    <linearGradient id="o-ring" x1="34" y1="26" x2="174" y2="182" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B68A2A"/>
+      <stop offset="1" stop-color="#D6B15A"/>
+    </linearGradient>
+  </defs>
+  <circle cx="104" cy="104" r="78" fill="#F7F3E7" stroke="url(#o-ring)" stroke-width="14"/>
+  <circle cx="104" cy="104" r="58" fill="#1D5A43" opacity="0.08"/>
+  <path d="M70 130C70 94.6538 98.6538 66 134 66H146L113.5 98.5H146C146 133.846 117.346 162.5 82 162.5H70V130Z" fill="#1C5C44"/>
+  <path d="M63 82C72.3888 82 80 89.6112 80 99C80 109.278 72.3888 116.889 63 126.75V82Z" fill="#D1A542"/>
+  <path d="M60 139H90" stroke="#D1A542" stroke-width="8" stroke-linecap="round"/>
+  <text x="220" y="106" fill="#174937" font-family="Georgia, 'Times New Roman', serif" font-size="78" font-weight="700" letter-spacing="-1">AniTech</text>
+  <text x="220" y="138" fill="#9B7A2E" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700" letter-spacing="6">AGRICULTURE MANAGEMENT SYSTEM</text>
+  <path d="M220 160H682" stroke="#D8C08B" stroke-width="3"/>
+</svg>

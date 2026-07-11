@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mxfile host="app.diagrams.net" modified="2026-05-11T10:00:00.000Z" agent="ChatGPT" version="24.7.17">
+  <diagram id="ERD1" name="Simplified ERD">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+```
+    <mxCell id="barangays" value="barangays" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="associations" value="associations" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="40" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="member_types" value="member_types" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="220" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="farmers" value="farmers" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="220" width="180" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="farmer_profiles" value="farmer_profiles" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="220" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="membership_transactions" value="membership_transactions" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="220" width="220" height="160" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="document_types" value="document_types" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="40" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="farmer_documents" value="farmer_documents" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="220" width="200" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fee_schedules" value="fee_schedules" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="40" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="payment_assessments" value="payment_assessments" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="440" width="220" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="payments" value="payments" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="440" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="membership_ledgers" value="membership_ledgers" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="640" width="220" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="claimers" value="claimers" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="640" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="mortuary_claims" value="mortuary_claims" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="640" width="220" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="users" value="users" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="40" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="advisories" value="advisories" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="220" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="queries" value="queries" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="420" width="180" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="query_responses" value="query_responses" style="shape=swimlane;rounded=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1600" y="420" width="200" height="120" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e1" value="has" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="barangays" target="associations">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e2" value="contains" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="barangays" target="farmers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e3" value="classifies" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="member_types" target="farmers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e4" value="has" style="endArrow=ERone;html=1;rounded=0;" edge="1" parent="1" source="farmers" target="farmer_profiles">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e5" value="submits" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="farmers" target="membership_transactions">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e6" value="requires" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="membership_transactions" target="farmer_documents">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e7" value="categorizes" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="document_types" target="farmer_documents">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e8" value="defines fees for" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="fee_schedules" target="payment_assessments">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e9" value="generates" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="membership_transactions" target="payment_assessments">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e10" value="is settled by" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="payment_assessments" target="payments">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e11" value="creates" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="membership_transactions" target="membership_ledgers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e12" value="applies to" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="fee_schedules" target="membership_ledgers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e13" value="supports" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="membership_ledgers" target="mortuary_claims">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e14" value="files" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="claimers" target="mortuary_claims">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e15" value="publishes" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="users" target="advisories">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e16" value="submits" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="farmers" target="queries">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e17" value="receives" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="queries" target="query_responses">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e18" value="responds to" style="endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="users" target="query_responses">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
+```
+
+  </diagram>
+</mxfile>

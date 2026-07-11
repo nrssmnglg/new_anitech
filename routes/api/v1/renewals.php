@@ -1,0 +1,3 @@
+<?php
+
+// Renewal API routes.

@@ -1,0 +1,3 @@
+<?php
+
+// Query API routes.
