@@ -38,10 +38,10 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build \
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache \
+    && npm run build \
     && composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
-    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache \
     && chown -R www-data:www-data /var/www/html
 
 COPY render/nginx.conf /etc/nginx/http.d/default.conf
