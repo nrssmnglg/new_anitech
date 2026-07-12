@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import AppState from '../components/ui/AppState.vue';
 import { useLocale } from '../composables/useLocale';
@@ -23,10 +23,24 @@ const form = reactive({
     password: '',
     password_confirmation: '',
 });
+const hasLockedLookup = computed(() => Boolean(String(route.query.application_no ?? '') && String(route.query.birth_date ?? '')));
 
 const canSubmit = computed(() => {
     return form.application_no && form.birth_date && form.email && form.password && form.password_confirmation;
 });
+
+watch(
+    () => route.query,
+    (query) => {
+        if (!hasLockedLookup.value) {
+            return;
+        }
+
+        form.application_no = String(query.application_no ?? form.application_no ?? '');
+        form.birth_date = String(query.birth_date ?? form.birth_date ?? '');
+    },
+    { deep: true },
+);
 
 const submit = async () => {
     successMessage.value = '';
@@ -63,7 +77,7 @@ const submit = async () => {
                     <span></span>
                 </div>
 
-                <form class="farmer-app__setup-form" @submit.prevent="submit">
+                <form class="farmer-app__setup-form" @submit.prevent="submit" @keydown.enter.prevent>
                     <div class="farmer-app__setup-grid">
                         <div class="farmer-app__setup-field">
                             <label for="application_no">Application Number</label>
@@ -74,7 +88,7 @@ const submit = async () => {
                                         <path d="M9 10h6M9 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     </svg>
                                 </span>
-                                <input id="application_no" v-model="form.application_no" type="text" placeholder="APP-82910" />
+                                <input id="application_no" v-model="form.application_no" type="text" placeholder="APP-82910" :readonly="hasLockedLookup" autocomplete="off" />
                             </div>
                             <p v-if="auth.validationErrors.value.application_no" class="farmer-app__setup-error">
                                 {{ auth.validationErrors.value.application_no }}
@@ -90,7 +104,7 @@ const submit = async () => {
                                         <path d="M8 4.5v3M16 4.5v3M5 10h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     </svg>
                                 </span>
-                                <input id="birth_date" v-model="form.birth_date" type="date" />
+                                <input id="birth_date" v-model="form.birth_date" type="date" :readonly="hasLockedLookup" autocomplete="off" />
                             </div>
                             <p v-if="auth.validationErrors.value.birth_date" class="farmer-app__setup-error">
                                 {{ auth.validationErrors.value.birth_date }}
@@ -107,7 +121,7 @@ const submit = async () => {
                                     <path d="m5.5 7 6.5 5 6.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <input id="setup_email" v-model="form.email" type="email" placeholder="farmer@example.com" />
+                            <input id="setup_email" v-model="form.email" type="email" placeholder="farmer@example.com" autocomplete="email" />
                         </div>
                         <p v-if="auth.validationErrors.value.email" class="farmer-app__setup-error">
                             {{ auth.validationErrors.value.email }}
@@ -129,6 +143,7 @@ const submit = async () => {
                                     v-model="form.password"
                                     :type="showPassword ? 'text' : 'password'"
                                     placeholder="Minimum 8 characters"
+                                    @keydown.enter.prevent
                                     autocomplete="new-password"
                                 />
                             </div>
@@ -152,6 +167,7 @@ const submit = async () => {
                                     v-model="form.password_confirmation"
                                     :type="showPasswordConfirmation ? 'text' : 'password'"
                                     placeholder="Repeat password"
+                                    @keydown.enter.prevent
                                     autocomplete="new-password"
                                 />
                             </div>
