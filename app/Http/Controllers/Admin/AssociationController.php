@@ -24,7 +24,12 @@ class AssociationController extends Controller
     public function index(Request $request): InertiaResponse
     {
         $filters = $request->only(['search', 'status', 'barangay_id']);
+        $canonicalAssociationIds = Association::query()
+            ->selectRaw('MIN(id)')
+            ->groupBy('barangay_id');
+
         $associationsQuery = Association::query()
+            ->whereIn('id', $canonicalAssociationIds)
             ->with('barangay:id,name,code')
             ->withCount('farmers')
             ->when($filters['search'] ?? null, function ($query, string $search): void {
@@ -53,9 +58,9 @@ class AssociationController extends Controller
             'associations' => $associations,
             'filters' => $filters,
             'summary' => [
-                'total' => Association::query()->count(),
-                'active' => Association::query()->where('status', 'active')->count(),
-                'inactive' => Association::query()->where('status', 'inactive')->count(),
+                'total' => (clone $associationsQuery)->count(),
+                'active' => (clone $associationsQuery)->whereRaw('LOWER(status) = ?', ['active'])->count(),
+                'inactive' => (clone $associationsQuery)->whereRaw('LOWER(status) = ?', ['inactive'])->count(),
             ],
             'urls' => [
                 'index' => route('admin.associations.index'),
