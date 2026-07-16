@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const maxTrend = computed(() => Math.max(
-    ...props.analytics.trend.map((row) => Math.max(row.pageViews, row.searches, row.businessEvents)),
+    ...props.analytics.trend.map((row) => Math.max(row.pageViews, row.searches)),
     1,
 ));
 
@@ -184,10 +184,6 @@ function exportAnalytics(format) {
                     <p class="mt-3 text-4xl font-black tracking-[-0.04em] text-[#143c32]">{{ analytics.summary.searches }}</p>
                 </article>
                 <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Business Events</p>
-                    <p class="mt-3 text-4xl font-black tracking-[-0.04em] text-[#143c32]">{{ analytics.summary.businessEvents }}</p>
-                </article>
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Active Users</p>
                     <p class="mt-3 text-4xl font-black tracking-[-0.04em] text-[#143c32]">{{ analytics.summary.activeUsers }}</p>
                 </article>
@@ -261,7 +257,6 @@ function exportAnalytics(format) {
                                 <div class="flex h-48 items-end justify-center gap-1">
                                     <div class="w-2 rounded-full bg-[#0f5b46]" :style="{ height: `${(row.pageViews / maxTrend) * 100}%` }"></div>
                                     <div class="w-2 rounded-full bg-[#86b049]" :style="{ height: `${(row.searches / maxTrend) * 100}%` }"></div>
-                                    <div class="w-2 rounded-full bg-[#d8e6df]" :style="{ height: `${(row.businessEvents / maxTrend) * 100}%` }"></div>
                                 </div>
                                 <div class="text-center text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#7a8781]">{{ row.label }}</div>
                             </div>
@@ -269,7 +264,6 @@ function exportAnalytics(format) {
                         <div class="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[#44515d]">
                             <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#0f5b46]"></span>Page views</span>
                             <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#86b049]"></span>Searches</span>
-                            <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#d8e6df]"></span>Business events</span>
                         </div>
                     </div>
                 </article>
@@ -279,30 +273,6 @@ function exportAnalytics(format) {
                     <p class="mt-1 text-sm text-[#5f6f67]">Most frequent tracked actions.</p>
                     <div class="mt-6 space-y-4">
                         <div v-for="row in analytics.topEvents" :key="row.label" class="flex items-center justify-between gap-4 rounded-[1rem] bg-[#f6f8f7] px-4 py-3">
-                            <span class="text-sm font-semibold text-[#20312b]">{{ row.label }}</span>
-                            <span class="text-sm font-black text-[#0f5b46]">{{ row.value }}</span>
-                        </div>
-                    </div>
-                </article>
-            </section>
-
-            <section class="grid gap-6 xl:grid-cols-2">
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <h2 class="text-xl font-bold text-[#143c32]">Top pages</h2>
-                    <p class="mt-1 text-sm text-[#5f6f67]">Most visited URLs in the selected range.</p>
-                    <div class="mt-6 space-y-4">
-                        <div v-for="row in analytics.topPages" :key="row.label" class="flex items-start justify-between gap-4 rounded-[1rem] bg-[#f6f8f7] px-4 py-3">
-                            <span class="break-all text-sm font-semibold text-[#20312b]">{{ row.label }}</span>
-                            <span class="shrink-0 text-sm font-black text-[#0f5b46]">{{ row.value }}</span>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <h2 class="text-xl font-bold text-[#143c32]">Module activity</h2>
-                    <p class="mt-1 text-sm text-[#5f6f67]">Event volume grouped by module.</p>
-                    <div class="mt-6 space-y-4">
-                        <div v-for="row in analytics.moduleBreakdown" :key="row.label" class="flex items-center justify-between gap-4 rounded-[1rem] bg-[#f6f8f7] px-4 py-3">
                             <span class="text-sm font-semibold text-[#20312b]">{{ row.label }}</span>
                             <span class="text-sm font-black text-[#0f5b46]">{{ row.value }}</span>
                         </div>
@@ -475,19 +445,6 @@ function exportAnalytics(format) {
                     </div>
                     <div class="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[#44515d]">
                         <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#0f5b46]"></span>Published</span>
-                    </div>
-                </article>
-            </section>
-
-            <section class="grid gap-6 xl:grid-cols-2">
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <h2 class="text-xl font-bold text-[#143c32]">Business events</h2>
-                    <p class="mt-1 text-sm text-[#5f6f67]">Tracked workflow outcomes across applications, renewals, advisories, and inquiries.</p>
-                    <div class="mt-6 space-y-4">
-                        <div v-for="row in analytics.businessBreakdown" :key="row.label" class="flex items-center justify-between gap-4 rounded-[1rem] bg-[#f6f8f7] px-4 py-3">
-                            <span class="text-sm font-semibold text-[#20312b]">{{ row.label }}</span>
-                            <span class="text-sm font-black text-[#0f5b46]">{{ row.value }}</span>
-                        </div>
                     </div>
                 </article>
             </section>

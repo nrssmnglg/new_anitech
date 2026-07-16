@@ -107,7 +107,6 @@ class AnalyticsDashboardController extends Controller
         $summary = [
             'pageViews' => (clone $baseQuery)->where('event_name', 'page_view')->count(),
             'searches' => (clone $baseQuery)->where('event_name', 'admin_search')->count(),
-            'businessEvents' => (clone $baseQuery)->where('event_name', '!=', 'page_view')->where('event_name', '!=', 'admin_search')->count(),
             'activeUsers' => (clone $baseQuery)->whereNotNull('user_id')->distinct('user_id')->count('user_id'),
         ];
 
@@ -120,7 +119,6 @@ class AnalyticsDashboardController extends Controller
                     'label' => $date->format('M d'),
                     'pageViews' => 0,
                     'searches' => 0,
-                    'businessEvents' => 0,
                 ];
             })
             ->keyBy('date');
@@ -129,7 +127,6 @@ class AnalyticsDashboardController extends Controller
             ->selectRaw('DATE(occurred_at) as event_date')
             ->selectRaw("SUM(CASE WHEN event_name = 'page_view' THEN 1 ELSE 0 END) as page_views")
             ->selectRaw("SUM(CASE WHEN event_name = 'admin_search' THEN 1 ELSE 0 END) as searches")
-            ->selectRaw("SUM(CASE WHEN event_name NOT IN ('page_view', 'admin_search') THEN 1 ELSE 0 END) as business_events")
             ->groupBy('event_date')
             ->orderBy('event_date')
             ->get();
@@ -142,7 +139,6 @@ class AnalyticsDashboardController extends Controller
             $trendRow = $trend->get($row->event_date);
             $trendRow['pageViews'] = (int) $row->page_views;
             $trendRow['searches'] = (int) $row->searches;
-            $trendRow['businessEvents'] = (int) $row->business_events;
             $trend->put($row->event_date, $trendRow);
         }
 
@@ -188,47 +184,6 @@ class AnalyticsDashboardController extends Controller
         );
 
         $topEvents = (clone $baseQuery)
-            ->select('event_name')
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('event_name')
-            ->orderByDesc('total')
-            ->limit(8)
-            ->get()
-            ->map(fn ($row): array => [
-                'label' => str($row->event_name)->replace('_', ' ')->title()->toString(),
-                'value' => (int) $row->total,
-            ])
-            ->all();
-
-        $topPages = (clone $baseQuery)
-            ->whereNotNull('url')
-            ->select('url')
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('url')
-            ->orderByDesc('total')
-            ->limit(8)
-            ->get()
-            ->map(fn ($row): array => [
-                'label' => (string) $row->url,
-                'value' => (int) $row->total,
-            ])
-            ->all();
-
-        $moduleBreakdown = (clone $baseQuery)
-            ->selectRaw("COALESCE(module, 'uncategorized') as module_name")
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('module_name')
-            ->orderByDesc('total')
-            ->limit(8)
-            ->get()
-            ->map(fn ($row): array => [
-                'label' => str($row->module_name)->replace('_', ' ')->title()->toString(),
-                'value' => (int) $row->total,
-            ])
-            ->all();
-
-        $businessBreakdown = (clone $baseQuery)
-            ->whereNotIn('event_name', ['page_view', 'admin_search'])
             ->select('event_name')
             ->selectRaw('COUNT(*) as total')
             ->groupBy('event_name')
@@ -453,9 +408,6 @@ class AnalyticsDashboardController extends Controller
             'summary' => $summary,
             'trend' => array_values($trend->all()),
             'topEvents' => $topEvents,
-            'topPages' => $topPages,
-            'moduleBreakdown' => $moduleBreakdown,
-            'businessBreakdown' => $businessBreakdown,
             'queueAging' => $queueAging,
             'turnaround' => $turnaround,
             'funnels' => $funnels,

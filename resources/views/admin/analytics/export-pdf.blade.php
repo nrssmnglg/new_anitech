@@ -58,7 +58,6 @@
             <tbody>
                 <tr><th>Page Views</th><td>{{ $analytics['summary']['pageViews'] }}</td></tr>
                 <tr><th>Searches</th><td>{{ $analytics['summary']['searches'] }}</td></tr>
-                <tr><th>Business Events</th><td>{{ $analytics['summary']['businessEvents'] }}</td></tr>
                 <tr><th>Active Users</th><td>{{ $analytics['summary']['activeUsers'] }}</td></tr>
             </tbody>
         </table>
