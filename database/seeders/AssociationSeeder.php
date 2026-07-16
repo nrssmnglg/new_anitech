@@ -14,15 +14,28 @@ class AssociationSeeder extends Seeder
             ->orderBy('id')
             ->get();
 
-        foreach ($barangays as $index => $barangay) {
-            Association::query()->updateOrCreate(
-                ['barangay_id' => $barangay->id],
-                [
-                    'name' => $barangay->name . ' ASSOCIATION',
-                    'code' => 'ASSOC' . str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
-                    'status' => 'active',
-                ],
-            );
+        foreach ($barangays as $barangay) {
+            $association = Association::query()->firstOrNew([
+                'barangay_id' => $barangay->id,
+            ]);
+
+            if (! $association->exists) {
+                $association->code = $this->nextAssociationCode();
+            }
+
+            $association->name = $barangay->name . ' ASSOCIATION';
+            $association->status = 'Active';
+            $association->save();
         }
+    }
+
+    private function nextAssociationCode(): string
+    {
+        $max = (int) Association::query()
+            ->selectRaw("MAX(CAST(SUBSTRING(code, 6) AS UNSIGNED)) as max_code")
+            ->where('code', 'like', 'ASSOC%')
+            ->value('max_code');
+
+        return 'ASSOC' . str_pad((string) ($max + 1), 2, '0', STR_PAD_LEFT);
     }
 }
