@@ -194,6 +194,27 @@ const summaryCards = [
                         </tbody>
                     </table>
                 </div>
+                <div v-if="associations.last_page > 1" class="flex flex-col gap-3 border-t border-[#edf2ee] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-sm text-[#6b7280]">
+                        Page {{ associations.current_page }} of {{ associations.last_page }}
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <Link
+                            :href="associations.prev_page_url || '#'"
+                            class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition"
+                            :class="associations.prev_page_url ? 'border-[#dbe3dd] text-[#12372a] hover:border-[#b9c5bc]' : 'cursor-not-allowed border-[#eef2ee] text-[#a0aca5] pointer-events-none'"
+                        >
+                            Previous
+                        </Link>
+                        <Link
+                            :href="associations.next_page_url || '#'"
+                            class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition"
+                            :class="associations.next_page_url ? 'border-[#014d3c] bg-[#014d3c] text-white hover:bg-[#01392d]' : 'cursor-not-allowed border-[#eef2ee] bg-[#eef2ee] text-[#a0aca5] pointer-events-none'"
+                        >
+                            Next
+                        </Link>
+                    </div>
+                </div>
             </section>
         </div>
     </AdminLayout>
