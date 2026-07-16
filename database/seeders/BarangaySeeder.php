@@ -151,13 +151,14 @@ class BarangaySeeder extends Seeder
 
         DB::transaction(function () use ($barangays, $legacyNames): void {
             foreach ($barangays as $index => $barangay) {
-                Barangay::query()->updateOrCreate(
-                    ['name' => $barangay],
-                    [
-                        'code' => 'BRGY' . str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
-                        'status' => 'Active',
-                    ],
-                );
+                $record = Barangay::query()->firstOrNew(['name' => $barangay]);
+
+                if (! $record->exists) {
+                    $record->code = $this->nextBarangayCode();
+                }
+
+                $record->status = 'Active';
+                $record->save();
             }
 
             foreach ($legacyNames as $legacyName => $canonicalName) {
@@ -194,5 +195,15 @@ class BarangaySeeder extends Seeder
                 $legacy->delete();
             }
         });
+    }
+
+    private function nextBarangayCode(): string
+    {
+        $max = (int) Barangay::query()
+            ->selectRaw("MAX(CAST(SUBSTRING(code, 5) AS UNSIGNED)) as max_code")
+            ->where('code', 'like', 'BRGY%')
+            ->value('max_code');
+
+        return 'BRGY' . str_pad((string) ($max + 1), 2, '0', STR_PAD_LEFT);
     }
 }
