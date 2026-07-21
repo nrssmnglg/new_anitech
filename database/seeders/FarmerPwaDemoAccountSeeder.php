@@ -15,22 +15,11 @@ class FarmerPwaDemoAccountSeeder extends Seeder
 {
     public function run(): void
     {
-        $barangay = Barangay::query()->firstOrCreate(
-            ['code' => 'BRGY-DEMO'],
-            [
-                'name' => 'Demo Barangay',
-                'status' => 'Active',
-            ],
-        );
-
-        $association = Association::query()->firstOrCreate(
-            ['code' => 'ASC-DEMO'],
-            [
-                'barangay_id' => $barangay->id,
-                'name' => 'Demo Farmers Association',
-                'status' => 'Active',
-            ],
-        );
+        $barangay = Barangay::query()->orderBy('id')->firstOrFail();
+        $association = Association::query()
+            ->where('barangay_id', $barangay->id)
+            ->orderBy('id')
+            ->firstOrFail();
 
         $memberType = MemberType::query()->firstOrCreate(
             ['code' => 'NM'],
@@ -65,7 +54,7 @@ class FarmerPwaDemoAccountSeeder extends Seeder
                 'last_name' => 'Member',
                 'sex' => 'Male',
                 'civil_status' => 'Single',
-                'address' => 'Purok 1, Demo Barangay',
+                'address' => 'Purok 1, ' . $barangay->name,
                 'mobile_number' => '09171234567',
                 'birth_date' => '1995-05-15',
             ],
