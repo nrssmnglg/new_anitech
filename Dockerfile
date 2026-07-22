@@ -47,8 +47,9 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 COPY render/nginx.conf /etc/nginx/http.d/default.conf
 COPY render/supervisord.conf /etc/supervisord.conf
 COPY render/start-web.sh /usr/local/bin/start-web.sh
+COPY render/run-scheduler.sh /usr/local/bin/run-scheduler.sh
 
-RUN chmod +x /usr/local/bin/start-web.sh
+RUN chmod +x /usr/local/bin/start-web.sh /usr/local/bin/run-scheduler.sh
 
 EXPOSE 10000
 
