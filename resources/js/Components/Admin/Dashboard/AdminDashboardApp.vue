@@ -13,9 +13,10 @@ const props = defineProps({
 const isAdmin = computed(() => Boolean(props.dashboard.permissions?.isAdmin));
 
 const { apply, selectedBarangayName, state } = useAdminDashboardFilters(props.dashboard.filters);
+const selectedYearLabel = computed(() => props.dashboard.filters.selectedYear ? String(props.dashboard.filters.selectedYear) : 'All years');
 
 function resetFilters() {
-    state.year = String(props.dashboard.filters.selectedYear);
+    state.year = '';
     state.barangayId = '';
     apply();
 }
@@ -108,7 +109,7 @@ const summaryCards = computed(() => {
             iconBg: 'bg-[#ffefb8]',
             iconColor: 'text-[#c76900]',
             progress: 'bg-[#ffe59a]',
-            meta: `Queued application reviews for ${props.dashboard.filters.selectedYear}`,
+            meta: `Queued application reviews for ${selectedYearLabel.value.toLowerCase()}`,
             href: props.dashboard.summaryCardLinks?.pendingApplications ?? null,
         },
         {
@@ -167,7 +168,7 @@ const summaryCards = computed(() => {
                 iconBg: 'bg-[#c7f4ff]',
                 iconColor: 'text-[#00749b]',
                 progress: 'bg-[#c2f1fd]',
-                meta: `Fee schedules enabled for ${props.dashboard.filters.selectedYear}`,
+                meta: props.dashboard.filters.selectedYear ? `Fee schedules enabled for ${selectedYearLabel.value}` : 'Fee schedules across all recorded years',
                 href: props.dashboard.summaryCardLinks?.activeFeeSchedules ?? null,
             },
         );
@@ -373,13 +374,14 @@ const linePoints = computed(() => {
                         </svg>
                         Live System Overview
                     </div>
-                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.25rem]">Registry Overview for {{ dashboard.filters.selectedYear }}</h2>
+                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.25rem]">Registry Overview for {{ selectedYearLabel }}</h2>
                 </div>
 
                 <form class="grid w-full max-w-[470px] gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-5 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
                     <label class="space-y-2">
                         <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
                         <select v-model="state.year" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                            <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
@@ -410,7 +412,7 @@ const linePoints = computed(() => {
                     <rect x="3" y="5" width="18" height="16" rx="2" />
                     <path d="M16 3v4M8 3v4M3 11h18" />
                 </svg>
-                {{ dashboard.filters.selectedYear }}
+                {{ selectedYearLabel }}
             </span>
             <span class="inline-flex items-center gap-2 rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-xl font-semibold text-[#102533]">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f5b46]" fill="none" stroke="currentColor" stroke-width="2">
@@ -530,7 +532,7 @@ const linePoints = computed(() => {
                         Registration Growth Trend
                     </h3>
                     <div class="flex items-center gap-2 text-sm font-medium text-[#4d5963]">
-                        <span>Monthly ({{ dashboard.filters.selectedYear }})</span>
+                        <span>Monthly ({{ selectedYearLabel }})</span>
                         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 17 9 11l4 4 8-10" />
                         </svg>
@@ -769,7 +771,7 @@ const linePoints = computed(() => {
                 <article v-if="isAdmin" class="h-fit rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
                     <div class="flex items-center justify-between gap-4">
                         <h3 class="text-[1.15rem] font-medium text-[#14202c]">Fee Schedules</h3>
-                        <span class="rounded-xl bg-[#1d5f4f] px-4 py-1.5 text-sm font-bold text-[#bfe5d2]">{{ dashboard.filters.selectedYear }}</span>
+                        <span class="rounded-xl bg-[#1d5f4f] px-4 py-1.5 text-sm font-bold text-[#bfe5d2]">{{ selectedYearLabel }}</span>
                     </div>
 
                     <div v-if="feeScheduleRows.length" class="mt-8 space-y-5">

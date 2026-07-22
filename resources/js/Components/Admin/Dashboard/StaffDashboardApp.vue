@@ -11,9 +11,10 @@ const props = defineProps({
 });
 
 const { apply, selectedBarangayName, state } = useAdminDashboardFilters(props.dashboard.filters);
+const selectedYearLabel = computed(() => props.dashboard.filters.selectedYear ? String(props.dashboard.filters.selectedYear) : 'All years');
 
 function resetFilters() {
-    state.year = String(props.dashboard.filters.selectedYear);
+    state.year = '';
     state.barangayId = '';
     apply();
 }
@@ -134,7 +135,7 @@ function iconForKey(key) {
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-[#e6f5da]">
                         Staff Workspace
                     </div>
-                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.2rem]">Assigned work dashboard for {{ dashboard.filters.selectedYear }}</h2>
+                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.2rem]">Assigned work dashboard for {{ selectedYearLabel }}</h2>
                     <div class="mt-6 flex flex-wrap gap-3">
                         <Link
                             :href="dashboard.actions.tasksUrl"
@@ -149,6 +150,7 @@ function iconForKey(key) {
                     <label class="space-y-2">
                         <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
                         <select v-model="state.year" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                            <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
@@ -175,7 +177,7 @@ function iconForKey(key) {
         <div class="flex flex-wrap items-center gap-3">
             <span class="text-[1.05rem] font-bold uppercase tracking-wide text-[#344654]">Active Filters:</span>
             <span class="inline-flex items-center rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-lg font-semibold text-[#102533]">
-                {{ dashboard.filters.selectedYear }}
+                {{ selectedYearLabel }}
             </span>
             <span class="inline-flex items-center rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-lg font-semibold text-[#102533]">
                 {{ selectedBarangayName }}

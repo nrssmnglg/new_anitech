@@ -2,7 +2,7 @@ import { computed, reactive } from 'vue';
 
 export function useAdminDashboardFilters(filters) {
     const state = reactive({
-        year: String(filters.selectedYear ?? ''),
+        year: filters.selectedYear ? String(filters.selectedYear) : '',
         barangayId: filters.selectedBarangayId ? String(filters.selectedBarangayId) : '',
     });
 

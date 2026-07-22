@@ -50,7 +50,7 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $isAdmin = $request->user()?->hasRole(User::ROLE_ADMIN) ?? false;
-        $selectedYear = $request->integer('year') ?: now()->year;
+        $selectedYear = $request->filled('year') ? $request->integer('year') : null;
         $barangays = Barangay::query()
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -199,7 +199,7 @@ class DashboardController extends Controller
         return back()->with('success', 'Quick action completed.');
     }
 
-    private function summary(int $year, ?int $barangayId, bool $isAdmin): array
+    private function summary(?int $year, ?int $barangayId, bool $isAdmin): array
     {
         $farmers = $this->farmerQuery($year, $barangayId);
         $pendingApplications = $this->membershipApplicationQuery($year, $barangayId)
@@ -223,7 +223,7 @@ class DashboardController extends Controller
             'activeMemberTypes' => MemberType::query()->where('status', 'Active')->count(),
             'activeFeeSchedules' => $isAdmin
                 ? FeeSchedule::query()
-                    ->where('year', $year)
+                    ->when($year !== null, fn (Builder $query) => $query->where('year', $year))
                     ->where('is_active', true)
                     ->count()
                 : 0,
@@ -236,10 +236,11 @@ class DashboardController extends Controller
         ];
     }
 
-    private function summaryCardLinks(Request $request, int $year, ?int $barangayId): array
+    private function summaryCardLinks(Request $request, ?int $year, ?int $barangayId): array
     {
         $isAdmin = $request->user()?->hasRole(User::ROLE_ADMIN) ?? false;
         $baseFilters = array_filter([
+            'year' => $year,
             'barangay_id' => $barangayId,
         ], fn ($value) => $value !== null && $value !== '');
 
@@ -248,18 +249,17 @@ class DashboardController extends Controller
             'activeFarmers' => route('admin.farmers.index', [...$baseFilters, 'status' => FarmerStatus::ACTIVE->value]),
             'pendingApplications' => route('admin.membership-applications.index', [
                 'status' => 'pending',
-                'year' => $year,
                 ...$baseFilters,
             ]),
             'inactiveFarmers' => route('admin.farmers.index', [...$baseFilters, 'status' => FarmerStatus::INACTIVE->value]),
             'activeBarangays' => $isAdmin ? route('admin.barangays.index') : null,
             'activeAssociations' => $isAdmin ? route('admin.associations.index', $baseFilters) : null,
             'activeOfficeUsers' => $isAdmin ? route('admin.users.index') : null,
-            'activeFeeSchedules' => $isAdmin ? route('admin.fee-schedules.index', ['year' => $year]) : null,
+            'activeFeeSchedules' => $isAdmin ? route('admin.fee-schedules.index', array_filter(['year' => $year], fn ($value) => $value !== null && $value !== '')) : null,
         ];
     }
 
-    private function membershipStatusBreakdown(int $year, ?int $barangayId): array
+    private function membershipStatusBreakdown(?int $year, ?int $barangayId): array
     {
         $farmers = $this->farmerQuery($year, $barangayId)
             ->withCount([
@@ -288,7 +288,7 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function registrationTrend(int $year, ?int $barangayId): array
+    private function registrationTrend(?int $year, ?int $barangayId): array
     {
         $monthly = collect(range(1, 12))->mapWithKeys(fn (int $month): array => [
             $month => [
@@ -301,13 +301,13 @@ class DashboardController extends Controller
         $rows = Farmer::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
             ->selectRaw('MONTH(COALESCE(registered_at, created_at)) as month_value, COUNT(*) as total_count')
-            ->where(function (Builder $query) use ($year): void {
-                $query->whereYear('registered_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->where(function (Builder $builder) use ($year): void {
+                $builder->whereYear('registered_at', $year)
                     ->orWhere(function (Builder $fallbackQuery) use ($year): void {
                         $fallbackQuery->whereNull('registered_at')
                             ->whereYear('created_at', $year);
                     });
-            })
+            }))
             ->groupBy('month_value')
             ->orderBy('month_value')
             ->get();
@@ -327,20 +327,24 @@ class DashboardController extends Controller
         }
 
         $currentTotal = (int) $monthly->sum('total');
-        $previousTotal = (int) Farmer::query()
-            ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
-            ->where(function (Builder $query) use ($year): void {
-                $query->whereYear('registered_at', $year - 1)
-                    ->orWhere(function (Builder $fallbackQuery) use ($year): void {
-                        $fallbackQuery->whereNull('registered_at')
-                            ->whereYear('created_at', $year - 1);
-                    });
-            })
-            ->count();
+        $previousTotal = $year === null
+            ? 0
+            : (int) Farmer::query()
+                ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
+                ->where(function (Builder $query) use ($year): void {
+                    $query->whereYear('registered_at', $year - 1)
+                        ->orWhere(function (Builder $fallbackQuery) use ($year): void {
+                            $fallbackQuery->whereNull('registered_at')
+                                ->whereYear('created_at', $year - 1);
+                        });
+                })
+                ->count();
 
-        $yearOverYearPercent = $previousTotal > 0
-            ? round((($currentTotal - $previousTotal) / $previousTotal) * 100)
-            : ($currentTotal > 0 ? 100 : 0);
+        $yearOverYearPercent = $year === null
+            ? 0
+            : ($previousTotal > 0
+                ? round((($currentTotal - $previousTotal) / $previousTotal) * 100)
+                : ($currentTotal > 0 ? 100 : 0));
 
         return [
             'series' => array_values($monthly->all()),
@@ -350,9 +354,10 @@ class DashboardController extends Controller
         ];
     }
 
-    private function staffOperations(int $year, ?int $barangayId): array
+    private function staffOperations(?int $year, ?int $barangayId): array
     {
         $baseFilters = array_filter([
+            'year' => $year,
             'barangay_id' => $barangayId,
         ], fn ($value) => $value !== null && $value !== '');
 
@@ -377,7 +382,6 @@ class DashboardController extends Controller
                 'description' => 'New membership applications waiting for review and encoding.',
                 'href' => route('admin.membership-applications.index', [
                     'status' => 'pending',
-                    'year' => $year,
                     ...$baseFilters,
                 ]),
                 'accent' => 'emerald',
@@ -388,7 +392,7 @@ class DashboardController extends Controller
                 'count' => $renewalQueueCount,
                 'description' => 'Active farmers who still need renewal for the selected year.',
                 'href' => route('admin.renewals.index', [
-                    'queue_year' => $year,
+                    'queue_year' => $year ?? now()->year,
                     ...$baseFilters,
                 ]),
                 'accent' => 'lime',
@@ -400,7 +404,7 @@ class DashboardController extends Controller
                 'description' => 'Renewal records still pending approval or payment processing.',
                 'href' => route('admin.renewals.index', [
                     'section' => 'records',
-                    'record_year' => $year,
+                    'record_year' => $year ?? now()->year,
                     'record_status' => 'pending',
                     ...$baseFilters,
                 ]),
@@ -413,7 +417,6 @@ class DashboardController extends Controller
                 'description' => 'Farmer messages that still need a response from office staff.',
                 'href' => route('admin.queries.index', [
                     'status' => 'New',
-                    'year' => $year,
                     ...$baseFilters,
                 ]),
                 'accent' => 'sky',
@@ -424,7 +427,6 @@ class DashboardController extends Controller
                 'count' => $mortuaryQueueCount,
                 'description' => 'Eligible mortuary records waiting to be filed or processed.',
                 'href' => route('admin.mortuary-claims.index', [
-                    'year' => $year,
                     ...$baseFilters,
                 ]),
                 'accent' => 'rose',
@@ -432,7 +434,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function staffWorkspace(Request $request, int $year, ?int $barangayId): array
+    private function staffWorkspace(Request $request, ?int $year, ?int $barangayId): array
     {
         $user = $request->user();
         $userId = $user?->id;
@@ -454,7 +456,7 @@ class DashboardController extends Controller
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->whereYear('created_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('created_at', $year))
             ->whereIn('status', ['New', 'In Progress', 'Escalated'])
             ->whereHas('responses', fn (Builder $query) => $query->where('responded_by', $userId))
             ->count();
@@ -464,7 +466,7 @@ class DashboardController extends Controller
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->whereYear('occurred_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('occurred_at', $year))
             ->count();
 
         $mobileInquiriesNotAnswered = Query::query()
@@ -472,7 +474,7 @@ class DashboardController extends Controller
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->whereYear('created_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('created_at', $year))
             ->where('status', 'New')
             ->count();
 
@@ -611,7 +613,7 @@ class DashboardController extends Controller
                     'description' => 'Mobile renewal submissions still pending review in the current staff workflow.',
                     'href' => route('admin.renewals.index', [
                         'section' => 'records',
-                        'record_year' => $year,
+                        'record_year' => $year ?? now()->year,
                         'record_status' => 'pending',
                         'record_source' => 'mobile',
                         ...$baseFilters,
@@ -626,11 +628,12 @@ class DashboardController extends Controller
         ];
     }
 
-    private function adminOperations(int $year, ?int $barangayId): array
+    private function adminOperations(?int $year, ?int $barangayId): array
     {
         $today = now();
         $monthStart = $today->copy()->startOfMonth();
         $monthEnd = $today->copy()->endOfMonth();
+        $selectedYear = $year ?? (int) $today->year;
 
         $pendingApplicationsToday = MembershipApplication::query()
             ->whereIn('status', $this->databaseStatusesForPendingQueue())
@@ -641,8 +644,8 @@ class DashboardController extends Controller
             ->count();
 
         $renewalsDueThisMonth = $this->renewalQueueQuery($year, $barangayId)
-            ->whereHas('memberType.feeSchedules', function (Builder $query) use ($year, $monthStart, $monthEnd): void {
-                $query->where('year', $year)
+            ->whereHas('memberType.feeSchedules', function (Builder $query) use ($selectedYear, $monthStart, $monthEnd): void {
+                $query->where('year', $selectedYear)
                     ->where('is_active', true)
                     ->whereBetween('renewal_deadline', [$monthStart->toDateString(), $monthEnd->toDateString()]);
             })
@@ -728,7 +731,7 @@ class DashboardController extends Controller
                     'label' => 'Renewals Due This Month',
                     'value' => $renewalsDueThisMonth,
                     'meta' => 'Active farmers whose renewal deadline falls within the current month.',
-                    'href' => route('admin.renewals.index', ['queue_year' => $year]),
+                    'href' => route('admin.renewals.index', ['queue_year' => $selectedYear]),
                     'tone' => 'lime',
                 ],
                 [
@@ -765,7 +768,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function memberTypeBreakdown(int $year, ?int $barangayId): array
+    private function memberTypeBreakdown(?int $year, ?int $barangayId): array
     {
         return MemberType::query()
             ->withCount(['farmers as filtered_farmers_count' => function (Builder $query) use ($year, $barangayId): void {
@@ -786,7 +789,7 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function topBarangays(int $year, ?int $barangayId): array
+    private function topBarangays(?int $year, ?int $barangayId): array
     {
         return Barangay::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->whereKey($barangayId))
@@ -805,7 +808,7 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function topAssociations(int $year, ?int $barangayId): array
+    private function topAssociations(?int $year, ?int $barangayId): array
     {
         return Association::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
@@ -824,16 +827,18 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function feeSchedules(int $year): array
+    private function feeSchedules(?int $year): array
     {
         return FeeSchedule::query()
             ->with('memberType:id,name')
-            ->where('year', $year)
+            ->when($year !== null, fn (Builder $query) => $query->where('year', $year))
             ->orderByDesc('is_active')
+            ->orderByDesc('year')
             ->orderBy('member_type_id')
             ->get()
             ->map(fn (FeeSchedule $schedule): array => [
                 'memberType' => $schedule->memberType?->name ?? 'Unassigned',
+                'year' => (int) $schedule->year,
                 'membershipFee' => (float) $schedule->membership_fee,
                 'annualDue' => (float) $schedule->annual_due,
                 'mortuaryFee' => (float) $schedule->mortuary_fee,
@@ -844,7 +849,7 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function recentFarmers(int $year, ?int $barangayId): array
+    private function recentFarmers(?int $year, ?int $barangayId): array
     {
         return $this->farmerQuery($year, $barangayId)
             ->withCount([
@@ -909,7 +914,7 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function availableYears(int $selectedYear): array
+    private function availableYears(?int $selectedYear): array
     {
         $years = collect([
             now()->year,
@@ -937,80 +942,86 @@ class DashboardController extends Controller
             ->values()
             ->all();
 
-        return $years === [] ? [$selectedYear] : $years;
+        return $years === [] && $selectedYear !== null ? [$selectedYear] : $years;
     }
 
-    private function farmerQuery(int $year, ?int $barangayId): Builder
+    private function farmerQuery(?int $year, ?int $barangayId): Builder
     {
         return Farmer::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
-            ->where(function (Builder $query) use ($year): void {
-                $query->whereYear('registered_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->where(function (Builder $builder) use ($year): void {
+                $builder->whereYear('registered_at', $year)
                     ->orWhere(function (Builder $fallbackQuery) use ($year): void {
                         $fallbackQuery->whereNull('registered_at')
                             ->whereYear('created_at', $year);
                     });
-            });
+            }));
     }
 
-    private function membershipApplicationQuery(int $year, ?int $barangayId): Builder
+    private function membershipApplicationQuery(?int $year, ?int $barangayId): Builder
     {
         return MembershipApplication::query()
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->where(function (Builder $query) use ($year): void {
-                $query->whereYear('submitted_at', $year)
+            ->when($year !== null, fn (Builder $query) => $query->where(function (Builder $builder) use ($year): void {
+                $builder->whereYear('submitted_at', $year)
                     ->orWhere(function (Builder $fallbackQuery) use ($year): void {
                         $fallbackQuery->whereNull('submitted_at')
                             ->whereYear('created_at', $year);
                     });
-            });
+            }));
     }
 
-    private function renewalQueueQuery(int $year, ?int $barangayId): Builder
+    private function renewalQueueQuery(?int $year, ?int $barangayId): Builder
     {
+        $selectedYear = $year ?? now()->year;
+
         return Farmer::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
             ->whereNull('inactive_at')
-            ->where(function (Builder $query) use ($year): void {
+            ->where(function (Builder $query) use ($selectedYear): void {
                 $query
                     ->where('membership_status', MembershipStatus::ACTIVE->value)
-                    ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year - 1));
+                    ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $selectedYear - 1));
             })
-            ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year));
+            ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $selectedYear));
     }
 
-    private function renewalRecordQuery(int $year, ?int $barangayId): Builder
+    private function renewalRecordQuery(?int $year, ?int $barangayId): Builder
     {
         return RenewalRequest::query()
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->where('year', $year);
+            ->when($year !== null, fn (Builder $query) => $query->where('year', $year));
     }
 
-    private function queryQueueQuery(int $year, ?int $barangayId): Builder
+    private function queryQueueQuery(?int $year, ?int $barangayId): Builder
     {
         return Query::query()
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->whereYear('created_at', $year);
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('created_at', $year));
     }
 
-    private function mortuaryQueueQuery(int $year, ?int $barangayId): Builder
+    private function mortuaryQueueQuery(?int $year, ?int $barangayId): Builder
     {
         return MortuaryClaim::query()
             ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
                 $query->whereHas('membershipLedger.membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
-            ->whereYear('claim_date', $year)
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('claim_date', $year))
             ->where('status', 'Pending');
     }
 
-    private function applyFarmerYearFilter(Builder $query, int $year): void
+    private function applyFarmerYearFilter(Builder $query, ?int $year): void
     {
+        if ($year === null) {
+            return;
+        }
+
         $query->where(function (Builder $builder) use ($year): void {
             $builder->whereYear('registered_at', $year)
                 ->orWhere(function (Builder $fallbackQuery) use ($year): void {
@@ -1025,7 +1036,7 @@ class DashboardController extends Controller
         return $this->applyFarmerStatusFilterForYear($query, $status, now()->year);
     }
 
-    private function applyFarmerStatusFilterForYear(Builder $query, FarmerStatus $status, int $year): Builder
+    private function applyFarmerStatusFilterForYear(Builder $query, FarmerStatus $status, ?int $year): Builder
     {
         return match ($status) {
             FarmerStatus::ACTIVE => $query
@@ -1050,7 +1061,7 @@ class DashboardController extends Controller
         };
     }
 
-    private function dashboardFarmerStatusForYear(Farmer $farmer, int $year): FarmerStatus
+    private function dashboardFarmerStatusForYear(Farmer $farmer, ?int $year): FarmerStatus
     {
         if ($farmer->inactive_at !== null) {
             return str_contains(strtolower((string) $farmer->inactive_reason), 'deceas')
@@ -1065,8 +1076,18 @@ class DashboardController extends Controller
         return FarmerStatus::PENDING;
     }
 
-    private function applySettledMembershipYearConstraint(Builder $query, int $year): void
+    private function applySettledMembershipYearConstraint(Builder $query, ?int $year): void
     {
+        if ($year === null) {
+            $query->where(function (Builder $ledgerBuilder): void {
+                $ledgerBuilder
+                    ->where('membership_ledgers.amount_paid', '>', 0)
+                    ->orWhereIn('membership_ledgers.payment_status', ['Paid', 'Overpaid', 'Waived']);
+            });
+
+            return;
+        }
+
         $query
             ->where('membership_ledgers.year', $year)
             ->where(function (Builder $ledgerBuilder): void {
