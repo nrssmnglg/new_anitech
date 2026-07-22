@@ -96,6 +96,7 @@ class PaymentGatewayService
         $reference = $this->resolveReference($data);
         $amount = round((float) ($data['amount'] ?? $data['amount_due'] ?? 0), 2);
         $billing = $this->normalize($data['billing'] ?? []);
+        $metadata = is_array($data['metadata'] ?? null) ? $data['metadata'] : [];
         $name = trim((string) ($billing['name'] ?? ''));
         $email = trim((string) ($billing['email'] ?? ''));
         $phone = trim((string) ($billing['phone'] ?? ''));
@@ -112,6 +113,9 @@ class PaymentGatewayService
                     'capture_type' => 'automatic',
                     'currency' => $data['currency'] ?? 'PHP',
                     'description' => $data['description'] ?? null,
+                    'metadata' => array_merge($metadata, [
+                        'reference_no' => $reference,
+                    ]),
                     'payment_method_allowed' => ['qrph'],
                 ], fn (mixed $value): bool => $value !== null),
             ],
@@ -168,7 +172,7 @@ class PaymentGatewayService
             'qr_code_id' => data_get($attachResponse, 'data.attributes.next_action.code.id'),
             'qr_label' => data_get($attachResponse, 'data.attributes.next_action.code.label'),
             'expires_at' => CarbonImmutable::now()->addSeconds($expirySeconds)->toIso8601String(),
-            'metadata' => data_get($attachResponse, 'data.attributes.metadata', $data['metadata'] ?? []),
+            'metadata' => data_get($attachResponse, 'data.attributes.metadata', $metadata),
         ];
     }
 
