@@ -37,7 +37,7 @@ services:
       - key: APP_MAINTENANCE_STORE
         value: database
       - key: RUN_MIGRATIONS_ON_BOOT
-        value: "false"
+        value: "true"
 
   - type: worker
     name: anitech-worker
