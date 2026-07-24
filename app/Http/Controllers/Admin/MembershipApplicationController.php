@@ -275,6 +275,13 @@ class MembershipApplicationController extends Controller
                 ] : null,
             ] : null,
             'memberTypes' => $memberTypes,
+            'memberTypePreview' => [
+                'default_code' => MemberTypeCode::NM->value,
+                'default_label' => MemberTypeCode::NM->label(),
+                'senior_code' => MemberTypeCode::NSC->value,
+                'senior_label' => MemberTypeCode::NSC->label(),
+                'senior_age' => 60,
+            ],
             'formDefaults' => [
                 'source' => 'walk_in',
                 'reapply_from_application_id' => old('reapply_from_application_id', $reapplyApplication?->id),
@@ -430,7 +437,9 @@ class MembershipApplicationController extends Controller
         $requiredDocuments = $documents->where('is_required', true)->values();
         $verifiedRequiredCount = $requiredDocuments->filter(fn (FarmerDocument $document) => $document->verification_status === DocumentVerificationStatus::VERIFIED)->count();
         $documentsComplete = $requiredDocuments->isEmpty() || $verifiedRequiredCount === $requiredDocuments->count();
-        $missingDocumentCount = $requiredDocuments->filter(fn (FarmerDocument $document) => ! (bool) $document->getAttribute('upload_present'))->count();
+        $missingDocumentCount = $requiredDocuments->filter(
+            fn (FarmerDocument $document) => ! (bool) $document->getAttribute('ready_for_verification')
+        )->count();
         $expiredDocumentCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('is_expired'))->count();
         $resubmissionCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('needs_resubmission'))->count();
         $payments = $assessment?->payments?->sortByDesc('paid_at') ?? collect();

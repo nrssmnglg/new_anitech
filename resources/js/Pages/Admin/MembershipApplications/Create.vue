@@ -15,6 +15,7 @@ const props = defineProps({
     nextFarmerCode: { type: String, required: true },
     requiredDocuments: { type: Array, required: true },
     reapplyApplication: { type: Object, default: null },
+    memberTypes: { type: Array, required: true },
     memberTypePreview: { type: Object, required: true },
     formDefaults: { type: Object, required: true },
     storeUrl: { type: String, required: true },
@@ -37,6 +38,7 @@ const form = useForm({
     sex: props.formDefaults.sex || '',
     civil_status: props.formDefaults.civil_status || '',
     mobile_number: props.formDefaults.mobile_number || '',
+    member_type_id: props.formDefaults.member_type_id || '',
     barangay_id: props.formDefaults.barangay_id || '',
     association_id: props.formDefaults.association_id || '',
     address: props.formDefaults.address || '',
@@ -76,6 +78,19 @@ const memberTypeLabel = computed(() => {
     return `${props.memberTypePreview.default_code} - ${props.memberTypePreview.default_label}`;
 });
 
+const resolvedMemberTypeId = computed(() => {
+    if (form.member_type_id) {
+        return String(form.member_type_id);
+    }
+
+    const age = calculateAge(form.birth_date);
+    const targetCode = age !== null && age >= Number(props.memberTypePreview.senior_age || 60)
+        ? props.memberTypePreview.senior_code
+        : props.memberTypePreview.default_code;
+
+    return String(props.memberTypes.find((type) => type.code === targetCode)?.id || '');
+});
+
 function calculateAge(birthDateValue) {
     if (!birthDateValue) {
         return null;
@@ -106,13 +121,20 @@ function syncAssociation() {
     }
 }
 
+function syncMemberType() {
+    form.member_type_id = resolvedMemberTypeId.value;
+}
+
 function submit() {
+    syncMemberType();
     form.post(props.storeUrl, {
         preserveScroll: true,
     });
 }
 
 const reapplyApplication = computed(() => props.reapplyApplication);
+
+syncMemberType();
 </script>
 
 <template>

@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
             MemberTypeSeeder::class,
             FeeScheduleSeeder::class,
             SampleQuerySeeder::class,
-            FarmerPwaDemoAccountSeeder::class,
         ]);
 
         User::query()->updateOrCreate(
