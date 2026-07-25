@@ -320,19 +320,19 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <div v-if="showNotifications" class="fixed inset-0 z-50 bg-[#08130f]/38 backdrop-blur-[2px]" @click="showNotifications = false">
+        <div v-if="showNotifications" class="fixed inset-0 z-50 bg-[#08130f]/32 backdrop-blur-[2px]" @click="showNotifications = false">
             <aside class="admin-notification-panel absolute right-0 top-0 flex h-full w-full max-w-[460px] flex-col border-l border-[#dfe7e2] bg-[#fcfdfc] shadow-[0_24px_80px_rgba(15,23,42,0.18)]" @click.stop>
-                <div class="border-b border-[#e4ebe7] bg-white px-5 py-5 sm:px-6">
+                <div class="border-b border-[#e4ebe7] bg-white px-4 py-4 sm:px-5">
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0">
-                            <div class="inline-flex items-center gap-2 rounded-full border border-[#dce7e1] bg-[#f5f8f6] px-3 py-1.5">
+                            <div class="inline-flex items-center gap-2 rounded-full border border-[#dce7e1] bg-[#f5f8f6] px-2.5 py-1">
                                 <span class="h-2 w-2 rounded-full bg-[#0f5b46]"></span>
-                                <span class="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#61756b]">Admin Inbox</span>
+                                <span class="text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#61756b]">Admin Inbox</span>
                             </div>
-                            <h2 class="mt-3 text-[1.45rem] font-black tracking-[-0.04em] text-stone-900">Notifications</h2>
-                            <p class="mt-1 text-[0.82rem] text-stone-500">{{ unreadCount }} unread</p>
+                            <h2 class="mt-2.5 text-[1.2rem] font-black tracking-[-0.03em] text-stone-900">Notifications</h2>
+                            <p class="mt-1 text-[0.78rem] text-stone-500">{{ unreadCount }} unread</p>
                         </div>
-                        <button type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-stone-500 transition hover:bg-stone-100" @click="showNotifications = false">
+                        <button type="button" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-stone-500 transition hover:bg-stone-100" @click="showNotifications = false">
                         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="m6 6 12 12" />
                             <path d="M18 6 6 18" />
@@ -341,58 +341,58 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between border-b border-[#e8edea] bg-[#fcfdfc] px-5 py-4 sm:px-6">
+                <div class="flex items-center justify-between border-b border-[#e8edea] bg-[#fcfdfc] px-4 py-3 sm:px-5">
                     <div class="flex items-center gap-3">
-                        <button type="button" class="text-sm font-bold text-[#0f5b46] transition hover:text-[#0b4636]" @click="refreshNotifications">
+                        <button type="button" class="text-[0.82rem] font-bold text-[#0f5b46] transition hover:text-[#0b4636]" @click="refreshNotifications">
                             Refresh
                         </button>
-                        <span v-if="loadingNotifications && hasLoadedNotifications" class="text-xs font-semibold text-stone-400">
+                        <span v-if="loadingNotifications && hasLoadedNotifications" class="text-[0.72rem] font-semibold text-stone-400">
                             Syncing...
                         </span>
                     </div>
-                    <button type="button" class="text-sm font-bold text-[#0f5b46] transition hover:text-[#0b4636]" :disabled="notificationSummary.unread <= 0" @click="markAllNotificationsRead">
+                    <button type="button" class="text-[0.82rem] font-bold text-[#0f5b46] transition hover:text-[#0b4636] disabled:cursor-not-allowed disabled:text-stone-300" :disabled="notificationSummary.unread <= 0" @click="markAllNotificationsRead">
                         Mark all read
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
-                    <div v-if="loadingNotifications && !hasLoadedNotifications" class="rounded-2xl bg-[#f8faf9] px-4 py-10 text-center text-sm text-stone-500">
+                <div class="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+                    <div v-if="loadingNotifications && !hasLoadedNotifications" class="rounded-2xl bg-[#f8faf9] px-4 py-8 text-center text-[0.82rem] text-stone-500">
                         Loading notifications...
                     </div>
 
-                    <div v-else-if="notifications.length" class="space-y-3">
-                        <article v-for="notification in notifications" :key="notification.recipientId" class="rounded-[1.55rem] border border-[#e4ebe7] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition hover:border-[#d5e2db] hover:shadow-[0_14px_34px_rgba(15,23,42,0.07)] sm:p-5">
+                    <div v-else-if="notifications.length" class="space-y-2.5">
+                        <article v-for="notification in notifications" :key="notification.recipientId" class="rounded-[1.3rem] border border-[#e4ebe7] bg-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition hover:border-[#d5e2db] hover:shadow-[0_14px_34px_rgba(15,23,42,0.07)] sm:p-4">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="rounded-full bg-[#edf3ef] px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#4e655a]">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="rounded-full bg-[#edf3ef] px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em] text-[#4e655a]">
                                             {{ notification.moduleLabel }}
                                         </span>
-                                        <span v-if="notification.sourceLabel" class="rounded-full bg-[#f4f6f5] px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.16em] text-stone-500">
+                                        <span v-if="notification.sourceLabel" class="rounded-full bg-[#f4f6f5] px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em] text-stone-500">
                                             {{ notification.sourceLabel }}
                                         </span>
-                                        <span :class="notification.isRead ? 'bg-stone-200 text-stone-600' : 'bg-[#ccefe1] text-[#0f5b46]'" class="rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.16em]">
+                                        <span :class="notification.isRead ? 'bg-stone-200 text-stone-600' : 'bg-[#ccefe1] text-[#0f5b46]'" class="rounded-full px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em]">
                                             {{ notification.isRead ? 'Read' : 'Unread' }}
                                         </span>
                                     </div>
-                                    <h3 class="mt-3 text-[0.95rem] font-black leading-5 tracking-[-0.01em] text-stone-900">{{ notification.subject }}</h3>
-                                    <p class="mt-1.5 text-[0.84rem] leading-6 text-stone-600">{{ notification.message }}</p>
-                                    <p class="mt-3 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-stone-400">{{ notification.createdAt }}</p>
+                                    <h3 class="mt-2.5 text-[0.88rem] font-black leading-5 tracking-[-0.01em] text-stone-900">{{ notification.subject }}</h3>
+                                    <p class="mt-1 text-[0.78rem] leading-5 text-stone-600">{{ notification.message }}</p>
+                                    <p class="mt-2.5 text-[0.66rem] font-bold uppercase tracking-[0.08em] text-stone-400">{{ notification.createdAt }}</p>
                                 </div>
                             </div>
 
-                            <div class="mt-4 flex flex-wrap gap-2.5">
+                            <div class="mt-3 flex flex-wrap gap-2">
                                 <button
                                     v-if="!notification.isRead"
                                     type="button"
-                                    class="inline-flex h-9 items-center justify-center rounded-xl border border-[#d7e0db] px-3 text-[0.82rem] font-bold text-stone-600 transition hover:bg-[#f4f7f5]"
+                                    class="inline-flex h-8 items-center justify-center rounded-lg border border-[#d7e0db] px-3 text-[0.76rem] font-bold text-stone-600 transition hover:bg-[#f4f7f5]"
                                     @click="markNotificationRead(notification)"
                                 >
                                     Mark Read
                                 </button>
                                 <button
                                     type="button"
-                                    class="inline-flex h-10 items-center justify-center rounded-2xl bg-[#0f5b46] px-4 text-[0.82rem] font-black text-white transition hover:bg-[#0b4636]"
+                                    class="inline-flex h-9 items-center justify-center rounded-xl bg-[#0f5b46] px-4 text-[0.76rem] font-black text-white transition hover:bg-[#0b4636]"
                                     @click="openNotification(notification)"
                                 >
                                     {{ notification.targetUrl ? 'Open' : 'Acknowledge' }}
@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
                         </article>
                     </div>
 
-                    <div v-else class="rounded-2xl bg-[#f8faf9] px-4 py-10 text-center text-sm text-stone-500">
+                    <div v-else class="rounded-2xl bg-[#f8faf9] px-4 py-8 text-center text-[0.82rem] text-stone-500">
                         No notifications found for this account.
                     </div>
                 </div>
