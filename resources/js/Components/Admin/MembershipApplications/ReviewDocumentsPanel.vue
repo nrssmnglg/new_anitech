@@ -7,9 +7,10 @@ defineProps({
     documents: { type: Array, required: true },
     documentRemarks: { type: Object, required: true },
     features: { type: Object, required: true },
+    urls: { type: Object, required: true },
 });
 
-defineEmits(['document-action']);
+defineEmits(['document-action', 'initialize-checklist']);
 
 const previewDocument = ref(null);
 const previewLoading = ref(false);
@@ -111,6 +112,25 @@ function alertBadge(document) {
         </div>
 
         <div class="space-y-4 px-5 py-5">
+            <div
+                v-if="flow.canInitializeChecklist"
+                class="rounded-[20px] border border-[#dbe2de] bg-[#fbfdfc] px-4 py-5"
+            >
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-[#1a2420]">Document checklist has not started yet.</p>
+                        <p class="mt-1 text-sm text-[#5f6c67]">Start intake first to generate the required document rows for this walk-in application.</p>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-xl bg-[#003629] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]"
+                        @click="$emit('initialize-checklist')"
+                    >
+                        Start Intake Checklist
+                    </button>
+                </div>
+            </div>
+
             <div class="grid gap-3 md:grid-cols-3">
                 <div class="rounded-[18px] border border-[#dfe5e1] bg-[#f7faf8] px-4 py-4">
                     <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Missing Documents</p>
@@ -142,6 +162,7 @@ function alertBadge(document) {
 
             <article
                 v-for="document in documents"
+                v-show="flow.checklistInitialized"
                 :key="document.id"
                 class="rounded-[24px] border border-[#e3eae6] bg-[linear-gradient(135deg,_#ffffff_0%,_#f8fbf9_100%)] p-4 shadow-[0_8px_22px_rgba(15,23,42,0.04)]"
             >

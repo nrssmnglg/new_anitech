@@ -442,6 +442,10 @@ class DashboardController extends Controller
         $baseFilters = array_filter([
             'barangay_id' => $barangayId,
         ], fn ($value) => $value !== null && $value !== '');
+        $assignedTaskFilters = array_filter([
+            'barangay_id' => $barangayId,
+            'assigned_to' => $userId,
+        ], fn ($value) => $value !== null && $value !== '');
         $myPendingApplications = $this->membershipApplicationQuery($year, $barangayId)
             ->where('reviewed_by', $userId)
             ->whereIn('status', $this->databaseStatusesForPendingQueue())

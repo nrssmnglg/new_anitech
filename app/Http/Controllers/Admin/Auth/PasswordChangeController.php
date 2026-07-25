@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -29,7 +30,18 @@ class PasswordChangeController extends Controller
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(8),
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    $user = $request->user();
+
+                    if ($user !== null && Hash::check((string) $value, (string) $user->password)) {
+                        $fail('The new password must be different from the current password.');
+                    }
+                },
+            ],
         ]);
 
         /** @var User $user */

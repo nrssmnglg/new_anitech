@@ -80,6 +80,12 @@ function submitDocumentAction(document, action) {
     });
 }
 
+function initializeChecklist() {
+    router.post(props.urls.initializeChecklist, {}, {
+        preserveScroll: true,
+    });
+}
+
 function submitPayment() {
     paymentForm.post(props.urls.recordPayment, {
         preserveScroll: true,
@@ -120,20 +126,15 @@ function submitRejection() {
 
             <RecordWarningsPanel :warnings="recordWarnings" :section-targets="warningSectionTargets" />
 
-            <section class="grid gap-4 md:grid-cols-3">
+            <section class="grid gap-4 md:grid-cols-2">
                 <article class="rounded-[22px] border border-[#dbe2de] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Last Updated By</p>
-                    <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.lastUpdatedBy || 'System' }}</p>
+                    <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
                     <p class="mt-1 text-sm text-[#6c7772]">{{ application.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
                 </article>
                 <article class="rounded-[22px] border border-[#dbe2de] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Assigned Staff</p>
                     <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.assignedStaff || 'Unassigned' }}</p>
-                </article>
-                <article class="rounded-[22px] border border-[#dbe2de] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Reviewed By</p>
-                    <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.reviewedBy || 'Not reviewed yet' }}</p>
-                    <p class="mt-1 text-sm text-[#6c7772]">{{ application.reviewedAt || 'No review timestamp' }}</p>
                 </article>
             </section>
 
@@ -150,7 +151,9 @@ function submitRejection() {
                             :documents="documents"
                             :document-remarks="documentRemarks"
                             :features="features"
+                            :urls="urls"
                             @document-action="submitDocumentAction"
+                            @initialize-checklist="initializeChecklist"
                         />
                     </div>
 

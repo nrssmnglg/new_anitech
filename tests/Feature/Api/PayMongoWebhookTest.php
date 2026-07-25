@@ -230,6 +230,71 @@ class PayMongoWebhookTest extends TestCase
         ]);
     }
 
+    public function test_raw_paid_payment_payload_is_normalized_and_processed(): void
+    {
+        Storage::fake('public');
+        config()->set('services.paymongo.webhook_secret', 'whsec_test_123');
+        config()->set('services.paymongo.qrph_test_amount', 1);
+        [$application, $assessment] = $this->createApprovedMobileApplication();
+
+        $payload = [
+            'id' => 'pay_6akspf853ux6BTT9LisQz5Pe',
+            'type' => 'payment',
+            'attributes' => [
+                'amount' => 100,
+                'billing' => [
+                    'email' => 'applicant-2@anitech.local',
+                    'name' => 'Michael Valdez Sorino',
+                    'phone' => '09525256369',
+                ],
+                'currency' => 'PHP',
+                'description' => 'Membership application payment for ' . $application->application_no,
+                'fee' => 2,
+                'livemode' => true,
+                'net_amount' => 98,
+                'source' => [
+                    'id' => 'qrph_S7wTkSc2UQHHENk4wPvmyj2g',
+                    'type' => 'qrph',
+                ],
+                'status' => 'paid',
+                'metadata' => [
+                    'reference_no' => $application->application_no,
+                    'source_type' => 'membership_application',
+                    'payment_method' => 'qrph',
+                    'membership_application_id' => (string) $application->id,
+                    'source_id' => (string) $application->id,
+                    'assessment_id' => (string) $assessment->id,
+                ],
+                'paid_at' => 1784871612,
+                'updated_at' => 1784871613,
+            ],
+        ];
+
+        $response = $this->postSignedWebhook($payload);
+
+        $response->assertOk();
+        $response->assertJsonPath('status', 'processed');
+        $response->assertJsonPath('source', 'membership_application');
+        $response->assertJsonPath('assessment_status', 'paid');
+
+        $this->assertDatabaseHas('payments', [
+            'payment_assessment_id' => $assessment->id,
+            'payment_method' => 'qrph',
+            'reference_no' => $application->application_no,
+            'amount_paid' => 350.00,
+            'status' => 'paid',
+        ]);
+        $this->assertDatabaseHas('paymongo_webhook_events', [
+            'paymongo_event_id' => 'pay_6akspf853ux6BTT9LisQz5Pe',
+            'event_type' => 'payment.paid',
+            'status' => 'processed',
+            'payment_assessment_id' => $assessment->id,
+            'membership_application_id' => $application->id,
+            'reference_no' => $application->application_no,
+            'amount' => 350.00,
+        ]);
+    }
+
     public function test_webhook_rejects_invalid_signature_in_middleware(): void
     {
         config()->set('services.paymongo.webhook_secret', 'whsec_test_123');

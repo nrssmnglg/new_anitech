@@ -293,9 +293,20 @@ class FarmerPasswordResetController extends Controller
 
     public function storeReset(Request $request): JsonResponse|RedirectResponse
     {
+        $farmerUser = $this->farmerUserByEmail((string) $request->string('email'));
+
         $validated = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8),
+                function (string $attribute, mixed $value, \Closure $fail) use ($farmerUser): void {
+                    if ($farmerUser !== null && Hash::check((string) $value, (string) $farmerUser->password)) {
+                        $fail('The new password must be different from the current password.');
+                    }
+                },
+            ],
         ]);
 
         if (! $this->hasVerifiedEmail($request, $validated['email'])) {

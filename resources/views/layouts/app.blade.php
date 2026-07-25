@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ trim($__env->yieldContent('title', 'Admin')) }}</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('figures/anitech-mark-official.svg') }}">
-    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ asset('figures/anitech-mark-official.svg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('figures/anitech-logo.png') }}">
+    <link rel="alternate icon" href="{{ asset('figures/anitech-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('figures/anitech-logo.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=poppins:400,500,600,700,800" rel="stylesheet" />
     @unless (app()->runningUnitTests())

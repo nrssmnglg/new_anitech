@@ -43,6 +43,10 @@ watch(
 );
 
 const submit = async () => {
+    if (!canSubmit.value || auth.loading.value) {
+        return;
+    }
+
     successMessage.value = '';
     createdEmail.value = '';
 
@@ -77,7 +81,7 @@ const submit = async () => {
                     <span></span>
                 </div>
 
-                <form class="farmer-app__setup-form" @submit.prevent="submit" @keydown.enter.prevent>
+                <form class="farmer-app__setup-form" @submit.prevent="submit">
                     <div class="farmer-app__setup-grid">
                         <div class="farmer-app__setup-field">
                             <label for="application_no">Application Number</label>
@@ -121,7 +125,17 @@ const submit = async () => {
                                     <path d="m5.5 7 6.5 5 6.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <input id="setup_email" v-model="form.email" type="email" placeholder="farmer@example.com" autocomplete="email" />
+                            <input
+                                id="setup_email"
+                                v-model="form.email"
+                                type="email"
+                                placeholder="farmer@example.com"
+                                autocomplete="email"
+                                autocapitalize="off"
+                                autocorrect="off"
+                                spellcheck="false"
+                                @keydown.enter.prevent.stop
+                            />
                         </div>
                         <p v-if="auth.validationErrors.value.email" class="farmer-app__setup-error">
                             {{ auth.validationErrors.value.email }}

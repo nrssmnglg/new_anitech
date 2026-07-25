@@ -48,7 +48,9 @@ class MembershipApplicationService
                 'submitted_at' => CarbonImmutable::now(),
             ]);
 
-            $this->farmerDocumentService->ensureApplicationChecklist($application);
+            if ($application->source !== 'walk_in') {
+                $this->farmerDocumentService->ensureApplicationChecklist($application);
+            }
             $application->load('farmer');
             $application->farmer?->forceFill([
                 'membership_status' => MembershipStatus::PENDING_APPLICATION->value,
@@ -67,6 +69,34 @@ class MembershipApplicationService
             );
 
             return $application->refresh()->load(['farmer', 'documents']);
+        });
+    }
+
+    public function initializeChecklist(MembershipApplication $application, ?int $userId = null): MembershipApplication
+    {
+        return DB::transaction(function () use ($application, $userId): MembershipApplication {
+            $application->loadMissing('documents');
+
+            if ($application->documents->isNotEmpty()) {
+                return $application->refresh()->load(['farmer', 'documents']);
+            }
+
+            $this->farmerDocumentService->ensureApplicationChecklist($application);
+            $initialized = $application->refresh()->load(['farmer', 'documents']);
+
+            $this->auditTrailService->recordById(
+                'membership_applications',
+                'checklist_initialized',
+                'Initialized the membership application document checklist.',
+                $userId,
+                $initialized,
+                [
+                    'application_no' => $initialized->application_no,
+                    'source' => $initialized->source,
+                ]
+            );
+
+            return $initialized;
         });
     }
 

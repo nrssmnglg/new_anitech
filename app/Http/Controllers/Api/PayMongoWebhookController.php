@@ -36,7 +36,7 @@ class PayMongoWebhookController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        $payload = $request->json()->all();
+        $payload = $this->normalizeIncomingPayload($request->json()->all());
 
         if (! is_array($payload) || $payload === []) {
             Log::warning('PayMongo webhook rejected: empty or invalid JSON payload.');
@@ -126,6 +126,39 @@ class PayMongoWebhookController extends Controller
         ]);
 
         return response()->json($handled['response']);
+    }
+
+    private function normalizeIncomingPayload(mixed $payload): array
+    {
+        if (! is_array($payload) || $payload === []) {
+            return [];
+        }
+
+        if (is_array(data_get($payload, 'data.attributes.data'))) {
+            return $payload;
+        }
+
+        if (($payload['type'] ?? null) !== 'payment') {
+            return $payload;
+        }
+
+        $attributes = is_array($payload['attributes'] ?? null) ? $payload['attributes'] : [];
+
+        if (strtolower((string) ($attributes['status'] ?? '')) !== 'paid') {
+            return $payload;
+        }
+
+        return [
+            'data' => [
+                'id' => (string) ($payload['id'] ?? ''),
+                'type' => 'event',
+                'attributes' => [
+                    'type' => 'payment.paid',
+                    'livemode' => (bool) ($attributes['livemode'] ?? false),
+                    'data' => $payload,
+                ],
+            ],
+        ];
     }
 
     private function handlePaidEvent(string $eventType, array $payload): array

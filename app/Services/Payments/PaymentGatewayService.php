@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PaymentGatewayService
@@ -33,6 +34,8 @@ class PaymentGatewayService
             ];
         }
 
+        $metadata = $this->sanitizeMetadata($data['metadata'] ?? []);
+
         $payload = [
             'data' => [
                 'attributes' => array_filter([
@@ -45,7 +48,7 @@ class PaymentGatewayService
                         'name' => $data['line_item_name'] ?? 'AniTech Membership Payment',
                         'quantity' => 1,
                     ]],
-                    'metadata' => array_merge($data['metadata'] ?? [], [
+                    'metadata' => array_merge($metadata, [
                         'reference_no' => $reference,
                     ]),
                     'payment_method_types' => $this->resolvePaymentMethodTypes((string) ($data['payment_method'] ?? 'gcash')),
@@ -96,7 +99,7 @@ class PaymentGatewayService
         $reference = $this->resolveReference($data);
         $amount = round((float) ($data['amount'] ?? $data['amount_due'] ?? 0), 2);
         $billing = $this->normalize($data['billing'] ?? []);
-        $metadata = is_array($data['metadata'] ?? null) ? $data['metadata'] : [];
+        $metadata = $this->sanitizeMetadata($data['metadata'] ?? []);
         $name = trim((string) ($billing['name'] ?? ''));
         $email = trim((string) ($billing['email'] ?? ''));
         $phone = trim((string) ($billing['phone'] ?? ''));
@@ -113,9 +116,6 @@ class PaymentGatewayService
                     'capture_type' => 'automatic',
                     'currency' => $data['currency'] ?? 'PHP',
                     'description' => $data['description'] ?? null,
-                    'metadata' => array_merge($metadata, [
-                        'reference_no' => $reference,
-                    ]),
                     'payment_method_allowed' => ['qrph'],
                 ], fn (mixed $value): bool => $value !== null),
             ],
@@ -279,6 +279,13 @@ class PaymentGatewayService
             ->post($url, $payload);
 
         if ($response->failed()) {
+            Log::warning('PayMongo request failed.', [
+                'url' => $url,
+                'payload' => $payload,
+                'response' => $response->json(),
+                'status' => $response->status(),
+            ]);
+
             throw new DomainException($this->resolveGatewayErrorMessage($response->json()));
         }
 
@@ -290,6 +297,58 @@ class PaymentGatewayService
         $seconds = is_numeric($value) ? (int) $value : 1800;
 
         return max(60, min(9000, $seconds));
+    }
+
+    private function sanitizeMetadata(mixed $metadata): array
+    {
+        if (! is_array($metadata)) {
+            return [];
+        }
+
+        $sanitized = [];
+
+        $this->flattenMetadata($metadata, $sanitized);
+
+        return $sanitized;
+    }
+
+    private function flattenMetadata(array $metadata, array &$sanitized, string $prefix = ''): void
+    {
+        foreach ($metadata as $key => $value) {
+            $normalizedKey = trim($prefix . (string) $key, '.');
+
+            if ($normalizedKey === '') {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $this->flattenMetadata($value, $sanitized, $normalizedKey . '.');
+                continue;
+            }
+
+            if ($value instanceof \BackedEnum) {
+                $sanitized[$normalizedKey] = (string) $value->value;
+                continue;
+            }
+
+            if ($value instanceof \Stringable) {
+                $sanitized[$normalizedKey] = (string) $value;
+                continue;
+            }
+
+            if (is_bool($value)) {
+                $sanitized[$normalizedKey] = $value ? 'true' : 'false';
+                continue;
+            }
+
+            if (is_scalar($value) || $value === null) {
+                $sanitized[$normalizedKey] = $value === null ? '' : (string) $value;
+                continue;
+            }
+
+            $encoded = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $sanitized[$normalizedKey] = $encoded === false ? '' : $encoded;
+        }
     }
 
     private function toCentavos(float $amount): int

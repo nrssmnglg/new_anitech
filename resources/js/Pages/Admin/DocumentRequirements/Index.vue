@@ -213,7 +213,6 @@ function transactionTone(value) {
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h2 class="text-lg font-black text-[#0f172a]">Transaction Scope</h2>
-                        <p class="mt-1 text-sm text-[#64748b]">Switch between document requirement groups without leaving the page.</p>
                     </div>
                     <button type="button" class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#01362a] disabled:cursor-not-allowed disabled:opacity-60" :disabled="isBusy" @click="refreshRecords">
                         Refresh Records

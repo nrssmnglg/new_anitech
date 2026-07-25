@@ -24,21 +24,21 @@ function handleRenewalClick() {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <section class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
+    <div class="space-y-4">
+        <section class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
             <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Registry Actions</p>
-            <p v-if="farmer?.inactiveReason" class="mt-3 rounded-2xl border border-[#f0d5d5] bg-[#fff6f6] px-4 py-3 text-sm text-[#8f3f3f]">
+            <p v-if="farmer?.inactiveReason" class="mt-2 rounded-[16px] border border-[#f0d5d5] bg-[#fff6f6] px-3 py-2.5 text-xs text-[#8f3f3f]">
                 {{ farmer.inactiveReason }}
             </p>
-            <div class="mt-4 grid gap-3">
-                <Link :href="urls.createApplication" class="inline-flex items-center justify-between rounded-2xl bg-[#003629] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#0d4637]">
+            <div class="mt-3 grid gap-2.5">
+                <Link :href="urls.createApplication" class="inline-flex items-center justify-between rounded-[16px] bg-[#003629] px-4 py-3 text-xs font-extrabold text-white transition hover:bg-[#0d4637]">
                     <span>New Membership</span>
                     <span>&rsaquo;</span>
                 </Link>
                 <Link
                     v-if="renewal.isAvailable"
                     :href="urls.renewalCreate"
-                    class="inline-flex items-center justify-between rounded-2xl bg-[#c0f190] px-5 py-4 text-sm font-extrabold text-[#0e2000] transition hover:opacity-90"
+                    class="inline-flex items-center justify-between rounded-[16px] bg-[#c0f190] px-4 py-3 text-xs font-extrabold text-[#0e2000] transition hover:opacity-90"
                 >
                     <span>Process Renewal</span>
                     <span>&rsaquo;</span>
@@ -46,17 +46,17 @@ function handleRenewalClick() {
                 <button
                     v-else
                     type="button"
-                    class="inline-flex items-center justify-between rounded-2xl bg-[#c0f190] px-5 py-4 text-sm font-extrabold text-[#0e2000] transition hover:opacity-90"
+                    class="inline-flex items-center justify-between rounded-[16px] bg-[#c0f190] px-4 py-3 text-xs font-extrabold text-[#0e2000] transition hover:opacity-90"
                     @click="handleRenewalClick"
                 >
                     <span>Process Renewal</span>
                     <span>&rsaquo;</span>
                 </button>
-                <div class="grid grid-cols-2 gap-3">
-                    <Link v-if="permissions.canEdit" :href="urls.edit" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#191c1c] transition hover:bg-[#f4f7f5]">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <Link v-if="permissions.canEdit" :href="urls.edit" class="inline-flex items-center justify-center rounded-[16px] border border-[#d7e0db] px-4 py-2.5 text-xs font-bold text-[#191c1c] transition hover:bg-[#f4f7f5]">
                         Edit
                     </Link>
-                    <Link :href="urls.index" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#191c1c] transition hover:bg-[#f4f7f5]">
+                    <Link :href="urls.index" class="inline-flex items-center justify-center rounded-[16px] border border-[#d7e0db] px-4 py-2.5 text-xs font-bold text-[#191c1c] transition hover:bg-[#f4f7f5]">
                         Back
                     </Link>
                 </div>
@@ -68,14 +68,14 @@ function handleRenewalClick() {
             class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/45 px-4"
             @click.self="showRenewalDialog = false"
         >
-            <div class="w-full max-w-md rounded-[28px] border border-[#dbe2de] bg-white p-6 shadow-[0_24px_64px_rgba(15,23,42,0.18)]">
+            <div class="w-full max-w-md rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_20px_56px_rgba(15,23,42,0.18)]">
                 <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Renewal Status</p>
-                <h3 class="mt-3 text-xl font-black text-[#1a2420]">{{ renewal.dialogTitle || 'Farmer Not Eligible for Renewal' }}</h3>
-                <p class="mt-3 text-sm leading-7 text-[#5f6c67]">{{ renewal.dialogMessage || renewal.disabledReason || 'This farmer cannot be processed for renewal right now.' }}</p>
-                <div class="mt-6 flex justify-end">
+                <h3 class="mt-2 text-lg font-black text-[#1a2420]">{{ renewal.dialogTitle || 'Farmer Not Eligible for Renewal' }}</h3>
+                <p class="mt-2 text-xs leading-6 text-[#5f6c67]">{{ renewal.dialogMessage || renewal.disabledReason || 'This farmer cannot be processed for renewal right now.' }}</p>
+                <div class="mt-5 flex justify-end">
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]"
+                        class="inline-flex items-center justify-center rounded-[16px] bg-[#003629] px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#0d4637]"
                         @click="showRenewalDialog = false"
                     >
                         OK
@@ -84,24 +84,24 @@ function handleRenewalClick() {
             </div>
         </div>
 
-        <section class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
+        <section class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
             <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Latest Activity</p>
-            <div class="mt-4 space-y-4 text-sm">
-                <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
+            <div class="mt-3 space-y-3 text-xs">
+                <div class="rounded-[16px] border border-[#e3eae6] bg-[#f7faf8] p-3">
                     <p class="font-bold text-[#191c1c]">Latest Application</p>
-                    <p class="mt-2 text-[#5f6c67]">{{ latestApplication?.applicationNo || 'No application yet' }}</p>
+                    <p class="mt-1.5 text-[#5f6c67]">{{ latestApplication?.applicationNo || 'No application yet' }}</p>
                     <p class="mt-1 text-xs text-[#7a8781]">{{ latestApplication?.submittedAt || '' }}</p>
                 </div>
-                <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
+                <div class="rounded-[16px] border border-[#e3eae6] bg-[#f7faf8] p-3">
                     <p class="font-bold text-[#191c1c]">Latest Payment</p>
-                    <p class="mt-2 text-[#5f6c67]">
+                    <p class="mt-1.5 text-[#5f6c67]">
                         <span v-if="latestPayment">PHP {{ Number(latestPayment.amountPaid || 0).toFixed(2) }} on {{ latestPayment.paidAt }}</span>
                         <span v-else>No payment yet</span>
                     </p>
                 </div>
-                <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
+                <div class="rounded-[16px] border border-[#e3eae6] bg-[#f7faf8] p-3">
                     <p class="font-bold text-[#191c1c]">Latest Ledger</p>
-                    <p class="mt-2 text-[#5f6c67]">{{ latestLedger?.year || 'No ledger yet' }} {{ latestLedger?.paymentStatus || '' }}</p>
+                    <p class="mt-1.5 text-[#5f6c67]">{{ latestLedger?.year || 'No ledger yet' }} {{ latestLedger?.paymentStatus || '' }}</p>
                 </div>
             </div>
         </section>

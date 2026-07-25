@@ -68,7 +68,7 @@ class FarmerController extends Controller
                         ->where('amount_paid', '>', 0)),
             ])
             ->with([
-                'profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number,address',
+                'profile:id,farmer_id,first_name,middle_name,last_name,suffix,birth_date,mobile_number,address',
                 'barangay:id,name',
                 'association:id,name,barangay_id',
                 'memberType:id,code,name',
@@ -120,7 +120,7 @@ class FarmerController extends Controller
                 'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
             ],
             'summary' => [
-                'total' => $this->registeredFarmerCount(clone $summaryQuery),
+                'total' => (clone $summaryQuery)->count(),
                 'active' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::ACTIVE)->count(),
                 'inactive' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::INACTIVE)->count(),
                 'deceased' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::DECEASED)->count(),
@@ -850,7 +850,11 @@ class FarmerController extends Controller
 
     private function listedFarmersQuery(): Builder
     {
-        return Farmer::query();
+        return Farmer::query()->where(function (Builder $query): void {
+            $query
+                ->whereNotNull('inactive_at')
+                ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, now()->year));
+        });
     }
 
     private function filters(Request $request): array
@@ -1553,19 +1557,10 @@ class FarmerController extends Controller
             });
     }
 
-    private function registeredFarmerCount(Builder $query): int
-    {
-        $activeCount = $this->applyStatusFilter(clone $query, FarmerStatus::ACTIVE)->count();
-        $inactiveCount = $this->applyStatusFilter(clone $query, FarmerStatus::INACTIVE)->count();
-
-        return $activeCount + $inactiveCount;
-    }
-
     private function registryStatusOptions(): array
     {
         return [
             ['value' => FarmerStatus::ACTIVE->value, 'label' => 'Active'],
-            ['value' => FarmerStatus::PENDING->value, 'label' => 'Pending'],
             ['value' => FarmerStatus::INACTIVE->value, 'label' => 'Inactive (last 5 years)'],
             ['value' => FarmerStatus::DECEASED->value, 'label' => 'Deceased'],
         ];

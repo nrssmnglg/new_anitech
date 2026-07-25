@@ -6,23 +6,24 @@ defineProps({
 </script>
 
 <template>
-    <section class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <article class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Membership</p>
-            <p class="mt-3 text-2xl font-black text-[#003629]">{{ farmer.membershipStatusLabel || 'Not set' }}</p>
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Registered</p>
+            <p class="mt-2 text-lg font-black text-[#003629]">{{ farmer.registeredAt || 'Not recorded' }}</p>
         </article>
-        <article class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+        <article class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
             <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Collections</p>
-            <p class="mt-3 text-2xl font-black text-[#191c1c]">PHP {{ Number(summary.totalPaid || 0).toFixed(2) }}</p>
+            <p class="mt-2 text-xl font-black text-[#191c1c]">PHP {{ Number(summary.totalPaid || 0).toFixed(2) }}</p>
         </article>
-        <article class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+        <article class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
             <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Current Ledger</p>
-            <p class="mt-3 text-2xl font-black text-[#416918]">{{ summary.currentYearLedger?.paymentStatus || 'No record' }}</p>
+            <p class="mt-2 text-xl font-black text-[#416918]">{{ summary.currentYearLedger?.paymentStatus || 'No record' }}</p>
+            <p class="mt-1 text-xs text-[#6a7872]">{{ summary.currentYearLedger?.year ? `Ledger year ${summary.currentYearLedger.year}` : 'No active yearly ledger' }}</p>
         </article>
-        <article class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Member Type</p>
-            <p class="mt-3 text-2xl font-black text-[#191c1c]">{{ farmer.memberType?.code || 'N/A' }}</p>
-            <p class="mt-2 text-sm text-[#6a7872]">{{ farmer.memberType?.name || 'Not set' }}</p>
+        <article class="rounded-[20px] border border-[#dbe2de] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Record Source</p>
+            <p class="mt-2 text-xl font-black text-[#191c1c]">{{ farmer.recordOrigin || 'Not set' }}</p>
+            <p class="mt-1 text-xs text-[#6a7872]">{{ farmer.barangay?.name || 'No barangay assigned' }}</p>
         </article>
     </section>
 </template>

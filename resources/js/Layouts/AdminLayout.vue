@@ -290,7 +290,7 @@ onBeforeUnmount(() => {
                 </div>
             </header>
 
-            <main class="px-4 py-6 sm:px-6 lg:px-8">
+            <main class="admin-compact px-4 py-6 sm:px-6 lg:px-8">
                 <slot />
             </main>
         </div>
@@ -418,3 +418,119 @@ onBeforeUnmount(() => {
         </div>
     </div>
 </template>
+
+<style>
+.admin-compact {
+    --compact-card-radius-lg: 20px;
+    --compact-card-radius-md: 16px;
+    --compact-card-radius-sm: 14px;
+}
+
+.admin-compact [class*="rounded-[28px]"] {
+    border-radius: var(--compact-card-radius-lg) !important;
+}
+
+.admin-compact [class*="rounded-[26px]"],
+.admin-compact [class*="rounded-[24px]"],
+.admin-compact [class*="rounded-[22px]"],
+.admin-compact [class*="rounded-[20px]"] {
+    border-radius: var(--compact-card-radius-md) !important;
+}
+
+.admin-compact [class*="rounded-[18px]"],
+.admin-compact [class*="rounded-[16px]"],
+.admin-compact [class*="rounded-[14px]"] {
+    border-radius: var(--compact-card-radius-sm) !important;
+}
+
+.admin-compact [class*="p-8"] {
+    padding: 1.5rem !important;
+}
+
+.admin-compact [class*="p-7"],
+.admin-compact [class*="p-6"] {
+    padding: 1.25rem !important;
+}
+
+.admin-compact [class*="p-5"] {
+    padding: 1rem !important;
+}
+
+.admin-compact [class*="px-6"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+.admin-compact [class*="py-6"] {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.admin-compact [class*="py-5"] {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
+}
+
+.admin-compact [class*="gap-6"] {
+    gap: 1rem !important;
+}
+
+.admin-compact [class*="gap-5"] {
+    gap: 0.875rem !important;
+}
+
+.admin-compact [class*="gap-4"] {
+    gap: 0.75rem !important;
+}
+
+.admin-compact [class*="space-y-7"] > :not([hidden]) ~ :not([hidden]),
+.admin-compact [class*="space-y-6"] > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+}
+
+.admin-compact [class*="space-y-5"] > :not([hidden]) ~ :not([hidden]),
+.admin-compact [class*="space-y-4"] > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.875rem !important;
+}
+
+.admin-compact [class*="text-2xl"] {
+    font-size: 1.375rem !important;
+    line-height: 1.85rem !important;
+}
+
+.admin-compact [class*="text-xl"] {
+    font-size: 1.125rem !important;
+    line-height: 1.6rem !important;
+}
+
+.admin-compact [class*="text-lg"] {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+}
+
+.admin-compact [class*="text-base"] {
+    font-size: 0.9375rem !important;
+    line-height: 1.4rem !important;
+}
+
+.admin-compact [class*="text-sm"] {
+    font-size: 0.8125rem !important;
+    line-height: 1.3rem !important;
+}
+
+.admin-compact [class*="text-[0.72rem]"],
+.admin-compact [class*="text-[0.7rem]"],
+.admin-compact [class*="text-[0.68rem]"] {
+    font-size: 0.64rem !important;
+}
+
+.admin-compact [class*="shadow-[0_24px"],
+.admin-compact [class*="shadow-[0_22px"],
+.admin-compact [class*="shadow-[0_18px"],
+.admin-compact [class*="shadow-[0_16px"],
+.admin-compact [class*="shadow-[0_14px"],
+.admin-compact [class*="shadow-[0_12px"],
+.admin-compact [class*="shadow-[0_10px"] {
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05) !important;
+}
+</style>

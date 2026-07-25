@@ -25,5 +25,8 @@ Route::post('membership-applications/{membership_application}/payment', [Members
 Route::post('membership-applications/{membership_application}/review', [MembershipApplicationController::class, 'review'])
     ->name('membership-applications.review');
 
+Route::post('membership-applications/{membership_application}/initialize-checklist', [MembershipApplicationController::class, 'initializeChecklist'])
+    ->name('membership-applications.initialize-checklist');
+
 Route::post('membership-applications/{membership_application}/internal-notes', [InternalNoteController::class, 'storeForApplication'])
     ->name('membership-applications.internal-notes.store');

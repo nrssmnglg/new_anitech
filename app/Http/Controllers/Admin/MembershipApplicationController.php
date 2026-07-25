@@ -368,6 +368,13 @@ class MembershipApplicationController extends Controller
                 'remarks' => $validated['application_remarks'] ?? null,
             ]);
 
+            $receivedDocumentsSelected = collect($validated['documents'] ?? [])
+                ->contains(fn (array $documentData): bool => (bool) ($documentData['is_received'] ?? false));
+
+            if ($receivedDocumentsSelected) {
+                $application = $this->membershipApplicationService->initializeChecklist($application, Auth::id());
+            }
+
             foreach (($validated['documents'] ?? []) as $documentType => $documentData) {
                 if (! ($documentData['is_received'] ?? false)) {
                     continue;
@@ -425,6 +432,7 @@ class MembershipApplicationController extends Controller
 
             return $document;
         });
+        $checklistInitialized = $membershipApplication->source !== 'walk_in' || $documents->isNotEmpty();
 
         $assessment = $membershipApplication->paymentAssessments->sortByDesc('id')->first();
         $paymentPreview = null;
@@ -434,9 +442,12 @@ class MembershipApplicationController extends Controller
                 'member_type' => $membershipApplication->farmer->memberType->code,
             ]);
         }
-        $requiredDocuments = $documents->where('is_required', true)->values();
+        $requiredDocuments = $checklistInitialized
+            ? $documents->where('is_required', true)->values()
+            : collect();
         $verifiedRequiredCount = $requiredDocuments->filter(fn (FarmerDocument $document) => $document->verification_status === DocumentVerificationStatus::VERIFIED)->count();
-        $documentsComplete = $requiredDocuments->isEmpty() || $verifiedRequiredCount === $requiredDocuments->count();
+        $documentsComplete = $checklistInitialized
+            && ($requiredDocuments->isEmpty() || $verifiedRequiredCount === $requiredDocuments->count());
         $missingDocumentCount = $requiredDocuments->filter(
             fn (FarmerDocument $document) => ! (bool) $document->getAttribute('ready_for_verification')
         )->count();
@@ -446,7 +457,10 @@ class MembershipApplicationController extends Controller
         $settledStatuses = [AssessmentStatus::PAID, AssessmentStatus::OVERPAID, AssessmentStatus::WAIVED];
         $paymentSettled = in_array($assessment?->status, $settledStatuses, true);
         $paymentRecorded = $payments->isNotEmpty();
-        $paymentReady = $documentsComplete && $membershipApplication->status !== ApplicationStatus::REJECTED && ! $paymentSettled;
+        $paymentReady = $checklistInitialized
+            && $documentsComplete
+            && $membershipApplication->status !== ApplicationStatus::REJECTED
+            && ! $paymentSettled;
         $profile = $membershipApplication->farmer?->profile;
         $duplicateRisk = $membershipApplication->farmer
             ? $this->farmerRegistryService->findPotentialDuplicates([
@@ -538,6 +552,8 @@ class MembershipApplicationController extends Controller
             'flow' => [
                 'isWalkIn' => $membershipApplication->source === 'walk_in',
                 'isMobile' => $membershipApplication->source === 'mobile',
+                'checklistInitialized' => $checklistInitialized,
+                'canInitializeChecklist' => $membershipApplication->source === 'walk_in' && ! $checklistInitialized,
                 'documentsComplete' => $documentsComplete,
                 'requiredCount' => $requiredDocuments->count(),
                 'verifiedCount' => $verifiedRequiredCount,
@@ -629,10 +645,20 @@ class MembershipApplicationController extends Controller
                     ? route('admin.membership-applications.create', ['reapply_from_application' => $membershipApplication->application_no])
                     : null,
                 'review' => route('admin.membership-applications.review', $membershipApplication),
+                'initializeChecklist' => route('admin.membership-applications.initialize-checklist', $membershipApplication),
                 'recordPayment' => route('admin.membership-applications.payment.store', $membershipApplication),
                 'storeInternalNote' => route('admin.membership-applications.internal-notes.store', $membershipApplication),
             ],
         ]);
+    }
+
+    public function initializeChecklist(MembershipApplication $membershipApplication): RedirectResponse
+    {
+        $this->membershipApplicationService->initializeChecklist($membershipApplication, Auth::id());
+
+        return redirect()
+            ->route('admin.membership-applications.show', $membershipApplication)
+            ->with('success', 'Document checklist started. Continue with intake confirmation and review.');
     }
 
     public function review(ReviewMembershipApplicationRequest $request, MembershipApplication $membershipApplication): RedirectResponse
@@ -871,7 +897,7 @@ class MembershipApplicationController extends Controller
             ->first(['actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor_name ?? $application->reviewer?->name ?? 'System',
+            'lastUpdatedBy' => $latestActivity?->actor_name ?? $application->reviewer?->name,
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $application->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => $application->reviewer?->name,
             'reviewedBy' => $application->reviewer?->name,

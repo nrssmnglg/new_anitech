@@ -79,9 +79,20 @@ class ResetPasswordController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $officeUser = $this->officeUserByEmail((string) $request->string('email'));
+
         $validated = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8),
+                function (string $attribute, mixed $value, \Closure $fail) use ($officeUser): void {
+                    if ($officeUser !== null && Hash::check((string) $value, (string) $officeUser->password)) {
+                        $fail('The new password must be different from the current password.');
+                    }
+                },
+            ],
         ]);
 
         if (! $this->hasVerifiedEmail($request, $validated['email'])) {
