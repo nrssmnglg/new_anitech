@@ -6,6 +6,7 @@ import { useLocale } from '../composables/useLocale';
 import { apiPost } from '../services/api';
 import { extractApiMessage, extractValidationErrors } from '../utils/api';
 import { brandLogoUrl } from '../utils/asset';
+import { resolveFarmerAppRedirect } from '../utils/paths';
 
 const route = useRoute();
 const router = useRouter();
@@ -132,7 +133,7 @@ const submit = async () => {
             ...otpMeta.value,
             ...(response?.meta ?? {}),
         };
-        router.push(response?.data?.redirect_url ?? `/reset-password/new?email=${encodeURIComponent(form.email)}`);
+        router.push(resolveFarmerAppRedirect(response?.data?.redirect_url) ?? `/reset-password/new?email=${encodeURIComponent(form.email)}`);
     } catch (err) {
         error.value = extractApiMessage(err, t('otp.verify_failed'));
         validationErrors.value = extractValidationErrors(err);

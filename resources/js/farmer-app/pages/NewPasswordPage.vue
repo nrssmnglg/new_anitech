@@ -6,6 +6,7 @@ import { useLocale } from '../composables/useLocale';
 import { apiPost } from '../services/api';
 import { extractApiMessage, extractValidationErrors } from '../utils/api';
 import { brandLogoUrl } from '../utils/asset';
+import { resolveFarmerAppRedirect } from '../utils/paths';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,7 +37,7 @@ const submit = async () => {
     try {
         const response = await apiPost('/reset-password', form);
         success.value = response?.message ?? t('newPassword.reset_success');
-        router.push(response?.data?.redirect_url ?? '/farmer/app/login');
+        router.push(resolveFarmerAppRedirect(response?.data?.redirect_url) ?? '/login');
     } catch (err) {
         error.value = extractApiMessage(err, t('newPassword.reset_failed'));
         validationErrors.value = extractValidationErrors(err);

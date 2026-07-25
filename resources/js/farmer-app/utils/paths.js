@@ -53,3 +53,24 @@ export function farmerAppPath(path) {
 
     return `${basePath}${normalizedPath}`;
 }
+
+export function resolveFarmerAppRedirect(target) {
+    if (!target) {
+        return null;
+    }
+
+    try {
+        const url = new URL(target, window.location.origin);
+        const appBasePath = resolveFarmerAppBasePath();
+
+        if (url.pathname.startsWith(`${appBasePath}/`) || url.pathname === appBasePath) {
+            const relativePath = url.pathname.slice(appBasePath.length) || '/';
+
+            return `${relativePath}${url.search}`;
+        }
+
+        return url.toString();
+    } catch {
+        return target;
+    }
+}
