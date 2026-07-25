@@ -18,16 +18,6 @@ class ValidatePayMongoWebhookSignature
         $eventType = data_get($decodedPayload, 'data.attributes.type');
         $header = trim((string) $request->header('Paymongo-Signature', ''));
 
-        Log::info('PayMongo webhook signature check started.', [
-            'path' => $request->path(),
-            'method' => $request->method(),
-            'event_id' => $eventId,
-            'event_type' => $eventType,
-            'has_secret' => $secret !== '',
-            'has_signature_header' => $header !== '',
-            'content_length' => strlen($payload),
-        ]);
-
         if ($secret === '') {
             Log::info('PayMongo webhook signature skipped because no secret is configured.', [
                 'event_id' => $eventId,
@@ -75,7 +65,6 @@ class ValidatePayMongoWebhookSignature
                 'event_type' => $eventType,
                 'signature_key' => $signatureKey,
                 'has_received_signature' => $received !== '',
-                'timestamp' => $timestamp,
             ]);
 
             return $this->unauthorizedResponse();
