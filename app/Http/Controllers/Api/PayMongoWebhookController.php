@@ -36,10 +36,20 @@ class PayMongoWebhookController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
+        Log::info('PayMongo webhook controller invoked.', [
+            'path' => $request->path(),
+            'method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'accept' => $request->header('Accept'),
+            'ip' => $request->ip(),
+        ]);
+
         $payload = $this->normalizeIncomingPayload($request->json()->all());
 
         if (! is_array($payload) || $payload === []) {
-            Log::warning('PayMongo webhook rejected: empty or invalid JSON payload.');
+            Log::warning('PayMongo webhook rejected: empty or invalid JSON payload.', [
+                'raw_payload_preview' => substr($request->getContent(), 0, 500),
+            ]);
 
             return response()->json([
                 'message' => 'Invalid webhook payload.',
@@ -52,9 +62,16 @@ class PayMongoWebhookController extends Controller
         Log::info('PayMongo webhook received.', [
             'event_id' => $eventId,
             'event_type' => $eventType,
+            'livemode' => (bool) data_get($payload, 'data.attributes.livemode', false),
         ]);
 
         $webhookEvent = $this->storeWebhookEvent($payload, $eventType);
+
+        Log::info('PayMongo webhook event stored.', [
+            'event_id' => $eventId,
+            'event_type' => $eventType,
+            'webhook_event_id' => $webhookEvent->id,
+        ]);
 
         if (! in_array($eventType, self::SUPPORTED_EVENTS, true)) {
             $this->markWebhookEvent($webhookEvent, [
@@ -114,6 +131,24 @@ class PayMongoWebhookController extends Controller
                 'status' => 'rejected',
                 'message' => $exception->getMessage(),
             ], 422);
+        } catch (\Throwable $exception) {
+            $this->markWebhookEvent($webhookEvent, [
+                'status' => 'failed',
+                'message' => $exception->getMessage(),
+            ]);
+
+            Log::error('PayMongo webhook crashed unexpectedly.', [
+                'event_id' => $eventId,
+                'event_type' => $eventType,
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
+
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Webhook processing failed unexpectedly.',
+            ], 500);
         }
 
         Log::info('PayMongo webhook handled successfully.', [
