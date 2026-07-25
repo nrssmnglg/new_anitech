@@ -28,6 +28,7 @@ use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\Audit\AuditTrailService;
@@ -49,60 +50,73 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response
     {
-        $isAdmin = $request->user()?->hasRole(User::ROLE_ADMIN) ?? false;
-        $selectedYear = $request->filled('year') ? $request->integer('year') : null;
-        $barangays = Barangay::query()
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        try {
+            $isAdmin = $request->user()?->hasRole(User::ROLE_ADMIN) ?? false;
+            $selectedYear = $request->filled('year') ? $request->integer('year') : null;
+            $barangays = Barangay::query()
+                ->orderBy('name')
+                ->get(['id', 'name']);
 
-        $selectedBarangayId = $request->filled('barangay_id')
-            ? $request->integer('barangay_id')
-            : null;
+            $selectedBarangayId = $request->filled('barangay_id')
+                ? $request->integer('barangay_id')
+                : null;
 
-        if ($selectedBarangayId !== null && ! $barangays->contains('id', $selectedBarangayId)) {
-            $selectedBarangayId = null;
+            if ($selectedBarangayId !== null && ! $barangays->contains('id', $selectedBarangayId)) {
+                $selectedBarangayId = null;
+            }
+
+            $dashboard = [
+                'filters' => [
+                    'baseUrl' => route('admin.dashboard.index'),
+                    'selectedYear' => $selectedYear,
+                    'selectedBarangayId' => $selectedBarangayId,
+                    'availableYears' => $this->availableYears($selectedYear),
+                    'barangays' => $barangays->map(fn (Barangay $barangay): array => [
+                        'id' => $barangay->id,
+                        'name' => $barangay->name,
+                    ])->values()->all(),
+                ],
+                'actions' => [
+                    'createMembershipApplicationUrl' => route('admin.membership-applications.create'),
+                    'viewFarmersUrl' => route('admin.farmers.index'),
+                    'tasksUrl' => ! $isAdmin ? route('admin.tasks.index') : null,
+                    'manageFeeSchedulesUrl' => $isAdmin ? route('admin.fee-schedules.index') : null,
+                    'viewUsersUrl' => $isAdmin ? route('admin.users.index') : null,
+                ],
+                'summary' => $this->summary($selectedYear, $selectedBarangayId, $isAdmin),
+                'summaryCardLinks' => $this->summaryCardLinks($request, $selectedYear, $selectedBarangayId),
+                'adminOperations' => $isAdmin ? $this->adminOperations($selectedYear, $selectedBarangayId) : null,
+                'staffWorkspace' => ! $isAdmin ? $this->staffWorkspace($request, $selectedYear, $selectedBarangayId) : null,
+                'breakdowns' => [
+                    'membershipStatus' => $this->membershipStatusBreakdown($selectedYear, $selectedBarangayId),
+                    'memberTypes' => $this->memberTypeBreakdown($selectedYear, $selectedBarangayId),
+                    'topBarangays' => $this->topBarangays($selectedYear, $selectedBarangayId),
+                    'topAssociations' => $this->topAssociations($selectedYear, $selectedBarangayId),
+                    'feeSchedules' => $isAdmin ? $this->feeSchedules($selectedYear) : [],
+                    'registrationTrend' => $this->registrationTrend($selectedYear, $selectedBarangayId),
+                ],
+                'recentFarmers' => $this->recentFarmers($selectedYear, $selectedBarangayId),
+                'officeUsers' => $isAdmin ? $this->officeUsers() : [],
+                'permissions' => [
+                    'isAdmin' => $isAdmin,
+                ],
+            ];
+
+            return Inertia::render($isAdmin ? 'Admin/Dashboard/Index' : 'Admin/Dashboard/StaffIndex', [
+                'dashboard' => $dashboard,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error('Admin dashboard failed to render.', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'selected_year' => $request->input('year'),
+                'selected_barangay_id' => $request->input('barangay_id'),
+                'user_id' => $request->user()?->id,
+            ]);
+
+            throw $exception;
         }
-
-        $dashboard = [
-            'filters' => [
-                'baseUrl' => route('admin.dashboard.index'),
-                'selectedYear' => $selectedYear,
-                'selectedBarangayId' => $selectedBarangayId,
-                'availableYears' => $this->availableYears($selectedYear),
-                'barangays' => $barangays->map(fn (Barangay $barangay): array => [
-                    'id' => $barangay->id,
-                    'name' => $barangay->name,
-                ])->values()->all(),
-            ],
-            'actions' => [
-                'createMembershipApplicationUrl' => route('admin.membership-applications.create'),
-                'viewFarmersUrl' => route('admin.farmers.index'),
-                'tasksUrl' => ! $isAdmin ? route('admin.tasks.index') : null,
-                'manageFeeSchedulesUrl' => $isAdmin ? route('admin.fee-schedules.index') : null,
-                'viewUsersUrl' => $isAdmin ? route('admin.users.index') : null,
-            ],
-            'summary' => $this->summary($selectedYear, $selectedBarangayId, $isAdmin),
-            'summaryCardLinks' => $this->summaryCardLinks($request, $selectedYear, $selectedBarangayId),
-            'adminOperations' => $isAdmin ? $this->adminOperations($selectedYear, $selectedBarangayId) : null,
-            'staffWorkspace' => ! $isAdmin ? $this->staffWorkspace($request, $selectedYear, $selectedBarangayId) : null,
-            'breakdowns' => [
-                'membershipStatus' => $this->membershipStatusBreakdown($selectedYear, $selectedBarangayId),
-                'memberTypes' => $this->memberTypeBreakdown($selectedYear, $selectedBarangayId),
-                'topBarangays' => $this->topBarangays($selectedYear, $selectedBarangayId),
-                'topAssociations' => $this->topAssociations($selectedYear, $selectedBarangayId),
-                'feeSchedules' => $isAdmin ? $this->feeSchedules($selectedYear) : [],
-                'registrationTrend' => $this->registrationTrend($selectedYear, $selectedBarangayId),
-            ],
-            'recentFarmers' => $this->recentFarmers($selectedYear, $selectedBarangayId),
-            'officeUsers' => $isAdmin ? $this->officeUsers() : [],
-            'permissions' => [
-                'isAdmin' => $isAdmin,
-            ],
-        ];
-
-        return Inertia::render($isAdmin ? 'Admin/Dashboard/Index' : 'Admin/Dashboard/StaffIndex', [
-            'dashboard' => $dashboard,
-        ]);
     }
 
     public function tasks(Request $request): Response
