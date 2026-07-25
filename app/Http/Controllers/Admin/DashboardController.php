@@ -216,17 +216,16 @@ class DashboardController extends Controller
     private function summary(?int $year, ?int $barangayId, bool $isAdmin): array
     {
         $farmers = $this->farmerQuery($year, $barangayId);
-        $registeredFarmers = (clone $farmers)->get()->filter(
-            fn (Farmer $farmer): bool => $this->resolveFarmerDashboardStatus($farmer, $year) !== FarmerStatus::PENDING
-        );
         $pendingApplications = $this->membershipApplicationQuery($year, $barangayId)
             ->whereIn('status', $this->databaseStatusesForPendingQueue())
             ->count();
+        $pendingFarmers = $this->applyFarmerStatusFilterForYear(clone $farmers, FarmerStatus::PENDING, $year)->count();
+        $totalFarmers = max(0, (clone $farmers)->count() - $pendingFarmers);
 
         return [
-            'totalFarmers' => $registeredFarmers->count(),
+            'totalFarmers' => $totalFarmers,
             'activeFarmers' => $this->applyFarmerStatusFilterForYear(clone $farmers, FarmerStatus::ACTIVE, $year)->count(),
-            'pendingFarmers' => $this->applyFarmerStatusFilterForYear(clone $farmers, FarmerStatus::PENDING, $year)->count(),
+            'pendingFarmers' => $pendingFarmers,
             'inactiveFarmers' => $this->applyFarmerStatusFilterForYear(clone $farmers, FarmerStatus::INACTIVE, $year)->count(),
             'pendingApplications' => $pendingApplications,
             'activeBarangays' => Barangay::query()
