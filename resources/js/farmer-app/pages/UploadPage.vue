@@ -537,22 +537,175 @@ onMounted(() => {
             </div>
 
             <footer class="farmer-app__upload-footer">
-                <p>&copy; 2023 AniTech Solutions. All rights reserved.</p>
-                <small>Powered by Agri-Data Hub.</small>
+                <p>&copy; 2026 AniTech. All rights reserved.</p>
             </footer>
         </main>
     </div>
 </template>
 
 <style scoped>
+.farmer-app__upload-screen {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(139, 199, 213, 0.78), rgba(243, 235, 190, 0.7)),
+        url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+}
+
+.farmer-app__upload-backdrop {
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(2px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.1));
+}
+
+.farmer-app__upload-shell {
+    position: relative;
+    z-index: 1;
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 2.5rem 0 3.5rem;
+}
+
+.farmer-app__upload-hero {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.farmer-app__upload-hero h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.05;
+    color: #10261f;
+}
+
+.farmer-app__upload-hero p {
+    margin: 0.75rem auto 0;
+    max-width: 40rem;
+    color: rgba(16, 38, 31, 0.78);
+    font-size: 1rem;
+}
+
+.farmer-app__upload-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 30px;
+    box-shadow: 0 24px 70px rgba(20, 54, 44, 0.12);
+    padding: 1.35rem;
+}
+
+.farmer-app__upload-workflow,
 .farmer-app__upload-checklist,
 .farmer-app__upload-selected {
     display: grid;
     gap: 0.8rem;
 }
 
+.farmer-app__upload-workflow {
+    gap: 1.15rem;
+}
+
+.farmer-app__upload-lookup,
+.farmer-app__upload-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.farmer-app__upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.farmer-app__upload-field {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.farmer-app__upload-field span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #19372e;
+}
+
+.farmer-app__upload-field input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(12, 106, 82, 0.15);
+    background: #f7fbf8;
+    border-radius: 16px;
+    padding: 0.95rem 1rem;
+    color: #163229;
+    outline: none;
+}
+
+.farmer-app__upload-field input:focus {
+    border-color: #0c6a52;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(12, 106, 82, 0.1);
+}
+
 .farmer-app__upload-hidden-input {
     display: none;
+}
+
+.farmer-app__upload-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-radius: 20px;
+    background: #102b23;
+    color: #f4fbf6;
+}
+
+.farmer-app__upload-progress-main {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    min-width: 0;
+}
+
+.farmer-app__upload-progress-count {
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 3px solid rgba(136, 212, 171, 0.9);
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.farmer-app__upload-progress-main strong,
+.farmer-app__upload-progress-meta p,
+.farmer-app__upload-progress-meta small {
+    display: block;
+}
+
+.farmer-app__upload-progress-main p,
+.farmer-app__upload-progress-meta p,
+.farmer-app__upload-progress-meta small {
+    margin: 0.2rem 0 0;
+}
+
+.farmer-app__upload-progress-main p {
+    color: rgba(238, 247, 241, 0.75);
+}
+
+.farmer-app__upload-progress-main p span {
+    color: #8fe2b8;
+    font-weight: 700;
+}
+
+.farmer-app__upload-progress-meta {
+    text-align: right;
+    color: rgba(244, 251, 246, 0.9);
+}
+
+.farmer-app__upload-progress-meta small {
+    color: rgba(244, 251, 246, 0.7);
 }
 
 .farmer-app__upload-checklist {
@@ -562,10 +715,10 @@ onMounted(() => {
 .farmer-app__upload-check {
     border: 1px solid rgba(0, 54, 41, 0.11);
     border-radius: 16px;
-    padding: 0.8rem 0.95rem;
+    padding: 0.9rem 1rem;
     background: #fbfdfb;
     display: grid;
-    gap: 0.25rem;
+    gap: 0.3rem;
 }
 
 .farmer-app__upload-check.is-flagged,
@@ -579,9 +732,9 @@ onMounted(() => {
     border: 1px solid rgba(0, 54, 41, 0.1);
     border-radius: 18px;
     background: #fff;
-    padding: 1rem;
+    padding: 1rem 1.1rem;
     display: grid;
-    gap: 0.55rem;
+    gap: 0.65rem;
 }
 
 .farmer-app__upload-blockers ul,
@@ -598,15 +751,119 @@ onMounted(() => {
     margin-top: 0.35rem;
 }
 
-.farmer-app__upload-selected {
-    border-top: 1px dashed rgba(0, 54, 41, 0.14);
-    padding-top: 0.8rem;
+.farmer-app__upload-list {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.farmer-app__upload-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.95fr) minmax(168px, 208px);
+    gap: 1.15rem;
+    align-items: start;
+    border: 1px solid rgba(0, 54, 41, 0.11);
+    border-radius: 22px;
+    background: #fff;
+    padding: 1.1rem;
+}
+
+.farmer-app__upload-item-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.farmer-app__upload-item-head h3,
+.farmer-app__upload-item-head p {
+    margin: 0;
+}
+
+.farmer-app__upload-item-head h3 {
+    color: #17352c;
+    font-size: 1.12rem;
+    line-height: 1.2;
+}
+
+.farmer-app__upload-item-head p {
+    color: #65776f;
+    margin-top: 0.28rem;
+    line-height: 1.35;
+    font-size: 0.94rem;
+}
+
+.farmer-app__upload-item-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: #f5f8f5;
+    border: 1px solid rgba(0, 54, 41, 0.08);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.farmer-app__upload-item-icon img {
+    width: 1.6rem;
+    height: 1.6rem;
+    object-fit: contain;
+}
+
+.farmer-app__upload-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
     align-items: center;
+    align-content: flex-start;
+    min-width: 0;
+    padding-top: 0.15rem;
+}
+
+.farmer-app__upload-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #eef3f0;
+    color: #35564b;
+    margin-right: 0.1rem;
+}
+
+.farmer-app__upload-badge.is-pending {
+    background: #f1f3f1;
+    color: #5f7269;
+}
+
+.farmer-app__upload-badge.is-uploaded {
+    background: #e4f5ea;
+    color: #196840;
+}
+
+.farmer-app__upload-badge.is-flagged {
+    background: #fff0ea;
+    color: #a14d34;
+}
+
+.farmer-app__upload-selected {
+    border-left: 1px dashed rgba(0, 54, 41, 0.14);
+    padding-left: 1.15rem;
+    align-items: start;
+    justify-items: end;
+    min-width: 0;
+    gap: 0.65rem;
 }
 
 .farmer-app__upload-preview {
     width: 100%;
-    max-width: 160px;
+    max-width: 148px;
+    aspect-ratio: 4 / 5;
     border-radius: 16px;
     object-fit: cover;
     border: 1px solid rgba(0, 54, 41, 0.1);
@@ -626,14 +883,56 @@ onMounted(() => {
     background: #f7fbf8;
     color: #0c5f49;
     border-radius: 999px;
-    padding: 0.72rem 1rem;
+    padding: 0.72rem 1.05rem;
     font-weight: 700;
+    min-height: 2.75rem;
+    min-width: 7.75rem;
+    font-size: 0.92rem;
 }
 
 .farmer-app__upload-picker--camera {
     background: #0c6a52;
     border-color: #0c6a52;
     color: #fff;
+}
+
+.farmer-app__upload-item-actions > .farmer-app__upload-badge {
+    margin-bottom: 0.15rem;
+}
+
+.farmer-app__upload-link {
+    border: none;
+    background: transparent;
+    color: #17704f;
+    font-weight: 700;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.farmer-app__upload-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+    padding-top: 0.25rem;
+}
+
+.farmer-app__upload-primary {
+    min-height: 3rem;
+}
+
+.farmer-app__upload-help,
+.farmer-app__upload-footer {
+    text-align: center;
+    margin-top: 1.15rem;
+    color: rgba(16, 38, 31, 0.8);
+}
+
+.farmer-app__upload-help a {
+    color: #0c6a52;
+    font-weight: 700;
 }
 
 .farmer-app__upload-badge.is-review {
@@ -658,5 +957,76 @@ onMounted(() => {
     display: block;
     height: 100%;
     background: linear-gradient(90deg, #0c6a52, #59b27d);
+}
+
+@media (max-width: 920px) {
+    .farmer-app__upload-item {
+        grid-template-columns: 1fr;
+        gap: 0.95rem;
+    }
+
+    .farmer-app__upload-selected {
+        border-left: none;
+        border-top: 1px dashed rgba(0, 54, 41, 0.14);
+        padding-left: 0;
+        padding-top: 0.95rem;
+        justify-items: start;
+    }
+
+    .farmer-app__upload-progress {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .farmer-app__upload-progress-meta {
+        text-align: left;
+    }
+}
+
+@media (max-width: 720px) {
+    .farmer-app__upload-shell {
+        width: min(100% - 1rem, 100%);
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+    }
+
+    .farmer-app__upload-card {
+        border-radius: 24px;
+        padding: 0.95rem;
+    }
+
+    .farmer-app__upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .farmer-app__upload-checklist {
+        grid-template-columns: 1fr;
+    }
+
+    .farmer-app__upload-item-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.7rem;
+    }
+
+    .farmer-app__upload-picker {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .farmer-app__upload-item-head h3 {
+        font-size: 1.02rem;
+    }
+
+    .farmer-app__upload-link {
+        text-align: left;
+        padding-top: 0.1rem;
+    }
+
+    .farmer-app__upload-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+    }
 }
 </style>

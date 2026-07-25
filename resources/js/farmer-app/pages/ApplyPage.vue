@@ -121,13 +121,13 @@ const estimatedMemberType = computed(() => {
     if (age.value >= 60) {
         return {
             code: 'NSC',
-            label: 'Estimated member type: New Senior Citizen',
+            label: 'New Senior Citizen',
         };
     }
 
     return {
         code: 'NM',
-        label: 'Estimated member type: New Member',
+        label: 'New Member',
     };
 });
 
@@ -570,7 +570,7 @@ loadReapplyContext();
                             <article class="farmer-app__apply-review-card">
                                 <small>Age Check</small>
                                 <strong>{{ age ?? 'Pending' }}</strong>
-                                <p>{{ birthDateGuidance || 'Enter your birth date to see your eligibility guidance.' }}</p>
+                                <p v-if="birthDateGuidance">{{ birthDateGuidance }}</p>
                             </article>
                         </div>
 
