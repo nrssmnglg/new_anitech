@@ -125,7 +125,7 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function markAllRead(): RedirectResponse
+    public function markAllRead(Request $request): JsonResponse|RedirectResponse
     {
         DB::table('notification_recipients')
             ->where('user_id', auth()->id())
@@ -136,21 +136,37 @@ class NotificationController extends Controller
                 'updated_at' => now(),
             ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'All notifications marked as read.',
+            ]);
+        }
+
         return redirect()
             ->route('admin.notifications.index')
             ->with('success', 'All notifications marked as read.');
     }
 
-    public function markRead(int $recipient): RedirectResponse
+    public function markRead(Request $request, int $recipient): JsonResponse|RedirectResponse
     {
         $updated = $this->markRecipientRead($recipient);
+        $message = $updated ? 'Notification marked as read.' : 'Notification already marked as read.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'updated' => $updated,
+            ]);
+        }
 
         return redirect()
             ->route('admin.notifications.index')
-            ->with('success', $updated ? 'Notification marked as read.' : 'Notification already marked as read.');
+            ->with('success', $message);
     }
 
-    public function open(int $recipient): RedirectResponse
+    public function open(Request $request, int $recipient): JsonResponse|RedirectResponse
     {
         $notification = $this->notificationQuery()
             ->where('recipients.id', $recipient)
@@ -160,6 +176,13 @@ class NotificationController extends Controller
 
         $payload = $this->decodePayload($notification->payload ?? null);
         $targetUrl = $this->targetUrl((string) $notification->type, $payload);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'target_url' => $targetUrl,
+            ]);
+        }
 
         if ($targetUrl !== null) {
             return redirect()->to($targetUrl);
