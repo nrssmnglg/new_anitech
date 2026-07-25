@@ -34,7 +34,7 @@ function submit() {
             <div class="mb-8 text-center">
                 <div class="mx-auto flex justify-center"><img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain"></div>
                 <h1 class="mt-5 text-2xl font-extrabold text-stone-800">Verify OTP</h1>
-                <p class="mt-2 text-sm text-stone-500">Enter the 6-digit OTP from your email to continue with your office account password reset.</p>
+                <p class="mt-2 text-sm text-stone-500">Enter the 6-digit OTP from your email to continue with your office account password reset. OTP codes expire after 10 minutes.</p>
             </div>
 
             <div v-if="errorList.length" class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -58,6 +58,8 @@ function submit() {
                     {{ form.processing ? 'VERIFYING...' : 'VERIFY OTP' }}
                 </button>
             </form>
+
+            <p class="mt-6 text-center text-sm text-stone-500">If the OTP does not arrive, go back and request a new code.</p>
         </div>
     </AdminAuthShell>
 </template>

@@ -104,7 +104,7 @@ onBeforeUnmount(() => {
                             <input
                                 v-model="form.email"
                                 type="email"
-                                placeholder="e.g. j.appleton@farm.com"
+                                placeholder="Enter your registered farmer email"
                             >
                         </div>
                         <small v-if="validationErrors.email" class="farmer-app__field-error">{{ validationErrors.email }}</small>
@@ -115,6 +115,7 @@ onBeforeUnmount(() => {
 
                     <div v-if="otpMeta" class="farmer-app__forgot-help">
                         <p v-if="countdown > 0">You can request another OTP in {{ countdown }}s.</p>
+                        <p>The OTP expires in 10 minutes.</p>
                         <p>{{ supportMessage }}</p>
                     </div>
 

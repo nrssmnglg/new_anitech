@@ -2,12 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\BrevoChannel;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class FarmerResetPasswordNotification extends Notification implements ShouldQueue
+class FarmerResetPasswordNotification extends Notification
 {
     use Queueable;
 
@@ -18,22 +17,33 @@ class FarmerResetPasswordNotification extends Notification implements ShouldQueu
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return [BrevoChannel::class];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toBrevo(object $notifiable): array
     {
-        return (new MailMessage())
-            ->subject('Your AniTech Farmer password reset OTP')
-            ->view('emails.password-reset-otp', [
-                'subject' => 'Your AniTech Farmer password reset OTP',
+        $subject = 'Your AniTech Farmer password reset OTP';
+
+        return [
+            'sender' => [
+                'name' => (string) env('BREVO_SENDER_NAME', config('app.name', 'AniTech')),
+                'email' => (string) env('BREVO_SENDER_EMAIL'),
+            ],
+            'to' => [
+                'email' => (string) $notifiable->email,
+                'name' => (string) ($notifiable->name ?: 'Farmer'),
+            ],
+            'subject' => $subject,
+            'html' => view('emails.password-reset-otp', [
+                'subject' => $subject,
                 'greeting' => 'Hello' . ($notifiable->name ? ' ' . $notifiable->name : ' Farmer') . ',',
                 'intro' => 'We received a request to reset your AniTech Farmer account password.',
                 'code' => $this->code,
                 'actionLabel' => 'Open Reset Page',
                 'actionUrl' => $this->resetUrl($notifiable),
                 'logoUrl' => asset('figures/anitech-logo-official.svg'),
-            ]);
+            ])->render(),
+        ];
     }
 
     private function resetUrl(object $notifiable): string

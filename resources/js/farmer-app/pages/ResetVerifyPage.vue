@@ -5,11 +5,11 @@ import AppState from '../components/ui/AppState.vue';
 import { useLocale } from '../composables/useLocale';
 import { apiPost } from '../services/api';
 import { extractApiMessage, extractValidationErrors } from '../utils/api';
+import { brandLogoUrl } from '../utils/asset';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useLocale();
-import { brandLogoUrl } from '../utils/asset';
 
 const brandLogo = brandLogoUrl();
 const loading = ref(false);
@@ -205,7 +205,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="farmer-app__verify-email">
-                    <span class="farmer-app__verify-email-icon" aria-hidden="true">✉</span>
+                    <span class="farmer-app__verify-email-icon" aria-hidden="true">&#9993;</span>
                     <span>{{ form.email || t('otp.no_email') }}</span>
                 </div>
 
@@ -239,6 +239,7 @@ onBeforeUnmount(() => {
 
                     <div class="farmer-app__verify-status">
                         <p v-if="otpMeta.retry_seconds_remaining > 0">{{ t('otp.resend_in', { seconds: otpMeta.retry_seconds_remaining }) }}</p>
+                        <p v-else class="farmer-app__verify-hint">OTP codes expire after 10 minutes.</p>
                     </div>
 
                     <button type="submit" class="farmer-app__btn farmer-app__verify-primary" :disabled="loading">

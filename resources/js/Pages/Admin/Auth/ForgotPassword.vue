@@ -36,7 +36,7 @@ function submit() {
                     <img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain">
                 </div>
                 <h1 class="mt-5 text-2xl font-extrabold text-stone-800">Forgot Password</h1>
-                <p class="mt-2 text-sm text-stone-500">Enter your office account email and we will send a 6-digit OTP.</p>
+                <p class="mt-2 text-sm text-stone-500">Enter your office account email and we will send a 6-digit OTP. The code expires in 10 minutes.</p>
             </div>
 
             <div v-if="flashStatus" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
@@ -69,6 +69,7 @@ function submit() {
             </form>
 
             <div class="mt-6 text-center text-sm">
+                <p class="mb-3 text-stone-500">If the email does not arrive, check your spam folder first.</p>
                 <Link :href="loginUrl" class="font-semibold text-[#1B4D3E] hover:text-[#2A6B54]">Back to sign in</Link>
             </div>
         </div>

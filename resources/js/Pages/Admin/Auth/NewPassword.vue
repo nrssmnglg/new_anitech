@@ -35,7 +35,7 @@ function submit() {
             <div class="mb-8 text-center">
                 <div class="mx-auto flex justify-center"><img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain"></div>
                 <h1 class="mt-5 text-2xl font-extrabold text-stone-800">Choose New Password</h1>
-                <p class="mt-2 text-sm text-stone-500">Your OTP is confirmed. Set a new password for your office account.</p>
+                <p class="mt-2 text-sm text-stone-500">Your OTP is confirmed. Set a new password for your office account and keep it different from your current password.</p>
             </div>
 
             <div v-if="errorList.length" class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">

@@ -5,11 +5,11 @@ import AppState from '../components/ui/AppState.vue';
 import { useLocale } from '../composables/useLocale';
 import { apiPost } from '../services/api';
 import { extractApiMessage, extractValidationErrors } from '../utils/api';
+import { brandLogoUrl } from '../utils/asset';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useLocale();
-import { brandLogoUrl } from '../utils/asset';
 
 const brandLogo = brandLogoUrl();
 const loading = ref(false);
@@ -64,7 +64,7 @@ const submit = async () => {
                     <div class="farmer-app__new-password-field">
                         <span>{{ t('newPassword.email') }}</span>
                         <div class="farmer-app__new-password-input-wrap farmer-app__new-password-input-wrap--readonly">
-                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">✉</span>
+                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">&#9993;</span>
                             <input v-model="form.email" type="email" readonly />
                         </div>
                         <p v-if="validationErrors.email" class="farmer-app__new-password-error">{{ validationErrors.email }}</p>
@@ -73,7 +73,7 @@ const submit = async () => {
                     <div class="farmer-app__new-password-field">
                         <span>{{ t('newPassword.new_password') }}</span>
                         <div class="farmer-app__new-password-input-wrap">
-                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">🔒</span>
+                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">&#128274;</span>
                             <input
                                 v-model="form.password"
                                 :type="showPassword ? 'text' : 'password'"
@@ -95,7 +95,7 @@ const submit = async () => {
                     <div class="farmer-app__new-password-field">
                         <span>{{ t('newPassword.confirm_password') }}</span>
                         <div class="farmer-app__new-password-input-wrap">
-                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">🛡</span>
+                            <span class="farmer-app__new-password-input-icon" aria-hidden="true">&#128737;</span>
                             <input
                                 v-model="form.password_confirmation"
                                 :type="showPasswordConfirmation ? 'text' : 'password'"
