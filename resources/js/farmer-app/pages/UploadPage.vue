@@ -61,18 +61,6 @@ const uploadChecklist = computed(() => (application.value?.documents ?? []).map(
     statusLabel: documentStatusLabel(document),
 })));
 
-const blockingDocuments = computed(() => (application.value?.documents ?? [])
-    .filter((document) => {
-        const statusKey = documentStatusKey(document);
-        return statusKey === 'missing' || statusKey === 'needs_resubmission';
-    })
-    .map((document) => ({
-        type: document.type,
-        label: document.label,
-        statusLabel: documentStatusLabel(document),
-        remarks: document.remarks,
-    })));
-
 const uploadHelpText = computed(() => {
     if (!application.value) {
         return t('upload.open_saved_draft');
@@ -105,13 +93,6 @@ const formattedValidationErrors = computed(() => Object.entries(validationErrors
         message: String(message ?? ''),
     };
 }));
-
-const qualityHints = [
-    t('upload.hint_readable'),
-    t('upload.hint_glare'),
-    t('upload.hint_corners'),
-    t('upload.hint_lighting'),
-];
 
 const draftAttachmentKey = (documentType) => `membership-upload:${lookup.application_no || 'pending'}:${documentType}`;
 
@@ -523,21 +504,6 @@ onMounted(() => {
                         </article>
                     </div>
 
-                    <div v-if="blockingDocuments.length" class="farmer-app__upload-blockers">
-                        <strong>{{ t('upload.missing_summary') }}</strong>
-                        <ul>
-                            <li v-for="document in blockingDocuments" :key="document.type">
-                                {{ document.label }} - {{ document.statusLabel }}<span v-if="document.remarks">: {{ document.remarks }}</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="farmer-app__upload-quality">
-                        <ul>
-                            <li v-for="hint in qualityHints" :key="hint">{{ hint }}</li>
-                        </ul>
-                    </div>
-
                     <div class="farmer-app__upload-list">
                         <article
                             v-for="document in uploadChecklist"
@@ -843,7 +809,6 @@ onMounted(() => {
     background: #fff7f3;
 }
 
-.farmer-app__upload-blockers,
 .farmer-app__upload-quality,
 .farmer-app__upload-error-list {
     border: 1px solid rgba(0, 54, 41, 0.1);
@@ -854,7 +819,6 @@ onMounted(() => {
     gap: 0.65rem;
 }
 
-.farmer-app__upload-blockers ul,
 .farmer-app__upload-quality ul,
 .farmer-app__upload-error-list ul {
     margin: 0;
