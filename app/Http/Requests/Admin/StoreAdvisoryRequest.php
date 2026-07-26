@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class StoreAdvisoryRequest extends FormRequest
@@ -23,6 +26,39 @@ class StoreAdvisoryRequest extends FormRequest
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:10240'],
         ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'attachments.*.uploaded' => 'One or more attachments could not be uploaded. Please select the file again and retry.',
+            'attachments.*.file' => 'The selected attachment is invalid or could not be read.',
+        ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $files = $this->file('attachments', []);
+            $files = $files instanceof UploadedFile ? [$files] : array_values(array_filter($files));
+
+            foreach ($files as $index => $file) {
+                if (! $file instanceof UploadedFile || $file->isValid()) {
+                    continue;
+                }
+
+                Log::warning('Advisory attachment upload failed during create request.', [
+                    'user_id' => $this->user()?->id,
+                    'ip' => $this->ip(),
+                    'index' => $index,
+                    'original_name' => $file->getClientOriginalName(),
+                    'client_mime_type' => $file->getClientMimeType(),
+                    'client_size' => $file->getSize(),
+                    'upload_error' => $file->getError(),
+                    'upload_error_message' => $file->getErrorMessage(),
+                ]);
+            }
+        });
     }
 
     protected function prepareForValidation(): void
