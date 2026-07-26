@@ -89,6 +89,23 @@ const uploadHelpText = computed(() => {
     return t('upload.all_on_record');
 });
 
+const formattedValidationErrors = computed(() => Object.entries(validationErrors.value).map(([key, message]) => {
+    const normalizedKey = String(key ?? '').replace(/^documents\./, '').replace(/^document$/, 'uploaded file');
+    const label = normalizedKey
+        .split('.')
+        .pop()
+        .split('_')
+        .filter(Boolean)
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(' ');
+
+    return {
+        key,
+        label: label || 'Error',
+        message: String(message ?? ''),
+    };
+}));
+
 const qualityHints = [
     t('upload.hint_readable'),
     t('upload.hint_glare'),
@@ -331,6 +348,7 @@ const submitDocuments = async () => {
             const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
                 params: {
                     birth_date: birthDate,
+                    document_type: type,
                 },
                 onUploadProgress: (event) => {
                     if (!event.total) {
@@ -430,6 +448,14 @@ onMounted(() => {
 
                 <AppState v-if="error" type="error" :message="error" />
                 <AppState v-if="success" :message="success" />
+                <div v-if="formattedValidationErrors.length" class="farmer-app__upload-error-list">
+                    <strong>Exact error details</strong>
+                    <ul>
+                        <li v-for="item in formattedValidationErrors" :key="item.key">
+                            {{ item.label }}: {{ item.message }}
+                        </li>
+                    </ul>
+                </div>
 
                 <div v-if="application" class="farmer-app__upload-workflow">
                     <article class="farmer-app__upload-progress">
@@ -787,7 +813,8 @@ onMounted(() => {
 }
 
 .farmer-app__upload-blockers,
-.farmer-app__upload-quality {
+.farmer-app__upload-quality,
+.farmer-app__upload-error-list {
     border: 1px solid rgba(0, 54, 41, 0.1);
     border-radius: 18px;
     background: #fff;
@@ -797,11 +824,18 @@ onMounted(() => {
 }
 
 .farmer-app__upload-blockers ul,
-.farmer-app__upload-quality ul {
+.farmer-app__upload-quality ul,
+.farmer-app__upload-error-list ul {
     margin: 0;
     padding-left: 1rem;
     display: grid;
     gap: 0.35rem;
+}
+
+.farmer-app__upload-error-list {
+    border-color: rgba(179, 84, 58, 0.28);
+    background: #fff5f2;
+    color: #8d3f2a;
 }
 
 .farmer-app__upload-remark {

@@ -139,6 +139,18 @@ class MembershipApplicationController extends Controller
 
     public function uploadDocument(Request $request, string $applicationNo): JsonResponse
     {
+        if (! $request->filled('birth_date') && $request->query('birth_date')) {
+            $request->merge([
+                'birth_date' => (string) $request->query('birth_date'),
+            ]);
+        }
+
+        if (! $request->filled('document_type') && $request->query('document_type')) {
+            $request->merge([
+                'document_type' => (string) $request->query('document_type'),
+            ]);
+        }
+
         $validated = $request->validate([
             'birth_date' => ['required', 'date'],
         ]);
