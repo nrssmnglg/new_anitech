@@ -21,7 +21,7 @@ defineEmits(['submit-payment', 'submit-rejection']);
         <section class="rounded-[24px] border border-[#dbe2de] bg-white shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
             <div class="border-b border-[#e4ebe7] px-5 py-4">
                 <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Step 3</p>
-                <h2 class="mt-1 text-lg font-bold text-[#1a2420]">
+                <h2 class="mt-1 text-base font-bold text-[#1a2420]">
                     {{ flow.isMobile ? 'Mobile payment' : 'Payment recording' }}
                 </h2>
             </div>
@@ -29,20 +29,20 @@ defineEmits(['submit-payment', 'submit-rejection']);
             <div class="space-y-4 px-5 py-5">
                 <div class="grid gap-3 sm:grid-cols-2">
                     <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
-                        <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Membership Fee</p>
-                        <p class="mt-2 text-lg font-black text-[#191c1c]">PHP {{ Number(assessment.membershipFee || 0).toFixed(2) }}</p>
+                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Membership Fee</p>
+                        <p class="mt-1.5 text-[1.05rem] font-black text-[#191c1c]">PHP {{ Number(assessment.membershipFee || 0).toFixed(2) }}</p>
                     </div>
                     <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
-                        <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Annual Due</p>
-                        <p class="mt-2 text-lg font-black text-[#191c1c]">PHP {{ Number(assessment.annualDue || 0).toFixed(2) }}</p>
+                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Annual Due</p>
+                        <p class="mt-1.5 text-[1.05rem] font-black text-[#191c1c]">PHP {{ Number(assessment.annualDue || 0).toFixed(2) }}</p>
                     </div>
                     <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] p-4">
-                        <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Mortuary Fee</p>
-                        <p class="mt-2 text-lg font-black text-[#191c1c]">PHP {{ Number(assessment.mortuaryFee || 0).toFixed(2) }}</p>
+                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Mortuary Fee</p>
+                        <p class="mt-1.5 text-[1.05rem] font-black text-[#191c1c]">PHP {{ Number(assessment.mortuaryFee || 0).toFixed(2) }}</p>
                     </div>
                     <div class="rounded-[20px] border border-[#d4e3da] bg-[linear-gradient(135deg,_#eef6f0_0%,_#ffffff_100%)] p-4">
-                        <p class="text-xs font-black uppercase tracking-[0.2em] text-[#6a7b73]">Total Due</p>
-                        <p class="mt-2 text-lg font-black text-[#163b31]">PHP {{ Number(assessment.totalAmountDue || 0).toFixed(2) }}</p>
+                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#6a7b73]">Total Due</p>
+                        <p class="mt-1.5 text-[1.05rem] font-black text-[#163b31]">PHP {{ Number(assessment.totalAmountDue || 0).toFixed(2) }}</p>
                     </div>
                 </div>
 

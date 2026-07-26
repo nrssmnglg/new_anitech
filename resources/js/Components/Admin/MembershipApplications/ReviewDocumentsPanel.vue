@@ -104,7 +104,7 @@ function alertBadge(document) {
         <div class="flex items-center justify-between border-b border-[#e4ebe7] px-5 py-4">
             <div>
                 <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Step 2</p>
-                <h2 class="mt-1 text-lg font-bold text-[#1a2420]">Document checklist</h2>
+                <h2 class="mt-1 text-base font-bold text-[#1a2420]">Document checklist</h2>
             </div>
             <span class="inline-flex rounded-full px-3 py-1 text-xs font-black" :class="flow.documentsComplete ? 'bg-[#eef7e3] text-[#416918]' : 'bg-[#fff3dc] text-[#a86100]'">
                 {{ flow.verifiedCount }}/{{ flow.requiredCount }} verified
@@ -133,16 +133,16 @@ function alertBadge(document) {
 
             <div class="grid gap-3 md:grid-cols-3">
                 <div class="rounded-[18px] border border-[#dfe5e1] bg-[#f7faf8] px-4 py-4">
-                    <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Missing Documents</p>
-                    <p class="mt-2 text-2xl font-black text-[#1a2420]">{{ flow.missingCount || 0 }}</p>
+                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Missing Documents</p>
+                    <p class="mt-1.5 text-[1.8rem] font-black text-[#1a2420]">{{ flow.missingCount || 0 }}</p>
                 </div>
                 <div class="rounded-[18px] border border-[#f2dfb2] bg-[#fffaf0] px-4 py-4">
-                    <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#9d6b00]">Expired Flags</p>
-                    <p class="mt-2 text-2xl font-black text-[#9d6b00]">{{ flow.expiredCount || 0 }}</p>
+                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#9d6b00]">Expired Flags</p>
+                    <p class="mt-1.5 text-[1.8rem] font-black text-[#9d6b00]">{{ flow.expiredCount || 0 }}</p>
                 </div>
                 <div class="rounded-[18px] border border-[#f4cfd6] bg-[#fff7f8] px-4 py-4">
-                    <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#b42341]">Needs Re-submission</p>
-                    <p class="mt-2 text-2xl font-black text-[#b42341]">{{ flow.resubmissionCount || 0 }}</p>
+                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#b42341]">Needs Re-submission</p>
+                    <p class="mt-1.5 text-[1.8rem] font-black text-[#b42341]">{{ flow.resubmissionCount || 0 }}</p>
                 </div>
             </div>
 

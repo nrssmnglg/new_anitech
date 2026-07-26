@@ -138,43 +138,43 @@ function submitRejection() {
                 </article>
             </section>
 
-            <section class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-                <div class="space-y-6">
+            <section class="space-y-6">
+                <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                     <div id="application-profile-section">
                         <ReviewProfilePanel :application="application" :farmer="farmer" />
                     </div>
 
-                    <div id="application-documents-section">
-                        <ReviewDocumentsPanel
+                    <div id="application-payment-section">
+                        <ReviewSidebar
                             :application="application"
                             :flow="flow"
-                            :documents="documents"
-                            :document-remarks="documentRemarks"
-                            :features="features"
+                            :assessment="assessment"
+                            :payments="payments"
+                            :permissions="permissions"
+                            :rejection-reason-options="rejectionReasonOptions"
                             :urls="urls"
-                            @document-action="submitDocumentAction"
-                            @initialize-checklist="initializeChecklist"
+                            :payment-form="paymentForm"
+                            :rejection-form="rejectionForm"
+                            @submit-payment="submitPayment"
+                            @submit-rejection="submitRejection"
                         />
                     </div>
-
-                    <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Application Internal Notes" />
                 </div>
 
-                <div id="application-payment-section">
-                    <ReviewSidebar
+                <div id="application-documents-section">
+                    <ReviewDocumentsPanel
                         :application="application"
                         :flow="flow"
-                        :assessment="assessment"
-                        :payments="payments"
-                        :permissions="permissions"
-                        :rejection-reason-options="rejectionReasonOptions"
+                        :documents="documents"
+                        :document-remarks="documentRemarks"
+                        :features="features"
                         :urls="urls"
-                        :payment-form="paymentForm"
-                        :rejection-form="rejectionForm"
-                        @submit-payment="submitPayment"
-                        @submit-rejection="submitRejection"
+                        @document-action="submitDocumentAction"
+                        @initialize-checklist="initializeChecklist"
                     />
                 </div>
+
+                <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Application Internal Notes" />
             </section>
         </div>
     </AdminLayout>
