@@ -383,6 +383,7 @@ onMounted(() => {
                             <input
                                 v-model="lookup.birth_date"
                                 type="date"
+                                class="farmer-app__date-input"
                             >
                             <small v-if="validationErrors.birth_date" class="farmer-app__field-error">{{ validationErrors.birth_date }}</small>
                         </label>
@@ -630,18 +631,40 @@ onMounted(() => {
 .farmer-app__upload-field input {
     width: 100%;
     min-width: 0;
+    max-width: 100%;
     border: 1px solid rgba(12, 106, 82, 0.15);
     background: #f7fbf8;
     border-radius: 16px;
     padding: 0.95rem 1rem;
     color: #163229;
     outline: none;
+    box-sizing: border-box;
 }
 
 .farmer-app__upload-field input:focus {
     border-color: #0c6a52;
     background: #fff;
     box-shadow: 0 0 0 4px rgba(12, 106, 82, 0.1);
+}
+
+.farmer-app__date-input {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    min-height: 3.5rem;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.farmer-app__date-input::-webkit-date-and-time-value,
+.farmer-app__date-input::-webkit-datetime-edit,
+.farmer-app__date-input::-webkit-datetime-edit-fields-wrapper {
+    text-align: left;
+    padding: 0;
+}
+
+.farmer-app__date-input::-webkit-calendar-picker-indicator {
+    margin: 0;
 }
 
 .farmer-app__upload-hidden-input {

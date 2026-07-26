@@ -108,7 +108,7 @@ const submit = async () => {
                                         <path d="M8 4.5v3M16 4.5v3M5 10h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     </svg>
                                 </span>
-                                <input id="birth_date" v-model="form.birth_date" type="date" :readonly="hasLockedLookup" autocomplete="off" />
+                                <input id="birth_date" v-model="form.birth_date" type="date" class="farmer-app__date-input" :readonly="hasLockedLookup" autocomplete="off" />
                             </div>
                             <p v-if="auth.validationErrors.value.birth_date" class="farmer-app__setup-error">
                                 {{ auth.validationErrors.value.birth_date }}

@@ -522,20 +522,6 @@ class MembershipApplicationController extends Controller
             ]);
         }
 
-        $pendingDocuments = $documentMap->filter(fn ($document) => ! $this->documentUploaded($document));
-        $missingDocumentErrors = [];
-
-        foreach ($pendingDocuments as $documentType => $document) {
-            if (! array_key_exists($documentType, $documents)) {
-                $label = $document->document_type?->label() ?? ucfirst(str_replace('_', ' ', (string) $documentType));
-                $missingDocumentErrors["documents.$documentType"] = "Please attach {$label} before submitting all documents.";
-            }
-        }
-
-        if ($missingDocumentErrors !== []) {
-            throw ValidationException::withMessages($missingDocumentErrors);
-        }
-
         foreach ($documents as $documentType => $file) {
             $this->membershipApplicationService->uploadMobileDocument($application, (string) $documentType, $file);
         }

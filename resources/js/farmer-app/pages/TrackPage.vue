@@ -443,7 +443,7 @@ if (pageMode.value === 'status' && hasLookup.value) {
 
                     <label class="farmer-app__track-field">
                         <span>Date of Birth</span>
-                        <input v-model="lookup.birth_date" type="date">
+                        <input v-model="lookup.birth_date" type="date" class="farmer-app__date-input">
                         <small v-if="validationErrors.birth_date" class="farmer-app__field-error">{{ validationErrors.birth_date }}</small>
                     </label>
 
