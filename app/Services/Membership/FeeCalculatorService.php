@@ -166,11 +166,9 @@ class FeeCalculatorService
 
     private function feesForTransaction(array $fees, MemberTypeCode $memberType, string $transactionType): array
     {
-        $annualDue = $transactionType === 'renewal'
-            ? 0.0
-            : $this->normalizeAmount(($fees['fee_schedule'] ?? null) instanceof FeeSchedule
-                ? $fees['fee_schedule']->annual_due
-                : ($fees['annual_due'] ?? 0));
+        $annualDue = $this->normalizeAmount(($fees['fee_schedule'] ?? null) instanceof FeeSchedule
+            ? $fees['fee_schedule']->annual_due
+            : ($fees['annual_due'] ?? 0));
 
         if (($fees['fee_schedule'] ?? null) instanceof FeeSchedule) {
             /** @var FeeSchedule $feeSchedule */
