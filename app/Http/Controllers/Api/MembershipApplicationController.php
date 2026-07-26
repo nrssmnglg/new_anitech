@@ -25,6 +25,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -139,61 +140,87 @@ class MembershipApplicationController extends Controller
 
     public function uploadDocument(Request $request, string $applicationNo): JsonResponse
     {
-        if (! $request->filled('birth_date') && $request->query('birth_date')) {
-            $request->merge([
-                'birth_date' => (string) $request->query('birth_date'),
+        try {
+            if (! $request->filled('birth_date') && $request->query('birth_date')) {
+                $request->merge([
+                    'birth_date' => (string) $request->query('birth_date'),
+                ]);
+            }
+
+            if (! $request->filled('document_type') && $request->query('document_type')) {
+                $request->merge([
+                    'document_type' => (string) $request->query('document_type'),
+                ]);
+            }
+
+            $validated = $request->validate([
+                'birth_date' => ['required', 'date'],
             ]);
-        }
 
-        if (! $request->filled('document_type') && $request->query('document_type')) {
-            $request->merge([
-                'document_type' => (string) $request->query('document_type'),
+            $application = $this->resolveTrackedApplication(
+                $applicationNo,
+                (string) $validated['birth_date'],
+            );
+
+            $batchedDocuments = array_filter((array) $request->file('documents', []));
+
+            if ($batchedDocuments !== []) {
+                return $this->uploadDocumentsBatch($request, $application);
+            }
+
+            $validated = $request->validate([
+                'birth_date' => ['required', 'date'],
+                'document_type' => ['required', 'string'],
+                'document' => array_merge(['required'], self::MOBILE_UPLOAD_FILE_RULES),
             ]);
-        }
 
-        $validated = $request->validate([
-            'birth_date' => ['required', 'date'],
-        ]);
+            $document = $this->membershipApplicationService->uploadMobileDocument(
+                $application,
+                (string) $validated['document_type'],
+                $request->file('document'),
+            );
 
-        $application = $this->resolveTrackedApplication(
-            $applicationNo,
-            (string) $validated['birth_date'],
-        );
+            $application->refresh()->load(['farmer.profile', 'farmer.memberType', 'documents', 'paymentAssessments']);
 
-        $batchedDocuments = array_filter((array) $request->file('documents', []));
-
-        if ($batchedDocuments !== []) {
-            return $this->uploadDocumentsBatch($request, $application);
-        }
-
-        $validated = $request->validate([
-            'birth_date' => ['required', 'date'],
-            'document_type' => ['required', 'string'],
-            'document' => array_merge(['required'], self::MOBILE_UPLOAD_FILE_RULES),
-        ]);
-
-        $document = $this->membershipApplicationService->uploadMobileDocument(
-            $application,
-            (string) $validated['document_type'],
-            $request->file('document'),
-        );
-
-        $application->refresh()->load(['farmer.profile', 'farmer.memberType', 'documents', 'paymentAssessments']);
-
-        return response()->json([
-            'message' => 'Document uploaded successfully.',
-            'data' => [
-                'document' => [
-                    'type' => $document->document_type?->value ?? (string) $document->document_type,
-                    'label' => $document->document_type?->label() ?? ucfirst(str_replace('_', ' ', (string) $document->document_type)),
-                    'status' => $document->verification_status?->value ?? (string) $document->verification_status,
-                    'status_label' => $document->verification_status?->label() ?? ucfirst((string) $document->verification_status),
-                    'uploaded' => true,
-                    'original_name' => $document->original_name,
+            return response()->json([
+                'message' => 'Document uploaded successfully.',
+                'data' => [
+                    'document' => [
+                        'type' => $document->document_type?->value ?? (string) $document->document_type,
+                        'label' => $document->document_type?->label() ?? ucfirst(str_replace('_', ' ', (string) $document->document_type)),
+                        'status' => $document->verification_status?->value ?? (string) $document->verification_status,
+                        'status_label' => $document->verification_status?->label() ?? ucfirst((string) $document->verification_status),
+                        'uploaded' => true,
+                        'original_name' => $document->original_name,
+                    ],
+                    'application' => $this->trackingPayload($application),
                 ],
-                'application' => $this->trackingPayload($application),
-            ],
-        ]);
+            ]);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            Log::error('Farmer PWA document upload failed.', [
+                'application_no' => $applicationNo,
+                'birth_date' => $request->input('birth_date', $request->query('birth_date')),
+                'document_type' => $request->input('document_type', $request->query('document_type')),
+                'has_document' => $request->hasFile('document'),
+                'document_name' => $request->file('document')?->getClientOriginalName(),
+                'document_mime' => $request->file('document')?->getClientMimeType(),
+                'document_size' => $request->file('document')?->getSize(),
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
+
+            return response()->json([
+                'message' => 'Upload failed: ' . $exception->getMessage(),
+                'errors' => [
+                    'server' => [
+                        class_basename($exception) . ' in ' . basename($exception->getFile()) . ':' . $exception->getLine(),
+                    ],
+                ],
+            ], 500);
+        }
     }
 
     public function qrPage(Request $request, string $applicationNo): View|RedirectResponse|JsonResponse
