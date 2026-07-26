@@ -320,25 +320,36 @@ const submitDocuments = async () => {
 
     try {
         const birthDate = normalizeBirthDate(lookup.birth_date);
-        const formData = new FormData();
-        formData.append('birth_date', birthDate);
+        let latestApplication = application.value;
 
-        selectedFiles.forEach(([type, file]) => {
-            formData.append(`documents[${type}]`, file);
-        });
+        for (const [index, [type, file]] of selectedFiles.entries()) {
+            const formData = new FormData();
+            formData.append('birth_date', birthDate);
+            formData.append('document_type', type);
+            formData.append('document', file);
 
-        const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
-            params: {
-                birth_date: birthDate,
-            },
-            onUploadProgress: (event) => {
-                if (event.total) {
-                    uploadProgress.value = Math.round((event.loaded / event.total) * 100);
-                }
-            },
-        });
+            const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
+                params: {
+                    birth_date: birthDate,
+                },
+                onUploadProgress: (event) => {
+                    if (!event.total) {
+                        return;
+                    }
 
-        application.value = response?.data?.data?.application ?? null;
+                    const filePortion = event.loaded / event.total;
+                    const completedPortion = index / selectedFiles.length;
+                    const totalProgress = ((completedPortion + (filePortion / selectedFiles.length)) * 100);
+
+                    uploadProgress.value = Math.max(uploadProgress.value, Math.round(totalProgress));
+                },
+            });
+
+            latestApplication = response?.data?.data?.application ?? latestApplication;
+        }
+
+        uploadProgress.value = 100;
+        application.value = latestApplication;
         success.value = 'Documents uploaded successfully. Redirecting to tracking...';
         lookup.current_step = 'complete';
 
