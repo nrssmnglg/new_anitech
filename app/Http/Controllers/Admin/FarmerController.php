@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Backup\BackupRecoveryService;
 use App\Services\Farmers\FarmerRegistryService;
+use App\Services\Farmers\LegacyMembershipRecorderService;
 use App\Services\Farmers\FarmerStatusWorkflowService;
 use App\Services\Notifications\NotificationDispatchService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -48,6 +49,7 @@ class FarmerController extends Controller
 {
     public function __construct(
         private readonly FarmerRegistryService $registry,
+        private readonly LegacyMembershipRecorderService $legacyMembershipRecorder,
         private readonly FarmerStatusWorkflowService $statusWorkflowService,
         private readonly AuditTrailService $auditTrailService,
         private readonly BackupRecoveryService $backupRecoveryService,
@@ -237,6 +239,7 @@ class FarmerController extends Controller
             ...$validated,
             'record_origin' => 'Old Record',
         ]);
+        $farmer = $this->legacyMembershipRecorder->syncForOldRecord($farmer);
 
         $this->auditTrailService->recordChange(
             'farmers',

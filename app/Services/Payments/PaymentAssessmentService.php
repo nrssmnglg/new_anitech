@@ -17,17 +17,18 @@ class PaymentAssessmentService
     ) {
     }
 
-    public function createForApplication(MembershipApplication $application): PaymentAssessment
+    public function createForApplication(MembershipApplication $application, array $context = []): PaymentAssessment
     {
         $application->loadMissing('farmer.memberType');
-        $memberTypeCode = $application->farmer->memberType?->code;
-        $memberTypeId = $application->farmer->member_type_id;
+        $memberTypeCode = $context['member_type_code'] ?? $application->farmer->memberType?->code;
+        $memberTypeId = $context['member_type_id'] ?? $application->farmer->member_type_id;
+        $year = isset($context['year']) ? (int) $context['year'] : null;
 
         if (! $memberTypeCode) {
             throw new DomainException('Member type is required before creating a payment assessment.');
         }
 
-        $feeSchedule = $this->resolveFeeSchedule($memberTypeId);
+        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year);
 
         $calculation = $this->feeCalculator->calculateApplication([
             'member_type' => $memberTypeCode,
@@ -49,17 +50,18 @@ class PaymentAssessmentService
         );
     }
 
-    public function createForRenewal(RenewalRequest $renewalRequest): PaymentAssessment
+    public function createForRenewal(RenewalRequest $renewalRequest, array $context = []): PaymentAssessment
     {
         $renewalRequest->loadMissing('farmer.memberType');
-        $memberTypeCode = $renewalRequest->farmer->memberType?->code;
-        $memberTypeId = $renewalRequest->farmer->member_type_id;
+        $memberTypeCode = $context['member_type_code'] ?? $renewalRequest->farmer->memberType?->code;
+        $memberTypeId = $context['member_type_id'] ?? $renewalRequest->farmer->member_type_id;
+        $year = isset($context['year']) ? (int) $context['year'] : null;
 
         if (! $memberTypeCode) {
             throw new DomainException('Member type is required before creating a renewal payment assessment.');
         }
 
-        $feeSchedule = $this->resolveFeeSchedule($memberTypeId);
+        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year);
 
         $calculation = $this->feeCalculator->calculateRenewal([
             'member_type' => $memberTypeCode,
@@ -81,13 +83,43 @@ class PaymentAssessmentService
         );
     }
 
-    public function resolveFeeSchedule(?int $memberTypeId = null): FeeSchedule
+    public function resolveFeeSchedule(?int $memberTypeId = null, ?int $year = null): FeeSchedule
     {
-        return FeeSchedule::query()
-            ->when($memberTypeId, fn ($query) => $query->where('member_type_id', $memberTypeId))
+        $baseQuery = FeeSchedule::query()
+            ->when($memberTypeId, fn ($query) => $query->where('member_type_id', $memberTypeId));
+
+        if ($year !== null) {
+            $exactYear = (clone $baseQuery)
+                ->where('year', $year)
+                ->orderByDesc('is_active')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($exactYear !== null) {
+                return $exactYear;
+            }
+
+            $closestPastYear = (clone $baseQuery)
+                ->where('year', '<=', $year)
+                ->orderByDesc('year')
+                ->orderByDesc('is_active')
+                ->first();
+
+            if ($closestPastYear !== null) {
+                return $closestPastYear;
+            }
+        }
+
+        return (clone $baseQuery)
             ->where('is_active', true)
             ->orderByDesc('year')
+            ->orderByDesc('id')
             ->first()
-            ?? throw new DomainException('No active fee schedule is available for the selected member type.');
+            ?? $baseQuery
+                ->orderByDesc('year')
+                ->orderByDesc('is_active')
+                ->orderByDesc('id')
+                ->first()
+            ?? throw new DomainException('No fee schedule is available for the selected member type.');
     }
 }
