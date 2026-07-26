@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\FarmerStatus;
+use App\Enums\MembershipStatus;
 use App\Enums\NotificationType;
 use App\Exports\FarmerRegistryExport;
 use App\Http\Controllers\Controller;
