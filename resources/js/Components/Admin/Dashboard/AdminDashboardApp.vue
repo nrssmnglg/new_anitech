@@ -426,25 +426,25 @@ const linePoints = computed(() => {
             </button>
         </div>
 
-        <section class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <component
                 :is="card.href ? Link : 'article'"
                 v-for="card in summaryCards"
                 :key="card.key"
                 :href="card.href || undefined"
-                class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)] transition"
+                class="rounded-[1.75rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_30px_rgba(0,54,41,0.05)] transition"
                 :class="card.href ? 'group block hover:-translate-y-0.5 hover:border-[#cdd8d3] hover:shadow-[0_18px_48px_rgba(0,54,41,0.1)] focus:outline-none focus:ring-2 focus:ring-[#b8d9cf]' : ''"
             >
-                <div class="flex items-start justify-between gap-4">
-                    <div :class="['flex h-16 w-16 items-center justify-center rounded-[1.35rem]', card.iconBg]">
-                        <svg viewBox="0 0 24 24" :class="['h-8 w-8', card.iconColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <div class="flex items-start justify-between gap-3">
+                    <div :class="['flex h-14 w-14 items-center justify-center rounded-[1.15rem]', card.iconBg]">
+                        <svg viewBox="0 0 24 24" :class="['h-6 w-6', card.iconColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path v-for="path in iconPath(card.icon)" :key="path" :d="path" />
                         </svg>
                     </div>
                 </div>
-                <p class="mt-5 text-[1.05rem] font-medium text-[#44515d]">{{ card.label }}</p>
-                <p class="mt-1 text-[2rem] font-medium tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
-                <div class="mt-6 h-1.5 rounded-full bg-[#e8ece9]">
+                <p class="mt-4 text-[0.95rem] font-medium text-[#44515d]">{{ card.label }}</p>
+                <p class="mt-1 text-[1.7rem] font-medium tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
+                <div class="mt-4 h-1.5 rounded-full bg-[#e8ece9]">
                     <div :class="['h-1.5 rounded-full', card.progress]" :style="{ width: card.value > 0 ? '100%' : '12%' }"></div>
                 </div>
             </component>
