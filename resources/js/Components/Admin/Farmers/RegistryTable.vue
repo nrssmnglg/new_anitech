@@ -232,6 +232,7 @@ function qualityIssueClass(issue) {
                     <Link
                         v-else
                         :href="link.url"
+                        :only="['farmers']"
                         class="inline-flex items-center rounded-xl border px-3 py-2 text-sm font-bold transition"
                         :class="link.active ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#dbe2de] text-[#5f6b66] hover:bg-white'"
                         preserve-scroll

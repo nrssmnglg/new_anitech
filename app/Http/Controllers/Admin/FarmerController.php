@@ -1559,7 +1559,7 @@ class FarmerController extends Controller
         return match ($normalized) {
             FarmerStatus::ACTIVE => $query
                 ->whereNull('inactive_at')
-                ->whereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, now()->year)),
+                ->where('membership_status', MembershipStatus::ACTIVE->value),
             FarmerStatus::INACTIVE => $query
                 ->whereNotNull('inactive_at')
                 ->where(function (Builder $builder): void {
@@ -1572,19 +1572,11 @@ class FarmerController extends Controller
                 ->whereRaw("LOWER(COALESCE(inactive_reason, '')) LIKE '%deceas%'"),
             FarmerStatus::PENDING => $query
                 ->whereNull('inactive_at')
-                ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, now()->year)),
+                ->where(function (Builder $builder): void {
+                    $builder->whereNull('membership_status')
+                        ->orWhere('membership_status', '!=', MembershipStatus::ACTIVE->value);
+                }),
         };
-    }
-
-    private function applySettledMembershipYearConstraint(Builder $query, int $year): void
-    {
-        $query
-            ->where('membership_ledgers.year', $year)
-            ->where(function (Builder $ledgerBuilder): void {
-                $ledgerBuilder
-                    ->where('membership_ledgers.amount_paid', '>', 0)
-                    ->orWhereIn('membership_ledgers.payment_status', ['Paid', 'Overpaid', 'Waived']);
-            });
     }
 
     private function registryStatusOptions(): array

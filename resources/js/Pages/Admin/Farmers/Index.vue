@@ -63,10 +63,14 @@ const followUpForm = reactive({ note: '' });
 const archiveForm = reactive({ registered_before: '', archive_reason: '' });
 
 function applyFilters() {
+    selectedIds.value = [];
+    bulkScope.value = 'selected';
+
     router.get(props.resetUrl, { ...form }, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
+        only: ['farmers'],
     });
 }
 
