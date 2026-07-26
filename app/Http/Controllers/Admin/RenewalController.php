@@ -25,6 +25,7 @@ use App\Services\Farmers\FarmerRegistryService;
 use App\Services\Membership\FeeCalculatorService;
 use App\Services\Membership\RenewalRequestService;
 use App\Services\Notifications\RenewalReminderService;
+use App\Services\Payments\PaymentAssessmentService;
 use App\Services\Reports\Pdf\RenewalSummaryPdfService;
 use App\Services\Reports\Pdf\StoredPdfExportService;
 use DomainException;
@@ -53,6 +54,7 @@ class RenewalController extends Controller
         private readonly FarmerRegistryService $farmerRegistryService,
         private readonly FeeCalculatorService $feeCalculatorService,
         private readonly RenewalReminderService $renewalReminderService,
+        private readonly PaymentAssessmentService $paymentAssessmentService,
         private readonly RenewalSummaryPdfService $renewalSummaryPdfService,
         private readonly StoredPdfExportService $storedPdfExportService,
         private readonly AnalyticsService $analyticsService,
@@ -449,6 +451,21 @@ class RenewalController extends Controller
             })->values();
 
         $assessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+
+        if (
+            $renewal->farmer?->memberType?->code
+            && ! in_array($assessment?->status, [
+                AssessmentStatus::PAID,
+                AssessmentStatus::OVERPAID,
+                AssessmentStatus::WAIVED,
+            ], true)
+        ) {
+            $assessment = $this->paymentAssessmentService->createForRenewal(
+                $renewal->refresh()->load(['farmer.memberType', 'paymentAssessments.payments'])
+            );
+            $renewal->load('paymentAssessments.payments');
+        }
+
         $paymentPreview = null;
 
         if (! $assessment && $renewal->farmer?->memberType?->code) {
