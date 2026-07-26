@@ -911,10 +911,11 @@ class FarmerController extends Controller
             return $query->where('is_registry_record', true);
         }
 
-        return $query->where(function (Builder $builder): void {
-            $builder->whereNotNull('inactive_at')
-                ->orWhereRaw("LOWER(TRIM(COALESCE(membership_status, ''))) = ?", [MembershipStatus::ACTIVE->value]);
-        });
+        return $query->whereIn(DB::raw($this->farmerStatusCaseExpression()), [
+            FarmerStatus::ACTIVE->value,
+            FarmerStatus::INACTIVE->value,
+            FarmerStatus::DECEASED->value,
+        ]);
     }
 
     private function filters(Request $request): array
@@ -1578,27 +1579,27 @@ class FarmerController extends Controller
             ? $status
             : (FarmerStatus::tryFrom(strtolower((string) $status)) ?? FarmerStatus::PENDING);
 
-        return match ($normalized) {
-            FarmerStatus::ACTIVE => $query
-                ->whereNull('inactive_at')
-                ->whereRaw("LOWER(TRIM(COALESCE(membership_status, ''))) = ?", [MembershipStatus::ACTIVE->value]),
-            FarmerStatus::INACTIVE => $query
-                ->whereNotNull('inactive_at')
-                ->where(function (Builder $builder): void {
-                    $builder->whereNull('inactive_reason')
-                        ->orWhere('inactive_reason', '')
-                        ->orWhereRaw("LOWER(COALESCE(inactive_reason, '')) NOT LIKE '%deceas%'");
-                }),
-            FarmerStatus::DECEASED => $query
-                ->whereNotNull('inactive_at')
-                ->whereRaw("LOWER(COALESCE(inactive_reason, '')) LIKE '%deceas%'"),
-            FarmerStatus::PENDING => $query
-                ->whereNull('inactive_at')
-                ->where(function (Builder $builder): void {
-                    $builder->whereNull('membership_status')
-                        ->orWhere('membership_status', '!=', MembershipStatus::ACTIVE->value);
-                }),
-        };
+        return $query->whereRaw(
+            '(' . $this->farmerStatusCaseExpression() . ') = ?',
+            [$normalized->value],
+        );
+    }
+
+    private function farmerStatusCaseExpression(): string
+    {
+        return sprintf(
+            "CASE
+                WHEN inactive_at IS NOT NULL AND LOWER(COALESCE(inactive_reason, '')) LIKE '%%deceas%%' THEN '%s'
+                WHEN inactive_at IS NOT NULL THEN '%s'
+                WHEN LOWER(TRIM(COALESCE(membership_status, ''))) = '%s' THEN '%s'
+                ELSE '%s'
+            END",
+            FarmerStatus::DECEASED->value,
+            FarmerStatus::INACTIVE->value,
+            MembershipStatus::ACTIVE->value,
+            FarmerStatus::ACTIVE->value,
+            FarmerStatus::PENDING->value,
+        );
     }
 
     private function registryStatusOptions(): array
