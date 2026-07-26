@@ -3,12 +3,15 @@ defineProps({
     summary: { type: Object, required: true },
 });
 
+defineEmits(['filter-status']);
+
 const cards = [
     {
         key: 'total',
         label: 'Registered Farmers',
         icon: 'group',
         trend: 'Registry total',
+        status: '',
         iconClass: 'bg-[#003629]/6 text-[#003629]',
         valueClass: 'text-[#003629]',
         trendClass: 'text-[#416918]',
@@ -18,6 +21,7 @@ const cards = [
         label: 'Active Members',
         icon: 'check_circle',
         trend: 'Membership ready',
+        status: 'active',
         iconClass: 'bg-[#416918]/8 text-[#416918]',
         valueClass: 'text-[#416918]',
         trendClass: 'text-[#416918]',
@@ -27,6 +31,7 @@ const cards = [
         label: 'Inactive Farmers',
         icon: 'block',
         trend: 'All inactive',
+        status: 'inactive',
         iconClass: 'bg-[#d04d4d]/10 text-[#b53a3a]',
         valueClass: 'text-[#b53a3a]',
         trendClass: 'text-[#b53a3a]',
@@ -36,6 +41,7 @@ const cards = [
         label: 'Deceased Farmers',
         icon: 'block',
         trend: 'Recorded deceased',
+        status: 'deceased',
         iconClass: 'bg-[#7f1d1d]/10 text-[#8f2d2d]',
         valueClass: 'text-[#8f2d2d]',
         trendClass: 'text-[#8f2d2d]',
@@ -45,10 +51,12 @@ const cards = [
 
 <template>
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <article
+        <button
             v-for="card in cards"
             :key="card.key"
-            class="group rounded-[20px] border border-[#dbe2de] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,23,42,0.07)]"
+            type="button"
+            class="group rounded-[20px] border border-[#dbe2de] bg-white px-5 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.045)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,23,42,0.07)] focus:outline-none focus:ring-2 focus:ring-[#003629]/15"
+            @click="$emit('filter-status', card.status)"
         >
             <div class="flex items-start justify-between gap-3">
                 <div class="rounded-[1.05rem] p-2.5 transition group-hover:scale-105" :class="card.iconClass">
@@ -77,6 +85,6 @@ const cards = [
 
             <p class="mt-4 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#76847d]">{{ card.label }}</p>
             <p class="mt-1.5 text-[2.2rem] font-black leading-none tracking-[-0.03em]" :class="card.valueClass">{{ summary[card.key] }}</p>
-        </article>
+        </button>
     </section>
 </template>

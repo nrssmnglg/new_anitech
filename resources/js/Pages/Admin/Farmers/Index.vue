@@ -110,6 +110,11 @@ function setQualityFilter(value) {
     applyFilters();
 }
 
+function setStatusFilter(value) {
+    form.status = value || '';
+    applyFilters();
+}
+
 function toggleSelection(id) {
     if (selectedIds.value.includes(id)) {
         selectedIds.value = selectedIds.value.filter((value) => value !== id);
@@ -267,7 +272,7 @@ function submitBulkArchive() {
                 @export="openExportModal"
             />
 
-            <RegistrySummaryGrid :summary="summary" />
+            <RegistrySummaryGrid :summary="summary" @filter-status="setStatusFilter" />
 
             <RegistryFilters
                 :form="form"
