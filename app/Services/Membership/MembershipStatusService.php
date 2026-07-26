@@ -50,6 +50,7 @@ class MembershipStatusService
         $now = CarbonImmutable::now();
 
         $farmer->forceFill([
+            'is_registry_record' => true,
             'membership_status' => MembershipStatus::ACTIVE,
             'registered_at' => $farmer->registered_at ?? $now,
             'activated_at' => $farmer->activated_at ?? $now,

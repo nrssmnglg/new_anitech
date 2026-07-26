@@ -38,6 +38,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -893,11 +894,16 @@ class FarmerController extends Controller
 
     private function listedFarmersQuery(): Builder
     {
-        return Farmer::query()
-            ->where(function (Builder $query): void {
-                $query->whereNotNull('inactive_at')
-                    ->orWhere('membership_status', MembershipStatus::ACTIVE->value);
-            });
+        $query = Farmer::query();
+
+        if (Schema::hasColumn('farmers', 'is_registry_record')) {
+            return $query->where('is_registry_record', true);
+        }
+
+        return $query->where(function (Builder $builder): void {
+            $builder->whereNotNull('inactive_at')
+                ->orWhereRaw("LOWER(TRIM(COALESCE(membership_status, ''))) = ?", [MembershipStatus::ACTIVE->value]);
+        });
     }
 
     private function filters(Request $request): array

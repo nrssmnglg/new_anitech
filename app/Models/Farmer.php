@@ -29,6 +29,7 @@ class Farmer extends Model
         'barangay_id',
         'association_id',
         'member_type_id',
+        'is_registry_record',
         'membership_status',
         'record_origin',
         'registered_at',
@@ -38,6 +39,7 @@ class Farmer extends Model
     ];
 
     protected $casts = [
+        'is_registry_record' => 'boolean',
         'registered_at' => 'datetime',
         'activated_at' => 'datetime',
         'inactive_at' => 'datetime',
@@ -181,6 +183,12 @@ class Farmer extends Model
 
     public function getIsRegistryRecordAttribute(): bool
     {
-        return true;
+        $value = $this->getAttributeFromArray('is_registry_record');
+
+        if ($value === null) {
+            return true;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? (bool) $value;
     }
 }
