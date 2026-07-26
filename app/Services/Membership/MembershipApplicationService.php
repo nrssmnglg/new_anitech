@@ -380,6 +380,14 @@ class MembershipApplicationService
                 $payload['file_size'] = $file->getSize();
             }
 
+            if (! $this->farmerDocumentHasColumn('mime_type')) {
+                unset($document->mime_type);
+            }
+
+            if (! $this->farmerDocumentHasColumn('file_size')) {
+                unset($document->file_size);
+            }
+
             $document->forceFill($payload)->save();
 
             if (($application->status?->value ?? (string) $application->status) === ApplicationStatus::DRAFT->value) {
@@ -429,6 +437,14 @@ class MembershipApplicationService
 
             if ($this->farmerDocumentHasColumn('file_size')) {
                 $payload['file_size'] = $file->getSize();
+            }
+
+            if (! $this->farmerDocumentHasColumn('mime_type')) {
+                unset($document->mime_type);
+            }
+
+            if (! $this->farmerDocumentHasColumn('file_size')) {
+                unset($document->file_size);
             }
 
             $document->forceFill($payload)->save();

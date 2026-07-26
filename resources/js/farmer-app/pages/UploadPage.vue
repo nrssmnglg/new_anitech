@@ -77,6 +77,18 @@ const uploadHelpText = computed(() => {
     return t('upload.all_on_record');
 });
 
+const uploadStatusLabel = computed(() => {
+    if (!application.value) {
+        return '';
+    }
+
+    if (documentSummary.value.flagged > 0) {
+        return 'Resubmission';
+    }
+
+    return application.value.status_label || 'Submitted';
+});
+
 const formattedValidationErrors = computed(() => Object.entries(validationErrors.value).map(([key, message]) => {
     const normalizedKey = String(key ?? '').replace(/^documents\./, '').replace(/^document$/, 'uploaded file');
     const label = normalizedKey
@@ -477,7 +489,7 @@ onMounted(() => {
                             </div>
                             <div>
                                 <strong>Progress: {{ documentSummary.total ? Math.round((documentSummary.uploaded / documentSummary.total) * 100) : 0 }}%</strong>
-                                <p>Application Status: <span>{{ application.status_label }}</span></p>
+                                <p>Application Status: <span>{{ uploadStatusLabel }}</span></p>
                             </div>
                         </div>
                         <div class="farmer-app__upload-progress-meta">
