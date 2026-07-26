@@ -106,6 +106,28 @@ const createPreviewUrl = (file) => {
     return URL.createObjectURL(file);
 };
 
+const normalizeBirthDate = (value) => {
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+        return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return raw;
+    }
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+        return raw;
+    }
+
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
 const documentStatusKey = (document) => {
     if (document.needs_correction) {
         return 'needs_resubmission';
@@ -297,14 +319,18 @@ const submitDocuments = async () => {
     success.value = '';
 
     try {
+        const birthDate = normalizeBirthDate(lookup.birth_date);
         const formData = new FormData();
-        formData.append('birth_date', lookup.birth_date);
+        formData.append('birth_date', birthDate);
 
         selectedFiles.forEach(([type, file]) => {
             formData.append(`documents[${type}]`, file);
         });
 
         const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
+            params: {
+                birth_date: birthDate,
+            },
             onUploadProgress: (event) => {
                 if (event.total) {
                     uploadProgress.value = Math.round((event.loaded / event.total) * 100);
