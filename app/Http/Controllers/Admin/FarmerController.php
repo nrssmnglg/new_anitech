@@ -892,11 +892,7 @@ class FarmerController extends Controller
 
     private function listedFarmersQuery(): Builder
     {
-        return Farmer::query()->where(function (Builder $query): void {
-            $query
-                ->whereNotNull('inactive_at')
-                ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, now()->year));
-        });
+        return Farmer::query();
     }
 
     private function filters(Request $request): array
