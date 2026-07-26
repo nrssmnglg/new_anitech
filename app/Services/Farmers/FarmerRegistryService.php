@@ -227,8 +227,8 @@ class FarmerRegistryService
             $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
         }
 
-        if ($this->shouldRequireReactivation($payload['record_origin'], $registeredAt)) {
-            $payload['membership_status'] = MembershipStatus::PENDING_APPLICATION->value;
+        if ($this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt) && $status === FarmerStatus::ACTIVE) {
+            $payload['membership_status'] = MembershipStatus::ACTIVE->value;
             $payload['activated_at'] = null;
             $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
             $payload['inactive_reason'] = trim((string) ($payload['inactive_reason'] ?? '')) !== ''
@@ -265,7 +265,7 @@ class FarmerRegistryService
         return $farmer?->registered_at?->toDateTimeString() ?? now()->toDateTimeString();
     }
 
-    private function shouldRequireReactivation(string $recordOrigin, string $registeredAt): bool
+    private function shouldAutoMarkOldRecordInactive(string $recordOrigin, string $registeredAt): bool
     {
         if (strcasecmp(trim($recordOrigin), 'Old Record') !== 0) {
             return false;
@@ -278,7 +278,7 @@ class FarmerRegistryService
     {
         return match ($status) {
             FarmerStatus::ACTIVE => MembershipStatus::ACTIVE->value,
-            FarmerStatus::INACTIVE => MembershipStatus::PENDING_APPLICATION->value,
+            FarmerStatus::INACTIVE, FarmerStatus::DECEASED => MembershipStatus::ACTIVE->value,
             default => $farmer?->membership_status?->value ?? MembershipStatus::PENDING_APPLICATION->value,
         };
     }
