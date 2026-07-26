@@ -29,6 +29,9 @@ const exportSections = reactive({
     top_barangays: false,
     top_associations: false,
     recent_farmers: false,
+    application_records: false,
+    renewal_records: false,
+    mortuary_records: false,
 });
 
 const numberFormatter = new Intl.NumberFormat('en-PH');
@@ -602,7 +605,10 @@ function iconForKey(key) {
                                     : key === 'member_types' ? 'Member types'
                                     : key === 'top_barangays' ? 'Top barangays'
                                     : key === 'top_associations' ? 'Top associations'
-                                    : 'Recent farmers'
+                                    : key === 'recent_farmers' ? 'Recent farmers'
+                                    : key === 'application_records' ? 'Application records list'
+                                    : key === 'renewal_records' ? 'Renewal records list'
+                                    : 'Mortuary records list'
                             }}
                         </span>
                     </label>

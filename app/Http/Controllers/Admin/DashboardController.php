@@ -197,7 +197,7 @@ class DashboardController extends Controller
             'year' => ['nullable', 'integer'],
             'barangay_id' => ['nullable', 'integer'],
             'sections' => ['nullable', 'array'],
-            'sections.*' => ['string', 'in:summary,collections,payment_breakdown,membership_status,member_types,top_barangays,top_associations,recent_farmers'],
+            'sections.*' => ['string', 'in:summary,collections,payment_breakdown,membership_status,member_types,top_barangays,top_associations,recent_farmers,application_records,renewal_records,mortuary_records'],
         ]);
 
         $year = isset($validated['year']) ? (int) $validated['year'] : null;
@@ -211,6 +211,9 @@ class DashboardController extends Controller
             'top_barangays',
             'top_associations',
             'recent_farmers',
+            'application_records',
+            'renewal_records',
+            'mortuary_records',
         ])->values()->all();
 
         $summary = $this->summary($year, $barangayId, true);
@@ -220,6 +223,15 @@ class DashboardController extends Controller
         $topBarangays = $this->topBarangays($year, $barangayId);
         $topAssociations = $this->topAssociations($year, $barangayId);
         $recentFarmers = $this->recentFarmers($year, $barangayId);
+        $applicationRecords = in_array('application_records', $sections, true)
+            ? $this->applicationExportRows($year, $barangayId)
+            : [];
+        $renewalRecords = in_array('renewal_records', $sections, true)
+            ? $this->renewalExportRows($year, $barangayId)
+            : [];
+        $mortuaryRecords = in_array('mortuary_records', $sections, true)
+            ? $this->mortuaryExportRows($year, $barangayId)
+            : [];
         $barangayName = $barangayId !== null
             ? Barangay::query()->whereKey($barangayId)->value('name')
             : 'All Barangays';
@@ -234,6 +246,9 @@ class DashboardController extends Controller
             $topBarangays,
             $topAssociations,
             $recentFarmers,
+            $applicationRecords,
+            $renewalRecords,
+            $mortuaryRecords,
             $year,
             $barangayName,
         ): void {
@@ -318,6 +333,38 @@ class DashboardController extends Controller
                 foreach ($recentFarmers as $row) {
                     $push('Recent Farmers', (string) ($row['fullName'] ?? 'Unknown'), ($row['farmerCode'] ?? '') . ' | ' . ($row['barangay'] ?? '-'));
                 }
+            }
+
+            $writeDetailedSection = static function (string $title, array $rows) use ($handle, $year, $barangayName): void {
+                fputcsv($handle, []);
+                fputcsv($handle, [$title, 'Metric', 'Value', 'Year', 'Barangay']);
+                fputcsv($handle, [$title, 'Total Records', count($rows), $year ?? 'All Years', $barangayName]);
+
+                if ($rows === []) {
+                    fputcsv($handle, [$title, 'No records found', '', $year ?? 'All Years', $barangayName]);
+
+                    return;
+                }
+
+                fputcsv($handle, array_keys($rows[0]));
+
+                foreach ($rows as $row) {
+                    fputcsv($handle, array_map(static function ($value) {
+                        return is_scalar($value) || $value === null ? $value : json_encode($value);
+                    }, $row));
+                }
+            };
+
+            if (in_array('application_records', $sections, true)) {
+                $writeDetailedSection('Application Records', $applicationRecords);
+            }
+
+            if (in_array('renewal_records', $sections, true)) {
+                $writeDetailedSection('Renewal Records', $renewalRecords);
+            }
+
+            if (in_array('mortuary_records', $sections, true)) {
+                $writeDetailedSection('Mortuary Records', $mortuaryRecords);
             }
 
             fclose($handle);
@@ -1246,6 +1293,125 @@ class DashboardController extends Controller
             })
             ->when($year !== null, fn (Builder $query) => $query->whereYear('claim_date', $year))
             ->where('status', 'Pending');
+    }
+
+    private function applicationExportRows(?int $year, ?int $barangayId): array
+    {
+        return $this->membershipApplicationQuery($year, $barangayId)
+            ->with([
+                'farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix',
+                'farmer.barangay:id,name',
+                'farmer.association:id,name',
+                'farmer.memberType:id,code,name',
+                'paymentAssessments.payments',
+            ])
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (MembershipApplication $application): array {
+                $latestAssessment = $application->paymentAssessments->sortByDesc('id')->first();
+                $totalPaid = (float) $application->paymentAssessments
+                    ->flatMap(fn ($assessment) => $assessment->payments)
+                    ->reject(fn ($payment) => strtolower((string) $payment->getRawOriginal('status')) === 'rejected')
+                    ->sum('amount_paid');
+
+                return [
+                    'Application No' => $application->application_no,
+                    'Farmer Code' => $application->farmer?->farmer_code,
+                    'Farmer Name' => $application->farmer?->full_name,
+                    'Barangay' => $application->farmer?->barangay?->name,
+                    'Association' => $application->farmer?->association?->name,
+                    'Member Type' => $application->farmer?->memberType?->name,
+                    'Status' => $application->status?->label() ?? 'Pending',
+                    'Source' => strtoupper(str_replace('_', '-', (string) $application->source)),
+                    'Submitted At' => optional($application->submitted_at ?? $application->created_at)?->format('Y-m-d H:i:s'),
+                    'Assessment Status' => $latestAssessment?->status?->label() ?? 'Pending',
+                    'Amount Due' => round((float) ($latestAssessment?->total_amount_due ?? 0), 2),
+                    'Total Paid' => round($totalPaid, 2),
+                    'Document Count' => $application->documents()->count(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function renewalExportRows(?int $year, ?int $barangayId): array
+    {
+        return $this->renewalRecordQuery($year, $barangayId)
+            ->with([
+                'farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix',
+                'farmer.barangay:id,name',
+                'farmer.association:id,name',
+                'farmer.memberType:id,code,name',
+                'paymentAssessments.payments',
+            ])
+            ->orderByDesc('year')
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (RenewalRequest $renewal): array {
+                $latestAssessment = $renewal->paymentAssessments->sortByDesc('id')->first();
+                $totalPaid = (float) $renewal->paymentAssessments
+                    ->flatMap(fn ($assessment) => $assessment->payments)
+                    ->reject(fn ($payment) => strtolower((string) $payment->getRawOriginal('status')) === 'rejected')
+                    ->sum('amount_paid');
+
+                return [
+                    'Renewal Reference' => $renewal->application_no,
+                    'Year' => $renewal->year,
+                    'Farmer Code' => $renewal->farmer?->farmer_code,
+                    'Farmer Name' => $renewal->farmer?->full_name,
+                    'Barangay' => $renewal->farmer?->barangay?->name,
+                    'Association' => $renewal->farmer?->association?->name,
+                    'Member Type' => $renewal->farmer?->memberType?->name,
+                    'Status' => $renewal->status?->label() ?? 'Pending',
+                    'Source' => strtoupper(str_replace('_', '-', (string) $renewal->source)),
+                    'Submitted At' => optional($renewal->submitted_at ?? $renewal->created_at)?->format('Y-m-d H:i:s'),
+                    'Assessment Status' => $latestAssessment?->status?->label() ?? 'Pending',
+                    'Amount Due' => round((float) ($latestAssessment?->total_amount_due ?? 0), 2),
+                    'Total Paid' => round($totalPaid, 2),
+                    'Document Count' => $renewal->documents()->count(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function mortuaryExportRows(?int $year, ?int $barangayId): array
+    {
+        return MortuaryClaim::query()
+            ->with([
+                'membershipLedger.membershipTransaction.farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix',
+                'membershipLedger.membershipTransaction.farmer.barangay:id,name',
+                'membershipLedger.membershipTransaction.farmer.association:id,name',
+                'membershipLedger.membershipTransaction.farmer.memberType:id,code,name',
+            ])
+            ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
+                $query->whereHas('membershipLedger.membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
+            })
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('claim_date', $year))
+            ->orderByDesc('claim_date')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (MortuaryClaim $claim): array {
+                $farmer = $claim->farmer;
+
+                return [
+                    'Claim Reference' => $claim->claim_reference,
+                    'Claim Date' => optional($claim->claim_date)?->format('Y-m-d'),
+                    'Farmer Code' => $farmer?->farmer_code,
+                    'Farmer Name' => $farmer?->full_name,
+                    'Barangay' => $farmer?->barangay?->name,
+                    'Association' => $farmer?->association?->name,
+                    'Member Type' => $farmer?->memberType?->name,
+                    'Claimer Name' => $claim->claimer_name,
+                    'Relationship' => $claim->claimer_relationship,
+                    'Status' => str($claim->status)->headline()->value(),
+                    'Claim Amount' => round((float) $claim->claim_amount, 2),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function applyFarmerYearFilter(Builder $query, ?int $year): void
