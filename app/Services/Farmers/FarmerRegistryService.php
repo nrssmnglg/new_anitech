@@ -11,6 +11,7 @@ use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 class FarmerRegistryService
@@ -209,9 +210,11 @@ class FarmerRegistryService
         $payload['membership_status'] = $this->resolveMembershipStatus($status, $farmer);
         $payload['registered_at'] = $registeredAt;
         $payload['record_origin'] = $payload['record_origin'] ?? $farmer?->record_origin ?? 'Admin';
-        $payload['is_registry_record'] = array_key_exists('is_registry_record', $payload)
-            ? filter_var($payload['is_registry_record'], FILTER_VALIDATE_BOOL)
-            : ($farmer?->is_registry_record ?? strcasecmp((string) $payload['record_origin'], 'application') !== 0);
+        if (Schema::hasColumn('farmers', 'is_registry_record')) {
+            $payload['is_registry_record'] = array_key_exists('is_registry_record', $payload)
+                ? filter_var($payload['is_registry_record'], FILTER_VALIDATE_BOOL)
+                : ($farmer?->is_registry_record ?? strcasecmp((string) $payload['record_origin'], 'application') !== 0);
+        }
 
         if ($status === FarmerStatus::ACTIVE && empty($payload['activated_at'])) {
             $payload['activated_at'] = $farmer?->activated_at?->toDateTimeString() ?? now()->toDateTimeString();
@@ -233,19 +236,24 @@ class FarmerRegistryService
                 : 'Old registry record requires reactivation.';
         }
 
-        return Arr::only($payload, [
+        $columns = [
             'farmer_code',
             'barangay_id',
             'association_id',
             'member_type_id',
-            'is_registry_record',
             'membership_status',
             'record_origin',
             'registered_at',
             'activated_at',
             'inactive_at',
             'inactive_reason',
-        ]);
+        ];
+
+        if (Schema::hasColumn('farmers', 'is_registry_record')) {
+            array_splice($columns, 4, 0, 'is_registry_record');
+        }
+
+        return Arr::only($payload, $columns);
     }
 
     private function normalizeRegisteredAt(mixed $value, ?Farmer $farmer = null): string

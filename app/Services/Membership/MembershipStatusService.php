@@ -6,6 +6,7 @@ use App\Enums\FarmerStatus;
 use App\Enums\MembershipStatus;
 use App\Models\Farmer;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Schema;
 
 class MembershipStatusService
 {
@@ -49,14 +50,19 @@ class MembershipStatusService
     {
         $now = CarbonImmutable::now();
 
-        $farmer->forceFill([
-            'is_registry_record' => true,
+        $attributes = [
             'membership_status' => MembershipStatus::ACTIVE,
             'registered_at' => $farmer->registered_at ?? $now,
             'activated_at' => $farmer->activated_at ?? $now,
             'inactive_at' => null,
             'inactive_reason' => null,
-        ])->save();
+        ];
+
+        if (Schema::hasColumn('farmers', 'is_registry_record')) {
+            $attributes['is_registry_record'] = true;
+        }
+
+        $farmer->forceFill($attributes)->save();
 
         return $farmer->refresh();
     }
