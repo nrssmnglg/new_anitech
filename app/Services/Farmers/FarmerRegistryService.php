@@ -8,6 +8,7 @@ use App\Models\Association;
 use App\Models\Farmer;
 use App\Models\FarmerProfile;
 use DomainException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -202,10 +203,11 @@ class FarmerRegistryService
         $payload = Arr::except($data, ['has_existing_membership', 'confirm_duplicate_override']);
         $status = FarmerStatus::tryFrom((string) ($payload['status'] ?? FarmerStatus::PENDING->value))
             ?? FarmerStatus::PENDING;
+        $registeredAt = $this->normalizeRegisteredAt($payload['registered_at'] ?? null, $farmer);
 
         $payload['farmer_code'] = $farmer?->farmer_code ?? $payload['farmer_code'] ?? $this->generateFarmerCode();
         $payload['membership_status'] = $this->resolveMembershipStatus($status, $farmer);
-        $payload['registered_at'] = $payload['registered_at'] ?? $farmer?->registered_at?->toDateTimeString() ?? now()->toDateTimeString();
+        $payload['registered_at'] = $registeredAt;
         $payload['record_origin'] = $payload['record_origin'] ?? $farmer?->record_origin ?? 'Admin';
 
         if ($status === FarmerStatus::ACTIVE && empty($payload['activated_at'])) {
@@ -217,6 +219,15 @@ class FarmerRegistryService
             $payload['inactive_reason'] = null;
         } elseif (empty($payload['inactive_at'])) {
             $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
+        }
+
+        if ($this->shouldRequireReactivation($payload['record_origin'], $registeredAt)) {
+            $payload['membership_status'] = MembershipStatus::PENDING_APPLICATION->value;
+            $payload['activated_at'] = null;
+            $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
+            $payload['inactive_reason'] = trim((string) ($payload['inactive_reason'] ?? '')) !== ''
+                ? $payload['inactive_reason']
+                : 'Old registry record requires reactivation.';
         }
 
         return Arr::only($payload, [
@@ -231,6 +242,24 @@ class FarmerRegistryService
             'inactive_at',
             'inactive_reason',
         ]);
+    }
+
+    private function normalizeRegisteredAt(mixed $value, ?Farmer $farmer = null): string
+    {
+        if (filled($value)) {
+            return Carbon::parse((string) $value)->startOfDay()->toDateTimeString();
+        }
+
+        return $farmer?->registered_at?->toDateTimeString() ?? now()->toDateTimeString();
+    }
+
+    private function shouldRequireReactivation(string $recordOrigin, string $registeredAt): bool
+    {
+        if (strcasecmp(trim($recordOrigin), 'Old Record') !== 0) {
+            return false;
+        }
+
+        return Carbon::parse($registeredAt)->lt(now()->subYears(5)->startOfDay());
     }
 
     private function resolveMembershipStatus(FarmerStatus $status, ?Farmer $farmer = null): string

@@ -1077,14 +1077,7 @@ class FarmerController extends Controller
 
     private function registryListRegisteredAt(Farmer $farmer): ?string
     {
-        $registeredAt = $farmer->registered_at;
-        $timestamp = $registeredAt;
-
-        if ($registeredAt && $registeredAt->format('H:i:s') === '00:00:00' && $farmer->created_at) {
-            $timestamp = $farmer->created_at;
-        }
-
-        return optional($timestamp ?? $farmer->created_at)?->format('M d, Y h:i A');
+        return optional($farmer->registered_at ?? $farmer->created_at)?->format('M d, Y h:i A');
     }
 
     private function serializeFarmer(Farmer $farmer): array
