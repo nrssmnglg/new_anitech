@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
 Route::get('/tasks', [DashboardController::class, 'tasks'])->name('tasks.index');
 Route::post('/tasks/quick-action', [DashboardController::class, 'quickAction'])->name('tasks.quick-action');
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');

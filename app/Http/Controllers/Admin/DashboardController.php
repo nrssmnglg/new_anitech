@@ -29,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\Audit\AuditTrailService;
@@ -82,6 +83,7 @@ class DashboardController extends Controller
                     'tasksUrl' => ! $isAdmin ? route('admin.tasks.index') : null,
                     'manageFeeSchedulesUrl' => $isAdmin ? route('admin.fee-schedules.index') : null,
                     'viewUsersUrl' => $isAdmin ? route('admin.users.index') : null,
+                    'exportDashboardUrl' => route('admin.dashboard.export'),
                 ],
                 'summary' => $this->summary($selectedYear, $selectedBarangayId, $isAdmin),
                 'summaryCardLinks' => $this->summaryCardLinks($request, $selectedYear, $selectedBarangayId),
@@ -189,6 +191,141 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function export(Request $request): StreamedResponse
+    {
+        $validated = $request->validate([
+            'year' => ['nullable', 'integer'],
+            'barangay_id' => ['nullable', 'integer'],
+            'sections' => ['nullable', 'array'],
+            'sections.*' => ['string', 'in:summary,collections,payment_breakdown,membership_status,member_types,top_barangays,top_associations,recent_farmers'],
+        ]);
+
+        $year = isset($validated['year']) ? (int) $validated['year'] : null;
+        $barangayId = isset($validated['barangay_id']) ? (int) $validated['barangay_id'] : null;
+        $sections = collect($validated['sections'] ?? [
+            'summary',
+            'collections',
+            'payment_breakdown',
+            'membership_status',
+            'member_types',
+            'top_barangays',
+            'top_associations',
+            'recent_farmers',
+        ])->values()->all();
+
+        $summary = $this->summary($year, $barangayId, true);
+        $collections = $this->collectionsSummary($year, $barangayId);
+        $membershipStatus = $this->membershipStatusBreakdown($year, $barangayId);
+        $memberTypes = $this->memberTypeBreakdown($year, $barangayId);
+        $topBarangays = $this->topBarangays($year, $barangayId);
+        $topAssociations = $this->topAssociations($year, $barangayId);
+        $recentFarmers = $this->recentFarmers($year, $barangayId);
+        $barangayName = $barangayId !== null
+            ? Barangay::query()->whereKey($barangayId)->value('name')
+            : 'All Barangays';
+        $filename = 'dashboard-report-' . now()->format('Y-m-d-His') . '.csv';
+
+        return response()->streamDownload(function () use (
+            $sections,
+            $summary,
+            $collections,
+            $membershipStatus,
+            $memberTypes,
+            $topBarangays,
+            $topAssociations,
+            $recentFarmers,
+            $year,
+            $barangayName,
+        ): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Report', 'Metric', 'Value', 'Year', 'Barangay']);
+
+            $push = static function (string $report, string $metric, mixed $value) use ($handle, $year, $barangayName): void {
+                fputcsv($handle, [
+                    $report,
+                    $metric,
+                    is_scalar($value) || $value === null ? $value : json_encode($value),
+                    $year ?? 'All Years',
+                    $barangayName,
+                ]);
+            };
+
+            if (in_array('summary', $sections, true)) {
+                foreach ([
+                    'Registered Farmers' => $summary['totalFarmers'] ?? 0,
+                    'Active Farmers' => $summary['activeFarmers'] ?? 0,
+                    'Pending Farmers' => $summary['pendingFarmers'] ?? 0,
+                    'Inactive Farmers' => $summary['inactiveFarmers'] ?? 0,
+                    'Pending Applications' => $summary['pendingApplications'] ?? 0,
+                    'Active Barangays' => $summary['activeBarangays'] ?? 0,
+                    'Active Associations' => $summary['activeAssociations'] ?? 0,
+                    'Active Office Users' => $summary['activeOfficeUsers'] ?? 0,
+                    'Active Fee Schedules' => $summary['activeFeeSchedules'] ?? 0,
+                ] as $metric => $value) {
+                    $push('Summary', $metric, $value);
+                }
+            }
+
+            if (in_array('collections', $sections, true)) {
+                foreach ([
+                    'Overall Collections' => $collections['totals']['overall'] ?? 0,
+                    'Application Collections' => $collections['totals']['applications'] ?? 0,
+                    'Renewal Collections' => $collections['totals']['renewals'] ?? 0,
+                    'Mortuary Claims Total' => $collections['totals']['mortuary'] ?? 0,
+                    'Application Payment Count' => $collections['counts']['applicationPayments'] ?? 0,
+                    'Renewal Payment Count' => $collections['counts']['renewalPayments'] ?? 0,
+                    'Mortuary Claim Count' => $collections['counts']['mortuaryClaims'] ?? 0,
+                ] as $metric => $value) {
+                    $push('Collections', $metric, $value);
+                }
+            }
+
+            if (in_array('payment_breakdown', $sections, true)) {
+                foreach ([
+                    'Membership Fees' => $collections['breakdown']['membershipFee'] ?? 0,
+                    'Annual Due' => $collections['breakdown']['annualDue'] ?? 0,
+                    'Mortuary Contribution' => $collections['breakdown']['mortuaryContribution'] ?? 0,
+                ] as $metric => $value) {
+                    $push('Payment Breakdown', $metric, $value);
+                }
+            }
+
+            if (in_array('membership_status', $sections, true)) {
+                foreach ($membershipStatus as $row) {
+                    $push('Membership Status', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
+                }
+            }
+
+            if (in_array('member_types', $sections, true)) {
+                foreach ($memberTypes as $row) {
+                    $push('Member Types', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
+                }
+            }
+
+            if (in_array('top_barangays', $sections, true)) {
+                foreach ($topBarangays as $row) {
+                    $push('Top Barangays', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
+                }
+            }
+
+            if (in_array('top_associations', $sections, true)) {
+                foreach ($topAssociations as $row) {
+                    $push('Top Associations', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
+                }
+            }
+
+            if (in_array('recent_farmers', $sections, true)) {
+                foreach ($recentFarmers as $row) {
+                    $push('Recent Farmers', (string) ($row['fullName'] ?? 'Unknown'), ($row['farmerCode'] ?? '') . ' | ' . ($row['barangay'] ?? '-'));
+                }
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function quickAction(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -230,12 +367,22 @@ class DashboardController extends Controller
             'inactiveFarmers' => $this->applyFarmerStatusFilterForYear(clone $farmers, FarmerStatus::INACTIVE, $year)->count(),
             'pendingApplications' => $pendingApplications,
             'activeBarangays' => Barangay::query()
-                ->when($barangayId !== null, fn (Builder $query) => $query->whereKey($barangayId))
                 ->where('status', 'Active')
+                ->when($barangayId !== null, fn (Builder $query) => $query->whereKey($barangayId))
+                ->when($year !== null || $barangayId !== null, function (Builder $query) use ($year): void {
+                    $query->whereHas('farmers', function (Builder $farmerQuery) use ($year): void {
+                        $this->applyFarmerYearFilter($farmerQuery, $year);
+                    });
+                })
                 ->count(),
             'activeAssociations' => Association::query()
-                ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
                 ->where('status', 'Active')
+                ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
+                ->when($year !== null || $barangayId !== null, function (Builder $query) use ($year): void {
+                    $query->whereHas('farmers', function (Builder $farmerQuery) use ($year): void {
+                        $this->applyFarmerYearFilter($farmerQuery, $year);
+                    });
+                })
                 ->count(),
             'activeMemberTypes' => MemberType::query()->where('status', 'Active')->count(),
             'activeFeeSchedules' => $isAdmin

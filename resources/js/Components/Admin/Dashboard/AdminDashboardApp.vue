@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useAdminDashboardFilters } from '../../../Composables/Admin/Dashboard/useAdminDashboardFilters';
 
 const props = defineProps({
@@ -20,6 +20,18 @@ function resetFilters() {
     state.barangayId = '';
     apply();
 }
+
+const exportModalOpen = ref(false);
+const exportSections = reactive({
+    summary: true,
+    collections: true,
+    payment_breakdown: true,
+    membership_status: true,
+    member_types: false,
+    top_barangays: false,
+    top_associations: false,
+    recent_farmers: false,
+});
 
 const numberFormatter = new Intl.NumberFormat('en-PH');
 const currencyFormatter = new Intl.NumberFormat('en-PH', {
@@ -46,6 +58,35 @@ function formatDate(value) {
     const date = new Date(normalized);
 
     return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+}
+
+function openExportModal() {
+    exportModalOpen.value = true;
+}
+
+function closeExportModal() {
+    exportModalOpen.value = false;
+}
+
+function exportDashboardReport() {
+    const url = new URL(props.dashboard.actions.exportDashboardUrl, window.location.origin);
+
+    if (state.year) {
+        url.searchParams.set('year', state.year);
+    }
+
+    if (state.barangayId) {
+        url.searchParams.set('barangay_id', state.barangayId);
+    }
+
+    Object.entries(exportSections).forEach(([key, enabled]) => {
+        if (enabled) {
+            url.searchParams.append('sections[]', key);
+        }
+    });
+
+    window.location.assign(url.toString());
+    closeExportModal();
 }
 
 function initials(name) {
@@ -381,6 +422,11 @@ const linePoints = computed(() => {
                         Live System Overview
                     </div>
                     <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.25rem]">Registry Overview for {{ selectedYearLabel }}</h2>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <button type="button" class="inline-flex items-center justify-center rounded-[1.2rem] bg-white px-5 py-3 text-sm font-extrabold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
+                            Generate Report
+                        </button>
+                    </div>
                 </div>
 
                 <form class="grid w-full max-w-[470px] gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-5 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
@@ -866,5 +912,47 @@ const linePoints = computed(() => {
                 <path d="M5 12h14" />
             </svg>
         </Link>
+
+        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-6" @click.self="closeExportModal">
+            <section class="w-full max-w-3xl rounded-[28px] border border-[#dbe2de] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]">
+                <div class="flex items-start justify-between gap-4 border-b border-[#e4ebe7] pb-4">
+                    <div>
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Dashboard Export</p>
+                        <h2 class="mt-1 text-xl font-bold text-[#1a2420]">Generate filtered report</h2>
+                        <p class="mt-2 text-sm text-[#697772]">Choose which dashboard sections to export for {{ selectedYearLabel }} and {{ selectedBarangayName }}.</p>
+                    </div>
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" @click="closeExportModal">
+                        <span class="text-lg leading-none">&times;</span>
+                    </button>
+                </div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                    <label v-for="(enabled, key) in exportSections" :key="key" class="flex items-center gap-3 rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#1a2420]">
+                        <input v-model="exportSections[key]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
+                        <span class="font-medium">
+                            {{
+                                key === 'summary' ? 'Summary cards'
+                                    : key === 'collections' ? 'Collections totals'
+                                    : key === 'payment_breakdown' ? 'Payment breakdown'
+                                    : key === 'membership_status' ? 'Membership status'
+                                    : key === 'member_types' ? 'Member types'
+                                    : key === 'top_barangays' ? 'Top barangays'
+                                    : key === 'top_associations' ? 'Top associations'
+                                    : 'Recent farmers'
+                            }}
+                        </span>
+                    </label>
+                </div>
+
+                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <button type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-5 py-3 text-sm font-bold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
+                        Cancel
+                    </button>
+                    <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]" @click="exportDashboardReport">
+                        Export CSV
+                    </button>
+                </div>
+            </section>
+        </div>
     </div>
 </template>
