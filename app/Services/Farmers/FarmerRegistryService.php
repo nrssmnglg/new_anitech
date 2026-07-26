@@ -227,6 +227,12 @@ class FarmerRegistryService
             $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
         }
 
+        if ($status === FarmerStatus::INACTIVE && trim((string) ($payload['inactive_reason'] ?? '')) === '') {
+            $payload['inactive_reason'] = $this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt)
+                ? 'Old registry record requires reactivation.'
+                : 'Marked inactive during old record encoding.';
+        }
+
         if ($this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt) && $status === FarmerStatus::ACTIVE) {
             $payload['membership_status'] = MembershipStatus::ACTIVE->value;
             $payload['activated_at'] = null;
