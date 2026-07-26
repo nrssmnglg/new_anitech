@@ -359,11 +359,13 @@ class FarmerController extends Controller
                 'edit' => route('admin.farmers.edit', $farmer),
                 'createApplication' => route('admin.membership-applications.create'),
                 'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => now()->year]),
+                'reactivate' => route('admin.farmers.reactivate', $farmer),
                 'recover' => route('admin.backups.farmers.recover', $farmer),
                 'storeInternalNote' => route('admin.farmers.internal-notes.store', $farmer),
             ],
             'permissions' => [
                 'canEdit' => Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false,
+                'canReactivate' => Auth::user()?->hasRole([User::ROLE_ADMIN, User::ROLE_STAFF]) ?? false,
             ],
             'renewal' => $this->renewalEligibility($farmer),
             'recoverySnapshots' => collect($this->backupRecoveryService->listSnapshots())
@@ -477,6 +479,43 @@ class FarmerController extends Controller
         return redirect()
             ->route('admin.farmers.show', $farmer)
             ->with('success', 'Farmer registry record updated.');
+    }
+
+    public function reactivate(Request $request, Farmer $farmer): RedirectResponse
+    {
+        $this->ensureRegistryRecord($farmer);
+        $farmer->refresh();
+
+        if ($farmer->status !== FarmerStatus::INACTIVE) {
+            return back()->with('error', 'Only inactive farmer records can be reactivated.');
+        }
+
+        $farmer->forceFill([
+            'membership_status' => \App\Enums\MembershipStatus::ACTIVE->value,
+            'activated_at' => now(),
+            'inactive_at' => null,
+            'inactive_reason' => null,
+        ])->save();
+
+        $farmer = $this->statusWorkflowService->syncManualUpdate($farmer, $request->user()?->id);
+
+        $this->auditTrailService->record(
+            'farmers',
+            'farmer_reactivated',
+            'Reactivated an inactive farmer record.',
+            $request->user(),
+            $farmer,
+            $this->auditTrailService->activityMetadata(
+                AuditTrailService::ACTION_PROCESSED,
+                'Farmer reactivation',
+                [
+                    'farmer_id' => $farmer->id,
+                    'farmer_code' => $farmer->farmer_code,
+                ]
+            )
+        );
+
+        return back()->with('success', 'Farmer record reactivated successfully.');
     }
 
     public function destroy(Farmer $farmer): RedirectResponse

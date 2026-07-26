@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -20,6 +20,16 @@ function handleRenewalClick() {
     }
 
     showRenewalDialog.value = true;
+}
+
+function reactivateFarmer() {
+    if (!props.urls?.reactivate || !window.confirm('Reactivate this farmer record?')) {
+        return;
+    }
+
+    router.post(props.urls.reactivate, {}, {
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -50,6 +60,15 @@ function handleRenewalClick() {
                     @click="handleRenewalClick"
                 >
                     <span>Process Renewal</span>
+                    <span>&rsaquo;</span>
+                </button>
+                <button
+                    v-if="permissions.canReactivate && farmer?.status?.value === 'inactive'"
+                    type="button"
+                    class="inline-flex items-center justify-between rounded-[16px] border border-[#d7e0db] bg-[#f4faf6] px-4 py-3 text-xs font-extrabold text-[#003629] transition hover:bg-[#ebf6ef]"
+                    @click="reactivateFarmer"
+                >
+                    <span>Reactivate Farmer</span>
                     <span>&rsaquo;</span>
                 </button>
                 <div class="grid grid-cols-2 gap-2.5">
