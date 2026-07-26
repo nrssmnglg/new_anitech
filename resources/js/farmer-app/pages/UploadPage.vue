@@ -115,6 +115,26 @@ const qualityHints = [
 
 const draftAttachmentKey = (documentType) => `membership-upload:${lookup.application_no || 'pending'}:${documentType}`;
 
+const coerceUploadFile = (value, fallbackName = 'document') => {
+    if (value instanceof File) {
+        return value;
+    }
+
+    if (value instanceof Blob) {
+        const extension = value.type === 'application/pdf' ? 'pdf' : 'jpg';
+        const safeName = String(fallbackName || 'document').includes('.')
+            ? String(fallbackName)
+            : `${fallbackName}.${extension}`;
+
+        return new File([value], safeName, {
+            type: value.type || 'application/octet-stream',
+            lastModified: Date.now(),
+        });
+    }
+
+    return null;
+};
+
 const createPreviewUrl = (file) => {
     if (!file || file.type === 'application/pdf') {
         return '';
@@ -206,13 +226,15 @@ const restoreDraftFiles = async () => {
     try {
         for (const document of application.value.documents) {
             const payload = await getDraftFile(draftAttachmentKey(document.type));
-            if (!payload?.file) {
+            const restoredFile = coerceUploadFile(payload?.file, payload?.name || document.type);
+
+            if (!restoredFile) {
                 continue;
             }
 
-            files[document.type] = payload.file;
+            files[document.type] = restoredFile;
             revokePreview(document.type);
-            previewUrls[document.type] = createPreviewUrl(payload.file);
+            previewUrls[document.type] = createPreviewUrl(restoredFile);
         }
     } finally {
         restoringDraft.value = false;
@@ -340,12 +362,21 @@ const submitDocuments = async () => {
         let latestApplication = application.value;
 
         for (const [index, [type, file]] of selectedFiles.entries()) {
+            const uploadFile = coerceUploadFile(file, file?.name || type);
+
+            if (!uploadFile) {
+                throw new Error(`Selected file for ${type} is invalid.`);
+            }
+
             const formData = new FormData();
             formData.append('birth_date', birthDate);
             formData.append('document_type', type);
-            formData.append('document', file);
+            formData.append('document', uploadFile, uploadFile.name);
 
             const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
                 params: {
                     birth_date: birthDate,
                     document_type: type,
