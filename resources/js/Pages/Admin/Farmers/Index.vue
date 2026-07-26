@@ -32,6 +32,18 @@ const props = defineProps({
     bulkPermissions: { type: Object, required: true },
 });
 
+const frozenSummary = {
+    total: props.summary.total,
+    active: props.summary.active,
+    inactive: props.summary.inactive,
+    deceased: props.summary.deceased,
+    duplicates: props.summary.duplicates,
+    incompleteProfiles: props.summary.incompleteProfiles,
+    invalidMobileNumbers: props.summary.invalidMobileNumbers,
+    barangayAssociationMismatches: props.summary.barangayAssociationMismatches,
+    inactiveForReview: props.summary.inactiveForReview,
+};
+
 const form = reactive({
     search: props.filters.search || '',
     status: props.filters.status || '',
@@ -67,10 +79,9 @@ function applyFilters() {
     bulkScope.value = 'selected';
 
     router.get(props.resetUrl, { ...form }, {
-        preserveState: true,
+        preserveState: false,
         preserveScroll: true,
         replace: true,
-        only: ['farmers', 'filters'],
     });
 }
 
@@ -90,11 +101,11 @@ const filteredTargetCount = computed(() => props.farmers.total || 0);
 const allCurrentPageSelected = computed(() => props.farmers.data.length > 0 && props.farmers.data.every((farmer) => selectedIds.value.includes(farmer.id)));
 
 const qualityCards = computed(() => [
-    { value: 'duplicate', label: 'Duplicate Detection', count: props.summary.duplicates, tone: 'border-[#ead7b2] bg-[#fff8ea] text-[#996515]' },
-    { value: 'incomplete_profile', label: 'Incomplete Profiles', count: props.summary.incompleteProfiles, tone: 'border-[#d5e4da] bg-[#f3faf6] text-[#245342]' },
-    { value: 'invalid_mobile', label: 'Invalid Mobile Numbers', count: props.summary.invalidMobileNumbers, tone: 'border-[#edd5cf] bg-[#fff4f1] text-[#a44d3f]' },
-    { value: 'barangay_association_mismatch', label: 'Barangay Mismatch', count: props.summary.barangayAssociationMismatches, tone: 'border-[#d8daf5] bg-[#f4f5ff] text-[#4655a4]' },
-    { value: 'inactive_review', label: 'Inactive Needing Review', count: props.summary.inactiveForReview, tone: 'border-[#e2d4db] bg-[#fbf5f8] text-[#8d4663]' },
+    { value: 'duplicate', label: 'Duplicate Detection', count: frozenSummary.duplicates, tone: 'border-[#ead7b2] bg-[#fff8ea] text-[#996515]' },
+    { value: 'incomplete_profile', label: 'Incomplete Profiles', count: frozenSummary.incompleteProfiles, tone: 'border-[#d5e4da] bg-[#f3faf6] text-[#245342]' },
+    { value: 'invalid_mobile', label: 'Invalid Mobile Numbers', count: frozenSummary.invalidMobileNumbers, tone: 'border-[#edd5cf] bg-[#fff4f1] text-[#a44d3f]' },
+    { value: 'barangay_association_mismatch', label: 'Barangay Mismatch', count: frozenSummary.barangayAssociationMismatches, tone: 'border-[#d8daf5] bg-[#f4f5ff] text-[#4655a4]' },
+    { value: 'inactive_review', label: 'Inactive Needing Review', count: frozenSummary.inactiveForReview, tone: 'border-[#e2d4db] bg-[#fbf5f8] text-[#8d4663]' },
 ]);
 
 const assignmentAssociations = computed(() => {
@@ -267,12 +278,12 @@ function submitBulkArchive() {
     <AdminLayout title="Farmer Registry">
         <div class="space-y-7">
             <RegistryHero
-                :total="farmers.total"
+                :total="frozenSummary.total"
                 :create-url="createApplicationUrl"
                 @export="openExportModal"
             />
 
-            <RegistrySummaryGrid :summary="summary" @filter-status="setStatusFilter" />
+            <RegistrySummaryGrid :summary="frozenSummary" @filter-status="setStatusFilter" />
 
             <RegistryFilters
                 :form="form"
