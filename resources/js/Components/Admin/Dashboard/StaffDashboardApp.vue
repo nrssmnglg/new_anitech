@@ -20,6 +20,11 @@ function resetFilters() {
 }
 
 const numberFormatter = new Intl.NumberFormat('en-PH');
+const currencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+});
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -56,6 +61,11 @@ const staffWorkspace = computed(() => props.dashboard.staffWorkspace ?? {
     mobileSupport: [],
     priority: null,
     recentActions: [],
+});
+const collections = computed(() => props.dashboard.collections ?? {
+    totals: { overall: 0, applications: 0, renewals: 0, mortuary: 0 },
+    counts: { applicationPayments: 0, renewalPayments: 0, mortuaryClaims: 0 },
+    links: {},
 });
 
 const operationAccentClasses = {
@@ -235,6 +245,38 @@ function iconForKey(key) {
                 </div>
                 <p class="mt-4 text-[1.9rem] font-semibold tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
             </component>
+        </section>
+
+        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Filtered Collections</p>
+                        <h3 class="mt-2 text-[1.2rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.overall || 0)) }}</h3>
+                    </div>
+                    <Link :href="collections.links.renewals || dashboard.actions.tasksUrl" class="text-sm font-bold text-[#003e32] transition hover:text-[#0f5b46]">
+                        Open Records
+                    </Link>
+                </div>
+
+                <div class="mt-5 grid gap-4 md:grid-cols-3">
+                    <Link :href="collections.links.applications || '#'" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Applications</p>
+                        <p class="mt-2 text-[1.1rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.applications || 0)) }}</p>
+                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.applicationPayments) }} payments</p>
+                    </Link>
+                    <Link :href="collections.links.renewals || '#'" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Renewals</p>
+                        <p class="mt-2 text-[1.1rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.renewals || 0)) }}</p>
+                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.renewalPayments) }} payments</p>
+                    </Link>
+                    <Link :href="collections.links.mortuary || '#'" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Mortuary</p>
+                        <p class="mt-2 text-[1.1rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.mortuary || 0)) }}</p>
+                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.mortuaryClaims) }} claims</p>
+                    </Link>
+                </div>
+            </article>
         </section>
 
         <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">

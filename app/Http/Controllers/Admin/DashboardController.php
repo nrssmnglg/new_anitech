@@ -87,6 +87,7 @@ class DashboardController extends Controller
                 'summaryCardLinks' => $this->summaryCardLinks($request, $selectedYear, $selectedBarangayId),
                 'adminOperations' => $isAdmin ? $this->adminOperations($selectedYear, $selectedBarangayId) : null,
                 'staffWorkspace' => ! $isAdmin ? $this->staffWorkspace($request, $selectedYear, $selectedBarangayId) : null,
+                'collections' => $this->collectionsSummary($selectedYear, $selectedBarangayId),
                 'breakdowns' => [
                     'membershipStatus' => $this->membershipStatusBreakdown($selectedYear, $selectedBarangayId),
                     'memberTypes' => $this->memberTypeBreakdown($selectedYear, $selectedBarangayId),
@@ -784,6 +785,70 @@ class DashboardController extends Controller
                     'meta' => 'Farmer profiles missing required registry information.',
                     'href' => route('admin.farmers.index'),
                 ],
+            ],
+        ];
+    }
+
+    private function collectionsSummary(?int $year, ?int $barangayId): array
+    {
+        $paymentQuery = Payment::query()
+            ->where('status', '!=', 'Rejected')
+            ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
+                $query->whereHas('paymentAssessment.membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
+            })
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('paid_at', $year));
+
+        $applicationPayments = (clone $paymentQuery)
+            ->whereHas('paymentAssessment.membershipTransaction', fn (Builder $query) => $query->where('transaction_type', 'Application'));
+        $renewalPayments = (clone $paymentQuery)
+            ->whereHas('paymentAssessment.membershipTransaction', fn (Builder $query) => $query->where('transaction_type', 'Renewal'));
+
+        $mortuaryQuery = MortuaryClaim::query()
+            ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
+                $query->whereHas('membershipLedger.membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
+            })
+            ->when($year !== null, fn (Builder $query) => $query->whereYear('claim_date', $year));
+
+        $applicationTotal = round((float) (clone $applicationPayments)->sum('amount_paid'), 2);
+        $renewalTotal = round((float) (clone $renewalPayments)->sum('amount_paid'), 2);
+        $mortuaryTotal = round((float) (clone $mortuaryQuery)->sum('claim_amount'), 2);
+
+        return [
+            'totals' => [
+                'overall' => round($applicationTotal + $renewalTotal + $mortuaryTotal, 2),
+                'applications' => $applicationTotal,
+                'renewals' => $renewalTotal,
+                'mortuary' => $mortuaryTotal,
+            ],
+            'counts' => [
+                'applicationPayments' => (clone $applicationPayments)->count(),
+                'renewalPayments' => (clone $renewalPayments)->count(),
+                'mortuaryClaims' => (clone $mortuaryQuery)->count(),
+            ],
+            'breakdown' => [
+                'membershipFee' => round((float) (clone $paymentQuery)->sum('membership_fee'), 2),
+                'annualDue' => round((float) (clone $paymentQuery)->sum('annual_due'), 2),
+                'mortuaryContribution' => round((float) (clone $paymentQuery)->sum('mortuary_fee'), 2),
+            ],
+            'links' => [
+                'applications' => route('admin.membership-applications.index', array_filter([
+                    'year' => $year,
+                    'barangay_id' => $barangayId,
+                ], fn ($value) => $value !== null && $value !== '')),
+                'renewals' => route('admin.renewals.index', array_filter([
+                    'section' => 'records',
+                    'record_year' => $year,
+                    'record_barangay_id' => $barangayId,
+                ], fn ($value) => $value !== null && $value !== '')),
+                'mortuary' => route('admin.mortuary-claims.index', array_filter([
+                    'section' => 'records',
+                    'year' => $year,
+                    'barangay_id' => $barangayId,
+                ], fn ($value) => $value !== null && $value !== '')),
+                'analytics' => route('admin.analytics.index', array_filter([
+                    'date_from' => $year !== null ? now()->setYear($year)->startOfYear()->toDateString() : null,
+                    'date_to' => $year !== null ? now()->setYear($year)->endOfYear()->toDateString() : null,
+                ], fn ($value) => $value !== null && $value !== '')),
             ],
         ];
     }
