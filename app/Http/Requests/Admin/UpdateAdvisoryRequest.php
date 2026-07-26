@@ -21,7 +21,7 @@ class UpdateAdvisoryRequest extends FormRequest
             'barangay_id' => ['nullable', 'integer', 'exists:barangays,id', 'required_if:audience_type,barangay'],
             'member_type_id' => ['nullable', 'integer', 'exists:member_types,id', 'required_if:audience_type,group'],
             'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
+            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:10240'],
         ];
     }
 

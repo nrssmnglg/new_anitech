@@ -402,6 +402,7 @@ class AdvisoryController extends Controller
 
             $advisory->attachments()->create([
                 'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
                 'file_path' => $path,
                 'uploaded_at' => now(),
             ]);

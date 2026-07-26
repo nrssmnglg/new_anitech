@@ -117,6 +117,7 @@ function updateAttachments(event) {
                                 <input
                                     type="file"
                                     multiple
+                                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                                     class="hidden"
                                     :disabled="disabled"
                                     @change="updateAttachments"
@@ -130,7 +131,7 @@ function updateAttachments(event) {
                                         </svg>
                                     </span>
                                     <p class="mt-4 text-sm font-semibold text-[#435762]">Click to upload or drag and drop</p>
-                                    <p class="mt-1 text-xs text-[#71808b]">PDF, PNG, JPG up to 10MB</p>
+                                    <p class="mt-1 text-xs text-[#71808b]">PDF, DOC, DOCX, PNG, JPG up to 10MB</p>
                                 </div>
                             </label>
 
