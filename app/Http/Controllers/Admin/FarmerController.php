@@ -211,6 +211,7 @@ class FarmerController extends Controller
     {
         return Inertia::render('Admin/Farmers/Create', [
             'statuses' => collect(FarmerStatus::cases())
+                ->reject(fn (FarmerStatus $status): bool => $status === FarmerStatus::PENDING)
                 ->map(fn (FarmerStatus $status): array => [
                     'value' => $status->value,
                     'label' => $status->label(),
@@ -228,6 +229,16 @@ class FarmerController extends Controller
     public function store(StoreFarmerRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $registeredAt = filled($validated['registered_at'] ?? null)
+            ? \Carbon\Carbon::parse((string) $validated['registered_at'])
+            : now();
+
+        if (($validated['status'] ?? null) === FarmerStatus::PENDING->value) {
+            $validated['status'] = $registeredAt->lt(now()->subYears(5)->startOfDay())
+                ? FarmerStatus::INACTIVE->value
+                : FarmerStatus::ACTIVE->value;
+        }
+
         $duplicates = $this->registry->findPotentialDuplicates($validated);
 
         if ($duplicates->isNotEmpty() && ! $request->boolean('confirm_duplicate_override')) {

@@ -28,7 +28,7 @@ const form = useForm({
     barangay_id: '',
     association_id: '',
     member_type_id: '',
-    status: 'pending',
+    status: 'active',
     registered_at: new Date().toISOString().slice(0, 10),
     remarks: '',
     confirm_duplicate_override: false,
