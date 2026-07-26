@@ -893,7 +893,11 @@ class FarmerController extends Controller
 
     private function listedFarmersQuery(): Builder
     {
-        return Farmer::query();
+        return Farmer::query()
+            ->where(function (Builder $query): void {
+                $query->whereNotNull('inactive_at')
+                    ->orWhere('membership_status', MembershipStatus::ACTIVE->value);
+            });
     }
 
     private function filters(Request $request): array
