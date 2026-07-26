@@ -247,8 +247,9 @@ class DocumentVerificationQueueController extends Controller
             'verifiedAt' => optional($document->verified_at)->format('M d, Y h:i A'),
             'verifierName' => $document->verifier?->name,
             'previewMimeType' => $uploadPresent
-                ? (Storage::disk('public')->mimeType((string) $document->file_path) ?: 'application/octet-stream')
+                ? $this->previewMimeTypeForDocument($document)
                 : null,
+            'originalName' => $document->original_name ?: basename((string) $document->file_path),
             'actions' => [
                 'reviewUrl' => $workflow === 'renewal'
                     ? route('admin.renewals.documents.review', [$transaction, $document])
@@ -263,5 +264,32 @@ class DocumentVerificationQueueController extends Controller
                     : route('admin.membership-applications.show', $transaction),
             ],
         ];
+    }
+
+    private function previewMimeTypeForDocument(FarmerDocument $document): string
+    {
+        $mimeType = strtolower(trim((string) ($document->mime_type ?? '')));
+
+        if ($mimeType !== '' && $mimeType !== 'application/octet-stream') {
+            return $mimeType;
+        }
+
+        $disk = $document->disk ?: 'public';
+        $path = (string) $document->path;
+        $storageMimeType = strtolower((string) (Storage::disk($disk)->mimeType($path) ?: ''));
+
+        if ($storageMimeType !== '' && $storageMimeType !== 'application/octet-stream') {
+            return $storageMimeType;
+        }
+
+        return match (strtolower(pathinfo($document->original_name ?: $path, PATHINFO_EXTENSION))) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
+            default => 'application/octet-stream',
+        };
     }
 }

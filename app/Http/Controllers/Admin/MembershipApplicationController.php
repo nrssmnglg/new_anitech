@@ -40,7 +40,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MembershipApplicationController extends Controller
 {
@@ -584,8 +584,9 @@ class MembershipApplicationController extends Controller
                 ],
                 'remarks' => $document->remarks,
                 'previewMimeType' => $document->getAttribute('upload_present')
-                    ? (Storage::disk('public')->mimeType((string) $document->file_path) ?: 'application/octet-stream')
+                    ? $this->previewMimeTypeForDocument($document)
                     : null,
+                'originalName' => $document->original_name ?: basename((string) $document->file_path),
                 'isExpired' => (bool) $document->getAttribute('is_expired'),
                 'expiresAtLabel' => $document->getAttribute('expires_at'),
                 'needsResubmission' => (bool) $document->getAttribute('needs_resubmission'),
@@ -806,22 +807,49 @@ class MembershipApplicationController extends Controller
             ->with('success', 'Payment recorded. The application is still awaiting full payment before completion.');
     }
 
-    public function viewDocument(MembershipApplication $membershipApplication, FarmerDocument $document): BinaryFileResponse
+    public function viewDocument(MembershipApplication $membershipApplication, FarmerDocument $document): StreamedResponse
     {
         abort_unless($document->membership_transaction_id == $membershipApplication->id, 404);
         abort_unless($this->farmerDocumentService->uploadPresent($document), 404);
 
-        $path = Storage::disk('public')->path((string) $document->file_path);
-        $mimeType = Storage::disk('public')->mimeType((string) $document->file_path) ?: 'application/octet-stream';
+        $disk = $document->disk ?: 'public';
+        $path = (string) $document->file_path;
+        $mimeType = $this->previewMimeTypeForDocument($document);
         $filename = $document->original_name ?: basename((string) $document->file_path);
 
-        return response()->file(
+        return Storage::disk($disk)->response(
             $path,
-            [
-                'Content-Type' => $mimeType,
-                'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
-            ],
+            $filename,
+            ['Content-Type' => $mimeType],
+            'inline',
         );
+    }
+
+    private function previewMimeTypeForDocument(FarmerDocument $document): string
+    {
+        $mimeType = strtolower(trim((string) ($document->mime_type ?? '')));
+
+        if ($mimeType !== '' && $mimeType !== 'application/octet-stream') {
+            return $mimeType;
+        }
+
+        $disk = $document->disk ?: 'public';
+        $path = (string) $document->file_path;
+        $storageMimeType = strtolower((string) (Storage::disk($disk)->mimeType($path) ?: ''));
+
+        if ($storageMimeType !== '' && $storageMimeType !== 'application/octet-stream') {
+            return $storageMimeType;
+        }
+
+        return match (strtolower(pathinfo($document->original_name ?: $path, PATHINFO_EXTENSION))) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
+            default => 'application/octet-stream',
+        };
     }
 
     private function requestQueueQuery(array $filters): Builder

@@ -17,16 +17,19 @@ const previewLoading = ref(false);
 
 const previewUrl = computed(() => previewDocument.value?.actions?.viewUrl || '');
 const previewMimeType = computed(() => previewDocument.value?.previewMimeType || '');
+const previewName = computed(() => String(previewDocument.value?.originalName || ''));
+const previewExtension = computed(() => previewName.value.includes('.') ? previewName.value.split('.').pop().toLowerCase() : '');
 const previewIsImage = computed(() => {
-    return previewMimeType.value.startsWith('image/');
+    return previewMimeType.value.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(previewExtension.value);
 });
 const previewIsPdf = computed(() => {
-    return previewMimeType.value === 'application/pdf';
+    return previewMimeType.value === 'application/pdf' || previewExtension.value === 'pdf';
 });
+const previewCanInline = computed(() => previewIsImage.value || previewIsPdf.value);
 
 function openPreview(document) {
     previewDocument.value = document;
-    previewLoading.value = true;
+    previewLoading.value = previewCanInline.value;
 }
 
 function closePreview() {
@@ -36,6 +39,14 @@ function closePreview() {
 
 function markPreviewLoaded() {
     previewLoading.value = false;
+}
+
+function openPreviewInNewTab() {
+    if (!previewUrl.value) {
+        return;
+    }
+
+    window.open(previewUrl.value, '_blank', 'noopener');
 }
 
 function documentBadge(value) {
@@ -304,6 +315,14 @@ function alertBadge(document) {
                             <p class="text-sm text-[#5f6c67]">
                                 This file type cannot be displayed inside the modal. Convert it to an image or PDF if you need inline preview.
                             </p>
+                            <button
+                                v-if="previewUrl"
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#31584a] transition hover:bg-[#f4f7f5]"
+                                @click="openPreviewInNewTab"
+                            >
+                                Open file in new tab
+                            </button>
                         </div>
                     </div>
                 </div>

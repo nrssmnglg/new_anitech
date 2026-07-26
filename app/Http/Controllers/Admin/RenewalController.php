@@ -641,8 +641,9 @@ class RenewalController extends Controller
                 ],
                 'remarks' => $document->remarks,
                 'previewMimeType' => $document->getAttribute('upload_present')
-                    ? (Storage::disk('public')->mimeType((string) $document->file_path) ?: 'application/octet-stream')
+                    ? $this->previewMimeTypeForDocument($document)
                     : null,
+                'originalName' => $document->original_name ?: basename((string) $document->file_path),
                 'isExpired' => (bool) $document->getAttribute('is_expired'),
                 'expiresAtLabel' => $document->getAttribute('expires_at'),
                 'needsResubmission' => (bool) $document->getAttribute('needs_resubmission'),
@@ -778,12 +779,36 @@ class RenewalController extends Controller
         $disk = $document->disk ?: 'public';
         $filename = $document->original_name ?: basename((string) $document->path);
 
-        return Storage::disk($disk)->response(
-            (string) $document->path,
-            $filename,
-            ['Content-Type' => $document->mime_type ?: 'application/octet-stream'],
-            'inline',
-        );
+        return Storage::disk($disk)->response((string) $document->path, $filename, [
+            'Content-Type' => $this->previewMimeTypeForDocument($document),
+        ], 'inline');
+    }
+
+    private function previewMimeTypeForDocument(FarmerDocument $document): string
+    {
+        $mimeType = strtolower(trim((string) ($document->mime_type ?? '')));
+
+        if ($mimeType !== '' && $mimeType !== 'application/octet-stream') {
+            return $mimeType;
+        }
+
+        $disk = $document->disk ?: 'public';
+        $path = (string) $document->path;
+        $storageMimeType = strtolower((string) (Storage::disk($disk)->mimeType($path) ?: ''));
+
+        if ($storageMimeType !== '' && $storageMimeType !== 'application/octet-stream') {
+            return $storageMimeType;
+        }
+
+        return match (strtolower(pathinfo($document->original_name ?: $path, PATHINFO_EXTENSION))) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
+            default => 'application/octet-stream',
+        };
     }
 
     private function renewalListRelations(): array

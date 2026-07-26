@@ -158,8 +158,18 @@ function flagLabel(document) {
 
 const previewUrl = computed(() => previewDocument.value?.actions?.viewUrl || '');
 const previewMimeType = computed(() => previewDocument.value?.previewMimeType || '');
-const previewIsImage = computed(() => previewMimeType.value.startsWith('image/'));
-const previewIsPdf = computed(() => previewMimeType.value === 'application/pdf');
+const previewName = computed(() => String(previewDocument.value?.originalName || ''));
+const previewExtension = computed(() => previewName.value.includes('.') ? previewName.value.split('.').pop().toLowerCase() : '');
+const previewIsImage = computed(() => previewMimeType.value.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(previewExtension.value));
+const previewIsPdf = computed(() => previewMimeType.value === 'application/pdf' || previewExtension.value === 'pdf');
+
+function openPreviewInNewTab() {
+    if (!previewUrl.value) {
+        return;
+    }
+
+    window.open(previewUrl.value, '_blank', 'noopener');
+}
 </script>
 
 <template>
@@ -347,6 +357,14 @@ const previewIsPdf = computed(() => previewMimeType.value === 'application/pdf')
                             <div class="max-w-md space-y-3">
                                 <h4 class="text-lg font-bold text-[#1a2420]">Preview not available</h4>
                                 <p class="text-sm text-[#5f6c67]">This file type cannot be displayed inline.</p>
+                                <button
+                                    v-if="previewUrl"
+                                    type="button"
+                                    class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#31584a] transition hover:bg-[#f4f7f5]"
+                                    @click="openPreviewInNewTab"
+                                >
+                                    Open file in new tab
+                                </button>
                             </div>
                         </div>
                     </div>
