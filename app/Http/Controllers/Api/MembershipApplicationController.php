@@ -146,7 +146,9 @@ class MembershipApplicationController extends Controller
             (string) $validated['birth_date'],
         );
 
-        if ($request->hasFile('documents')) {
+        $batchedDocuments = array_filter((array) $request->file('documents', []));
+
+        if ($batchedDocuments !== []) {
             return $this->uploadDocumentsBatch($request, $application);
         }
 
