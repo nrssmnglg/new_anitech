@@ -259,6 +259,22 @@ const topStatusLabel = computed(() => {
     return application.value.status_label || 'Under Review';
 });
 
+const submissionLabel = computed(() => {
+    if (!application.value) {
+        return '';
+    }
+
+    return application.value.submitted_at ? 'Submitted' : 'Started';
+});
+
+const submissionTimestampLabel = computed(() => {
+    if (!application.value?.submitted_at) {
+        return 'Waiting for first document upload';
+    }
+
+    return new Date(application.value.submitted_at).toLocaleString();
+});
+
 function documentReviewBadge(document) {
     if (document?.needs_correction) {
         return {
@@ -497,7 +513,7 @@ if (pageMode.value === 'status' && hasLookup.value) {
                     <div class="farmer-app__track-overview">
                         <div>
                             <h2>{{ application.farmer?.name || 'Application Overview' }}</h2>
-                            <p>Submitted {{ new Date(application.submitted_at).toLocaleString() }}</p>
+                            <p>{{ submissionLabel }} {{ submissionTimestampLabel }}</p>
                         </div>
                         <div class="farmer-app__track-overview-mark">
                             <img :src="brandLogo" alt="AniTech mark">

@@ -31,6 +31,8 @@ use Illuminate\View\View;
 
 class MembershipApplicationController extends Controller
 {
+    private const MOBILE_UPLOAD_FILE_RULES = ['file', 'mimes:jpg,jpeg,png,pdf,webp,heic,heif', 'max:10240'];
+
     public function __construct(
         private readonly MembershipApplicationService $membershipApplicationService,
         private readonly FarmerRegistryService $farmerRegistryService,
@@ -155,7 +157,7 @@ class MembershipApplicationController extends Controller
         $validated = $request->validate([
             'birth_date' => ['required', 'date'],
             'document_type' => ['required', 'string'],
-            'document' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+            'document' => array_merge(['required'], self::MOBILE_UPLOAD_FILE_RULES),
         ]);
 
         $document = $this->membershipApplicationService->uploadMobileDocument(
@@ -509,13 +511,17 @@ class MembershipApplicationController extends Controller
     {
         $validated = $request->validate([
             'documents' => ['required', 'array', 'min:1'],
-            'documents.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+            'documents.*' => self::MOBILE_UPLOAD_FILE_RULES,
         ]);
 
-        $documents = $request->file('documents', []);
-        $documentMap = $application->documents->mapWithKeys(fn ($document) => [
-            ($document->document_type?->value ?? (string) $document->document_type) => $document,
-        ]);
+        $documents = collect($request->file('documents', []))
+            ->mapWithKeys(fn ($file, $documentType) => [$this->normalizeDocumentTypeKey((string) $documentType) => $file])
+            ->all();
+        $documentMap = $application->documents->mapWithKeys(function ($document) {
+            $documentType = $this->normalizeDocumentTypeKey($document->document_type?->value ?? (string) $document->document_type);
+
+            return [$documentType => $document];
+        });
 
         $invalidDocumentTypes = array_diff(array_keys($documents), $documentMap->keys()->all());
         if ($invalidDocumentTypes !== []) {
@@ -553,6 +559,17 @@ class MembershipApplicationController extends Controller
     private function applicationQrSessionKey(string $applicationNo, string $birthDate): string
     {
         return 'farmer_pwa.application_qr_payment.' . md5($applicationNo . '|' . $birthDate);
+    }
+
+    private function normalizeDocumentTypeKey(string $value): string
+    {
+        $normalized = strtolower(trim($value));
+
+        return match ($normalized) {
+            'birthcertificate' => 'birth_certificate',
+            '2x2picture', 'twobytwopicture' => 'two_by_two_picture',
+            default => $normalized,
+        };
     }
 
     private function usesQrPhTestAmount(): bool

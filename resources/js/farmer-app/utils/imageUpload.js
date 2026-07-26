@@ -12,6 +12,16 @@ export async function prepareUploadFile(file, options = {}) {
         };
     }
 
+    // Keep formats like HEIC/HEIF untouched. Browsers do not reliably re-encode them.
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        return {
+            file,
+            compressed: false,
+            originalSize: file.size,
+            finalSize: file.size,
+        };
+    }
+
     const compressed = await compressImageFile(file, options);
 
     return {

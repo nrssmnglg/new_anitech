@@ -40,12 +40,13 @@ class MembershipApplicationService
     public function create(array $attributes): MembershipApplication
     {
         return DB::transaction(function () use ($attributes): MembershipApplication {
+            $isMobile = ($attributes['source'] ?? null) === 'mobile';
             $application = MembershipApplication::query()->create([
                 'farmer_id' => $attributes['farmer_id'],
                 'application_no' => $this->generateApplicationNumber(),
                 'source' => $attributes['source'],
-                'status' => ApplicationStatus::SUBMITTED,
-                'submitted_at' => CarbonImmutable::now(),
+                'status' => $isMobile ? ApplicationStatus::DRAFT : ApplicationStatus::SUBMITTED,
+                'submitted_at' => $isMobile ? null : CarbonImmutable::now(),
             ]);
 
             if ($application->source !== 'walk_in') {
@@ -361,12 +362,21 @@ class MembershipApplicationService
             $document->forceFill([
                 'file_path' => $path,
                 'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
                 'uploaded_at' => now(),
                 'verification_status' => DocumentVerificationStatus::PENDING,
                 'verified_by' => null,
                 'verified_at' => null,
                 'remarks' => null,
             ])->save();
+
+            if (($application->status?->value ?? (string) $application->status) === ApplicationStatus::DRAFT->value) {
+                $application->forceFill([
+                    'status' => $this->workflow->submit(ApplicationStatus::DRAFT),
+                    'submitted_at' => $application->submitted_at ?? CarbonImmutable::now(),
+                ])->save();
+            }
 
             $application = $application->refresh()->load(['documents', 'farmer']);
             $this->updateMembershipStatusFromDocuments($application);
