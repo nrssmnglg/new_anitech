@@ -1570,7 +1570,7 @@ class FarmerController extends Controller
         return match ($normalized) {
             FarmerStatus::ACTIVE => $query
                 ->whereNull('inactive_at')
-                ->where('membership_status', MembershipStatus::ACTIVE->value),
+                ->whereRaw("LOWER(TRIM(COALESCE(membership_status, ''))) = ?", [MembershipStatus::ACTIVE->value]),
             FarmerStatus::INACTIVE => $query
                 ->whereNotNull('inactive_at')
                 ->where(function (Builder $builder): void {

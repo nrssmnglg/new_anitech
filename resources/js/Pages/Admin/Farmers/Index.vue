@@ -70,7 +70,7 @@ function applyFilters() {
         preserveState: true,
         preserveScroll: true,
         replace: true,
-        only: ['farmers'],
+        only: ['farmers', 'filters'],
     });
 }
 
