@@ -305,9 +305,6 @@ const submitDocuments = async () => {
         });
 
         const response = await farmerApi.post(`/application/${encodeURIComponent(lookup.application_no)}/documents`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
             onUploadProgress: (event) => {
                 if (event.total) {
                     uploadProgress.value = Math.round((event.loaded / event.total) * 100);
