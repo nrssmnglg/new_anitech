@@ -1566,7 +1566,6 @@ class FarmerController extends Controller
                 ->whereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, now()->year)),
             FarmerStatus::INACTIVE => $query
                 ->whereNotNull('inactive_at')
-                ->where('inactive_at', '>=', now()->subYears(5))
                 ->where(function (Builder $builder): void {
                     $builder->whereNull('inactive_reason')
                         ->orWhere('inactive_reason', '')
@@ -1596,7 +1595,7 @@ class FarmerController extends Controller
     {
         return [
             ['value' => FarmerStatus::ACTIVE->value, 'label' => 'Active'],
-            ['value' => FarmerStatus::INACTIVE->value, 'label' => 'Inactive (last 5 years)'],
+            ['value' => FarmerStatus::INACTIVE->value, 'label' => 'Inactive'],
             ['value' => FarmerStatus::DECEASED->value, 'label' => 'Deceased'],
         ];
     }

@@ -24,9 +24,9 @@ const cards = [
     },
     {
         key: 'inactive',
-        label: 'Inactive (last 5 years)',
+        label: 'Inactive Farmers',
         icon: 'block',
-        trend: 'Within 5 years',
+        trend: 'All inactive',
         iconClass: 'bg-[#d04d4d]/10 text-[#b53a3a]',
         valueClass: 'text-[#b53a3a]',
         trendClass: 'text-[#b53a3a]',
