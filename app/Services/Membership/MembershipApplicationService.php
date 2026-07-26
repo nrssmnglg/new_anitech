@@ -20,10 +20,13 @@ use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class MembershipApplicationService
 {
+    private ?array $farmerDocumentColumns = null;
+
     public function __construct(
         private readonly ApplicationWorkflowService $workflow,
         private readonly FarmerDocumentService $farmerDocumentService,
@@ -359,17 +362,25 @@ class MembershipApplicationService
                 'public',
             );
 
-            $document->forceFill([
+            $payload = [
                 'file_path' => $path,
                 'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
-                'file_size' => $file->getSize(),
                 'uploaded_at' => now(),
                 'verification_status' => DocumentVerificationStatus::PENDING,
                 'verified_by' => null,
                 'verified_at' => null,
                 'remarks' => null,
-            ])->save();
+            ];
+
+            if ($this->farmerDocumentHasColumn('mime_type')) {
+                $payload['mime_type'] = $file->getClientMimeType();
+            }
+
+            if ($this->farmerDocumentHasColumn('file_size')) {
+                $payload['file_size'] = $file->getSize();
+            }
+
+            $document->forceFill($payload)->save();
 
             if (($application->status?->value ?? (string) $application->status) === ApplicationStatus::DRAFT->value) {
                 $application->forceFill([
@@ -406,16 +417,33 @@ class MembershipApplicationService
                 'public',
             );
 
-            $document->forceFill([
+            $payload = [
                 'file_path' => $path,
                 'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
-                'file_size' => $file->getSize(),
                 'uploaded_at' => now(),
-            ])->save();
+            ];
+
+            if ($this->farmerDocumentHasColumn('mime_type')) {
+                $payload['mime_type'] = $file->getClientMimeType();
+            }
+
+            if ($this->farmerDocumentHasColumn('file_size')) {
+                $payload['file_size'] = $file->getSize();
+            }
+
+            $document->forceFill($payload)->save();
 
             return $document->refresh()->load('documentType');
         });
+    }
+
+    private function farmerDocumentHasColumn(string $column): bool
+    {
+        if ($this->farmerDocumentColumns === null) {
+            $this->farmerDocumentColumns = Schema::getColumnListing('farmer_documents');
+        }
+
+        return in_array($column, $this->farmerDocumentColumns, true);
     }
 
     private function finalizeApproval(MembershipApplication $application, ?int $reviewerId = null): MembershipApplication
