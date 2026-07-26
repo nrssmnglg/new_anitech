@@ -7,6 +7,7 @@ use App\Enums\DocumentVerificationStatus;
 use App\Models\DocumentRequirement;
 use App\Models\DocumentType as DocumentTypeModel;
 use App\Models\MembershipApplication;
+use App\Models\ReactivationRequest;
 use App\Models\RenewalRequest;
 use InvalidArgumentException;
 use Throwable;
@@ -105,6 +106,33 @@ class DocumentRequirementService
 
                 return [
                     'membership_transaction_id' => $renewalRequest->id,
+                    'document_type_id' => $documentTypeId,
+                    'original_name' => $source === 'walk_in' ? $type->label() : 'Pending Upload',
+                    'file_path' => $source === 'walk_in' ? 'office-checklist/' . $type->value : 'pending-upload/' . $type->value,
+                    'verification_status' => DocumentVerificationStatus::PENDING,
+                    'remarks' => null,
+                    'uploaded_at' => now(),
+                ];
+            })->all();
+    }
+
+    public function checklistRowsForReactivation(ReactivationRequest $reactivationRequest): array
+    {
+        $source = strtolower((string) $reactivationRequest->source);
+
+        return $this->configuredDocumentTypesFor('reactivation', $reactivationRequest)
+            ->map(function (DocumentType $type) use ($reactivationRequest, $source): array {
+                $documentTypeId = DocumentTypeModel::query()->firstOrCreate(
+                    ['code' => $type->value],
+                    [
+                        'name' => $type->label(),
+                        'description' => $type->label(),
+                        'status' => 'Active',
+                    ],
+                )->id;
+
+                return [
+                    'membership_transaction_id' => $reactivationRequest->id,
                     'document_type_id' => $documentTypeId,
                     'original_name' => $source === 'walk_in' ? $type->label() : 'Pending Upload',
                     'file_path' => $source === 'walk_in' ? 'office-checklist/' . $type->value : 'pending-upload/' . $type->value,
@@ -216,6 +244,10 @@ class DocumentRequirementService
         }
 
         if ($context instanceof RenewalRequest) {
+            return strtolower((string) $context->source);
+        }
+
+        if ($context instanceof ReactivationRequest) {
             return strtolower((string) $context->source);
         }
 

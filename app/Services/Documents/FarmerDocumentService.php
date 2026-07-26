@@ -5,6 +5,7 @@ namespace App\Services\Documents;
 use App\Enums\DocumentVerificationStatus;
 use App\Models\FarmerDocument;
 use App\Models\MembershipApplication;
+use App\Models\ReactivationRequest;
 use App\Models\RenewalRequest;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -45,6 +46,21 @@ class FarmerDocumentService
         }
 
         return $renewalRequest->documents()->with('documentType')->orderBy('document_type_id')->get();
+    }
+
+    public function ensureReactivationChecklist(ReactivationRequest $reactivationRequest): Collection
+    {
+        foreach ($this->documentRequirementService->checklistRowsForReactivation($reactivationRequest) as $row) {
+            FarmerDocument::query()->updateOrCreate(
+                [
+                    'membership_transaction_id' => $reactivationRequest->id,
+                    'document_type_id' => $row['document_type_id'],
+                ],
+                $row,
+            );
+        }
+
+        return $reactivationRequest->documents()->with('documentType')->orderBy('document_type_id')->get();
     }
 
     public function markReceived(FarmerDocument $document, bool $received, ?int $userId = null): FarmerDocument

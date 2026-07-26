@@ -5,6 +5,7 @@ namespace App\Services\Documents;
 use App\Enums\DocumentVerificationStatus;
 use App\Models\FarmerDocument;
 use App\Models\MembershipApplication;
+use App\Models\ReactivationRequest;
 use App\Models\RenewalRequest;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -73,5 +74,19 @@ class DocumentVerificationService
     public function missingRequiredDocumentsForRenewal(RenewalRequest $renewalRequest): array
     {
         return $this->documentRequirementService->missingFor('renewal', $renewalRequest->documents, $renewalRequest, true);
+    }
+
+    public function allRequiredVerifiedForReactivation(ReactivationRequest $reactivationRequest): bool
+    {
+        return $this->documentRequirementService->allRequiredVerified(
+            'reactivation',
+            $reactivationRequest->documents,
+            $reactivationRequest,
+        );
+    }
+
+    public function missingRequiredDocumentsForReactivation(ReactivationRequest $reactivationRequest): array
+    {
+        return $this->documentRequirementService->missingFor('reactivation', $reactivationRequest->documents, $reactivationRequest, true);
     }
 }

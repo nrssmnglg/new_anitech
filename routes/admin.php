@@ -20,6 +20,7 @@ Route::prefix('admin')
             require __DIR__ . '/admin/farmers.php';
             require __DIR__ . '/admin/membership.php';
             require __DIR__ . '/admin/renewals.php';
+            require __DIR__ . '/admin/reactivations.php';
             require __DIR__ . '/admin/document-verification.php';
             require __DIR__ . '/admin/mortuary.php';
             require __DIR__ . '/admin/queries.php';

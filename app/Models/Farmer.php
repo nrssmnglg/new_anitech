@@ -108,6 +108,11 @@ class Farmer extends Model
         return $this->hasMany(RenewalRequest::class);
     }
 
+    public function reactivationRequests(): HasMany
+    {
+        return $this->hasMany(ReactivationRequest::class);
+    }
+
     public function farmerDocuments(): HasMany
     {
         return $this->hasMany(FarmerDocument::class);
