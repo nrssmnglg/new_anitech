@@ -486,29 +486,31 @@ onMounted(() => {
                                     @change="setFile(document.type, $event, 'library')"
                                 >
 
-                                <button type="button" class="farmer-app__upload-picker farmer-app__upload-picker--camera" @click="openCamera(document.type)">
-                                    Capture Photo
-                                </button>
-                                <button type="button" class="farmer-app__upload-picker" @click="openFilePicker(document.type)">
-                                    Choose File
-                                </button>
-                                <button
-                                    v-if="selectedFileName(document.type)"
-                                    type="button"
-                                    class="farmer-app__upload-link"
-                                    @click="openCamera(document.type)"
-                                >
-                                    Retake
-                                </button>
-
-                                <button v-if="selectedFileName(document.type)" type="button" class="farmer-app__upload-link" @click="removeFile(document.type)">
-                                    Remove
-                                </button>
+                                <div class="farmer-app__upload-action-row">
+                                    <button type="button" class="farmer-app__upload-picker farmer-app__upload-picker--camera" @click="openCamera(document.type)">
+                                        Camera
+                                    </button>
+                                    <button type="button" class="farmer-app__upload-picker" @click="openFilePicker(document.type)">
+                                        File
+                                    </button>
+                                </div>
                             </div>
 
                             <div v-if="selectedFileName(document.type)" class="farmer-app__upload-selected">
-                                <div>
+                                <div class="farmer-app__upload-selected-head">
                                     <strong>{{ selectedFileName(document.type) }}</strong>
+                                    <div class="farmer-app__upload-selected-links">
+                                        <button
+                                            type="button"
+                                            class="farmer-app__upload-link"
+                                            @click="openCamera(document.type)"
+                                        >
+                                            Retake
+                                        </button>
+                                        <button type="button" class="farmer-app__upload-link" @click="removeFile(document.type)">
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                                 <img v-if="previewUrl(document.type)" :src="previewUrl(document.type)" :alt="`${document.label} preview`" class="farmer-app__upload-preview">
                                 <div v-else class="farmer-app__upload-preview farmer-app__upload-preview--file">PDF ready</div>
@@ -836,11 +838,10 @@ onMounted(() => {
 .farmer-app__upload-item-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.8rem;
+    gap: 0.65rem;
     align-items: center;
     align-content: flex-start;
     min-width: 0;
-    padding-top: 0.15rem;
 }
 
 .farmer-app__upload-badge {
@@ -878,16 +879,38 @@ onMounted(() => {
     border-left: 1px dashed rgba(0, 54, 41, 0.14);
     padding-left: 1.15rem;
     align-items: start;
-    justify-items: end;
+    justify-items: start;
     min-width: 0;
-    gap: 0.65rem;
+    gap: 0.55rem;
+}
+
+.farmer-app__upload-selected-head {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.farmer-app__upload-selected-head strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.farmer-app__upload-selected-links {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex: 0 0 auto;
 }
 
 .farmer-app__upload-preview {
     width: 100%;
-    max-width: 148px;
+    max-width: 112px;
     aspect-ratio: 4 / 5;
-    border-radius: 16px;
+    border-radius: 14px;
     object-fit: cover;
     border: 1px solid rgba(0, 54, 41, 0.1);
 }
@@ -906,11 +929,11 @@ onMounted(() => {
     background: #f7fbf8;
     color: #0c5f49;
     border-radius: 999px;
-    padding: 0.72rem 1.05rem;
+    padding: 0.55rem 0.9rem;
     font-weight: 700;
-    min-height: 2.75rem;
-    min-width: 7.75rem;
-    font-size: 0.92rem;
+    min-height: 2.25rem;
+    min-width: 0;
+    font-size: 0.85rem;
 }
 
 .farmer-app__upload-picker--camera {
@@ -919,8 +942,10 @@ onMounted(() => {
     color: #fff;
 }
 
-.farmer-app__upload-item-actions > .farmer-app__upload-badge {
-    margin-bottom: 0.15rem;
+.farmer-app__upload-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .farmer-app__upload-link {
@@ -1027,23 +1052,32 @@ onMounted(() => {
     }
 
     .farmer-app__upload-item-actions {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.7rem;
+        align-items: flex-start;
+        gap: 0.6rem;
     }
 
     .farmer-app__upload-picker {
-        width: 100%;
-        min-width: 0;
+        flex: 1 1 0;
+        justify-content: center;
+        min-width: 5.5rem;
     }
 
     .farmer-app__upload-item-head h3 {
         font-size: 1.02rem;
     }
 
-    .farmer-app__upload-link {
-        text-align: left;
-        padding-top: 0.1rem;
+    .farmer-app__upload-action-row {
+        width: 100%;
+    }
+
+    .farmer-app__upload-selected-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .farmer-app__upload-selected-links {
+        gap: 0.75rem;
     }
 
     .farmer-app__upload-actions {
