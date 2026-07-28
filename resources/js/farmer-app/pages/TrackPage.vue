@@ -138,8 +138,11 @@ const timelineState = computed(() => {
         under_review: allUploaded || ['approved', 'rejected'].includes(data.status),
         needs_correction: isRejected || documentSummary.value.corrections > 0,
         approved: data.status === 'approved' || paymentPending || paymentVerified || completed,
-        payment_pending: paymentPending || paymentVerified || completed,
+        payment_pending: paymentPending,
         completed,
+        payment_verified: paymentVerified,
+        show_payment_pending: paymentPending,
+        show_completed: completed && !paymentVerified,
     };
 });
 
@@ -153,7 +156,14 @@ const stageItems = computed(() => {
         stepNumber: index + 1,
         complete: Boolean(state[step.key]) && index < activeIndex,
         current: index === activeIndex,
-        visible: step.key !== 'needs_correction' || Boolean(state.needs_correction),
+        visible:
+            step.key === 'needs_correction'
+                ? Boolean(state.needs_correction)
+                : step.key === 'payment_pending'
+                    ? Boolean(state.show_payment_pending)
+                    : step.key === 'completed'
+                        ? Boolean(state.show_completed)
+                        : true,
     })).filter((step) => step.visible);
 });
 
@@ -171,7 +181,7 @@ const stageNote = computed(() => {
     }
 
     if (application.value.payment?.is_verified) {
-        return 'The office has verified your payment. Final account activation is underway.';
+        return 'Your payment has been verified. Your application is approved and account activation is underway.';
     }
 
     if (application.value.payment?.can_pay) {
@@ -245,7 +255,7 @@ const topStatusLabel = computed(() => {
     }
 
     if (application.value.payment?.is_verified) {
-        return 'Payment Verified';
+        return 'Approved';
     }
 
     if (application.value.payment?.can_pay) {
@@ -565,7 +575,7 @@ if (pageMode.value === 'status' && hasLookup.value) {
                     </div>
                 </article>
 
-                <article class="farmer-app__track-card farmer-app__track-card--payment">
+                <article v-if="application.payment?.can_pay" class="farmer-app__track-card farmer-app__track-card--payment">
                     <div class="farmer-app__track-card-head">
                         <h3>Payment Guidance</h3>
                         <strong>

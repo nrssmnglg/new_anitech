@@ -905,17 +905,14 @@ class FarmerController extends Controller
 
     private function listedFarmersQuery(): Builder
     {
-        $query = Farmer::query();
+        $query = Farmer::query()
+            ->whereIn(DB::raw($this->farmerStatusCaseExpression()), $this->visibleRegistryStatuses());
 
         if (Schema::hasColumn('farmers', 'is_registry_record')) {
             return $query->where('is_registry_record', true);
         }
 
-        return $query->whereIn(DB::raw($this->farmerStatusCaseExpression()), [
-            FarmerStatus::ACTIVE->value,
-            FarmerStatus::INACTIVE->value,
-            FarmerStatus::DECEASED->value,
-        ]);
+        return $query;
     }
 
     private function filters(Request $request): array
@@ -1608,6 +1605,18 @@ class FarmerController extends Controller
             ['value' => FarmerStatus::ACTIVE->value, 'label' => 'Active'],
             ['value' => FarmerStatus::INACTIVE->value, 'label' => 'Inactive'],
             ['value' => FarmerStatus::DECEASED->value, 'label' => 'Deceased'],
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function visibleRegistryStatuses(): array
+    {
+        return [
+            FarmerStatus::ACTIVE->value,
+            FarmerStatus::INACTIVE->value,
+            FarmerStatus::DECEASED->value,
         ];
     }
 

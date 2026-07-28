@@ -75,6 +75,52 @@ class FarmerRegistryTest extends TestCase
         $response->assertSee($juan->farmer_code);
     }
 
+    public function test_registry_index_filters_by_status(): void
+    {
+        [$barangay] = $this->seedLookups();
+
+        Farmer::create([
+            'farmer_code' => 'FRM-2026-01001',
+            'first_name' => 'Active',
+            'last_name' => 'Farmer',
+            'barangay_id' => $barangay->id,
+            'member_type_id' => MemberType::query()->where('code', MemberTypeCode::NM->value)->value('id'),
+            'status' => FarmerStatus::ACTIVE->value,
+            'registered_at' => now(),
+        ]);
+
+        Farmer::create([
+            'farmer_code' => 'FRM-2026-01002',
+            'first_name' => 'Inactive',
+            'last_name' => 'Farmer',
+            'barangay_id' => $barangay->id,
+            'member_type_id' => MemberType::query()->where('code', MemberTypeCode::OM->value)->value('id'),
+            'status' => FarmerStatus::INACTIVE->value,
+            'inactive_at' => now(),
+            'inactive_reason' => 'No renewal',
+            'registered_at' => now(),
+        ]);
+
+        Farmer::create([
+            'farmer_code' => 'FRM-2026-01003',
+            'first_name' => 'Deceased',
+            'last_name' => 'Farmer',
+            'barangay_id' => $barangay->id,
+            'member_type_id' => MemberType::query()->where('code', MemberTypeCode::OM->value)->value('id'),
+            'status' => FarmerStatus::DECEASED->value,
+            'inactive_at' => now(),
+            'inactive_reason' => 'Deceased record',
+            'registered_at' => now(),
+        ]);
+
+        $response = $this->get(route('admin.farmers.index', ['status' => FarmerStatus::INACTIVE->value]));
+
+        $response->assertOk();
+        $response->assertSee('Inactive Farmer');
+        $response->assertDontSee('Active Farmer');
+        $response->assertDontSee('Deceased Farmer');
+    }
+
 
     public function test_registry_index_only_lists_farmers_with_current_approved_and_paid_membership_ledgers(): void
     {
