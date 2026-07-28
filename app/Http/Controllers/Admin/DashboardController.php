@@ -479,7 +479,7 @@ class DashboardController extends Controller
             ->get();
 
         return $farmers
-            ->filter(fn (Farmer $farmer): bool => $farmer->inactive_at === null)
+            ->filter(fn (Farmer $farmer): bool => trim((string) $farmer->inactive_reason) === '')
             ->groupBy(function (Farmer $farmer): string {
                 if ((int) ($farmer->selected_year_settled_membership_count ?? 0) > 0) {
                     return MembershipStatus::ACTIVE->value;
@@ -1258,7 +1258,7 @@ class DashboardController extends Controller
 
         return Farmer::query()
             ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
-            ->whereNull('inactive_at')
+            ->whereRaw("TRIM(COALESCE(inactive_reason, '')) = ''")
             ->where(function (Builder $query) use ($selectedYear): void {
                 $query
                     ->where('membership_status', MembershipStatus::ACTIVE->value)
@@ -1438,31 +1438,28 @@ class DashboardController extends Controller
     {
         return match ($status) {
             FarmerStatus::ACTIVE => $query
-                ->whereNull('inactive_at')
+                ->whereRaw("TRIM(COALESCE(inactive_reason, '')) = ''")
                 ->whereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year)),
             FarmerStatus::INACTIVE => $query
                 ->where(function (Builder $builder): void {
                     $builder
-                        ->whereNotNull('inactive_at')
-                        ->where(function (Builder $reasonBuilder): void {
-                            $reasonBuilder->whereNull('inactive_reason')
-                                ->orWhere('inactive_reason', '')
-                                ->orWhereRaw("LOWER(COALESCE(inactive_reason, '')) NOT LIKE '%deceas%'");
-                        });
+                        ->whereRaw("TRIM(COALESCE(inactive_reason, '')) <> ''")
+                        ->whereRaw("LOWER(COALESCE(inactive_reason, '')) NOT LIKE '%deceas%'");
                 }),
             FarmerStatus::DECEASED => $query
-                ->whereNotNull('inactive_at')
                 ->whereRaw("LOWER(COALESCE(inactive_reason, '')) LIKE '%deceas%'"),
             FarmerStatus::PENDING => $query
-                ->whereNull('inactive_at')
+                ->whereRaw("TRIM(COALESCE(inactive_reason, '')) = ''")
                 ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year)),
         };
     }
 
     private function dashboardFarmerStatusForYear(Farmer $farmer, ?int $year): FarmerStatus
     {
-        if ($farmer->inactive_at !== null) {
-            return str_contains(strtolower((string) $farmer->inactive_reason), 'deceas')
+        $inactiveReason = trim((string) $farmer->inactive_reason);
+
+        if ($inactiveReason !== '') {
+            return str_contains(strtolower($inactiveReason), 'deceas')
                 ? FarmerStatus::DECEASED
                 : FarmerStatus::INACTIVE;
         }

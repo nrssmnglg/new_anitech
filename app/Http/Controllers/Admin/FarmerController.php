@@ -1586,8 +1586,8 @@ class FarmerController extends Controller
     {
         return sprintf(
             "CASE
-                WHEN inactive_at IS NOT NULL AND LOWER(COALESCE(inactive_reason, '')) LIKE '%%deceas%%' THEN '%s'
-                WHEN inactive_at IS NOT NULL THEN '%s'
+                WHEN LOWER(TRIM(COALESCE(inactive_reason, ''))) LIKE '%%deceas%%' THEN '%s'
+                WHEN TRIM(COALESCE(inactive_reason, '')) <> '' THEN '%s'
                 WHEN LOWER(TRIM(COALESCE(membership_status, ''))) = '%s' THEN '%s'
                 ELSE '%s'
             END",

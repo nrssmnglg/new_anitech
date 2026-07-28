@@ -175,8 +175,10 @@ class Farmer extends Model
 
     public function getStatusAttribute(): FarmerStatus
     {
-        if ($this->inactive_at !== null) {
-            return str_contains(strtolower((string) $this->inactive_reason), 'deceas')
+        $inactiveReason = trim((string) $this->inactive_reason);
+
+        if ($inactiveReason !== '') {
+            return str_contains(strtolower($inactiveReason), 'deceas')
                 ? FarmerStatus::DECEASED
                 : FarmerStatus::INACTIVE;
         }

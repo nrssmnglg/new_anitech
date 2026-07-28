@@ -86,6 +86,8 @@ class FarmerRegistryTest extends TestCase
             'barangay_id' => $barangay->id,
             'member_type_id' => MemberType::query()->where('code', MemberTypeCode::NM->value)->value('id'),
             'status' => FarmerStatus::ACTIVE->value,
+            'inactive_at' => now(),
+            'inactive_reason' => null,
             'registered_at' => now(),
         ]);
 
@@ -113,12 +115,26 @@ class FarmerRegistryTest extends TestCase
             'registered_at' => now(),
         ]);
 
-        $response = $this->get(route('admin.farmers.index', ['status' => FarmerStatus::INACTIVE->value]));
+        $activeResponse = $this->get(route('admin.farmers.index', ['status' => FarmerStatus::ACTIVE->value]));
 
-        $response->assertOk();
-        $response->assertSee('Inactive Farmer');
-        $response->assertDontSee('Active Farmer');
-        $response->assertDontSee('Deceased Farmer');
+        $activeResponse->assertOk();
+        $activeResponse->assertSee('Active Farmer');
+        $activeResponse->assertDontSee('Inactive Farmer');
+        $activeResponse->assertDontSee('Deceased Farmer');
+
+        $inactiveResponse = $this->get(route('admin.farmers.index', ['status' => FarmerStatus::INACTIVE->value]));
+
+        $inactiveResponse->assertOk();
+        $inactiveResponse->assertSee('Inactive Farmer');
+        $inactiveResponse->assertDontSee('Active Farmer');
+        $inactiveResponse->assertDontSee('Deceased Farmer');
+
+        $deceasedResponse = $this->get(route('admin.farmers.index', ['status' => FarmerStatus::DECEASED->value]));
+
+        $deceasedResponse->assertOk();
+        $deceasedResponse->assertSee('Deceased Farmer');
+        $deceasedResponse->assertDontSee('Active Farmer');
+        $deceasedResponse->assertDontSee('Inactive Farmer');
     }
 
 
