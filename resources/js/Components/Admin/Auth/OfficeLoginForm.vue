@@ -37,7 +37,7 @@ const emit = defineEmits(['submit', 'toggle-password']);
             <div class="mx-auto flex justify-center">
                 <img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain">
             </div>
-            <p class="mt-4 text-sm font-semibold uppercase tracking-[0.25em] text-stone-500">Office Portal Login</p>
+            <p class="mt-4 text-sm font-semibold uppercase tracking-[0.25em] text-stone-500">Rural-Base Organization Portal Login</p>
         </div>
 
         <div

@@ -28,14 +28,14 @@ function submit() {
 
     <AdminAuthShell
         :hero-title="'Create\nNew Password'"
-        hero-copy="Your OTP is already verified. Set a new password to regain access to the office portal."
+        hero-copy="Your OTP is already verified. Set a new password to regain access to the portal."
         :logo-url="logoUrl"
     >
         <div class="relative w-full max-w-md rounded-2xl border border-black/5 bg-white p-8 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
             <div class="mb-8 text-center">
                 <div class="mx-auto flex justify-center"><img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain"></div>
                 <h1 class="mt-5 text-2xl font-extrabold text-stone-800">Choose New Password</h1>
-                <p class="mt-2 text-sm text-stone-500">Your OTP is confirmed. Set a new password for your office account and keep it different from your current password.</p>
+                <p class="mt-2 text-sm text-stone-500">Your OTP is confirmed. Set a new password for your portal account and keep it different from your current password.</p>
             </div>
 
             <div v-if="errorList.length" class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">

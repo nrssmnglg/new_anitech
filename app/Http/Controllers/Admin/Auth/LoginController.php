@@ -65,7 +65,7 @@ class LoginController extends Controller
             $this->auditTrailService->record(
                 'auth',
                 'login_rejected',
-                'Office portal login rejected because no matching office account was found.',
+                'Portal login rejected because no matching portal account was found.',
                 null,
                 null,
                 ['email' => $credentials['email']]
@@ -74,7 +74,7 @@ class LoginController extends Controller
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors([
-                    'email' => 'No office portal account was found for this email address.',
+                    'email' => 'No portal account was found for this email address.',
                 ]);
         }
 
@@ -84,7 +84,7 @@ class LoginController extends Controller
             $this->auditTrailService->record(
                 'auth',
                 'login_failed',
-                'Office portal login failed because of an invalid password.',
+                'Portal login failed because of an invalid password.',
                 $user,
                 null,
                 [
@@ -108,7 +108,7 @@ class LoginController extends Controller
             $this->auditTrailService->record(
                 'auth',
                 'login_blocked_inactive',
-                'Office portal login was blocked because the account is inactive.',
+                'Portal login was blocked because the account is inactive.',
                 $user
             );
 
@@ -125,7 +125,7 @@ class LoginController extends Controller
         $this->auditTrailService->record(
             'auth',
             'login_succeeded',
-            'Office portal login succeeded.',
+            'Portal login succeeded.',
             $user
         );
 

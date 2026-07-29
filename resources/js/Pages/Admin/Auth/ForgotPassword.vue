@@ -26,8 +26,8 @@ function submit() {
     <Head title="Forgot Password" />
 
     <AdminAuthShell
-        :hero-title="'Office Account\nRecovery'"
-        hero-copy="Reset your office portal access securely through a one-time password sent to your registered office email."
+        :hero-title="'Rural-Base Organization\nPortal Recovery'"
+        hero-copy="Reset your portal access securely through a one-time password sent to your registered office email."
         :logo-url="logoUrl"
     >
         <div class="relative w-full max-w-md rounded-2xl border border-black/5 bg-white p-8 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
@@ -36,7 +36,7 @@ function submit() {
                     <img :src="logoUrl" alt="AniTech logo" class="h-20 w-auto object-contain">
                 </div>
                 <h1 class="mt-5 text-2xl font-extrabold text-stone-800">Forgot Password</h1>
-                <p class="mt-2 text-sm text-stone-500">Enter your office account email and we will send a 6-digit OTP. The code expires in 10 minutes.</p>
+                <p class="mt-2 text-sm text-stone-500">Enter your portal email and we will send a 6-digit OTP. The code expires in 10 minutes.</p>
             </div>
 
             <div v-if="flashStatus" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">

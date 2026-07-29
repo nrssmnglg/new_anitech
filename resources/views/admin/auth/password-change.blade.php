@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Change Password')
-@section('subtitle', 'Update your password to continue using the office portal.')
+@section('subtitle', 'Update your password to continue using the portal.')
 
 @section('content')
     <section class="card" style="max-width: 540px;">

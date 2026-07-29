@@ -22,7 +22,7 @@ class LogoutController extends Controller
         $this->auditTrailService->record(
             'auth',
             'logout_succeeded',
-            'Office portal logout succeeded.',
+            'Portal logout succeeded.',
             $user
         );
 

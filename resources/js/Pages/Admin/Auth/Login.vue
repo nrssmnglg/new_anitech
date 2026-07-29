@@ -23,10 +23,10 @@ const { errorList, flashStatus, form, showPassword, submit } = useOfficeLogin(pr
 </script>
 
 <template>
-    <Head title="Office Portal Login" />
+    <Head title="Rural-Base Organization Portal Login" />
 
     <AdminAuthShell
-        :hero-title="'Municipal Agriculture\nOffice Portal'"
+        :hero-title="'Rural-Base Organization Portal\nCity Agriculture'"
         hero-copy="Log in to support agricultural services through efficient management of farmers, records, and staff operations."
         :logo-url="logoUrl"
     >

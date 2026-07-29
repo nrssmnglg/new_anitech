@@ -38,7 +38,7 @@ class ResetPasswordController extends Controller
         if (! $officeUser) {
             return back()
                 ->withInput()
-                ->withErrors(['email' => 'This email address is not eligible for office portal password reset.']);
+                ->withErrors(['email' => 'This email address is not eligible for portal password reset.']);
         }
 
         $otp = OfficePasswordResetOtp::query()
@@ -108,7 +108,7 @@ class ResetPasswordController extends Controller
 
             return redirect()
                 ->route('password.request')
-                ->withErrors(['email' => 'This email address is not eligible for office portal password reset.']);
+                ->withErrors(['email' => 'This email address is not eligible for portal password reset.']);
         }
 
         $officeUser->forceFill([
