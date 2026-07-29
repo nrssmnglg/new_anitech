@@ -345,7 +345,7 @@ class MembershipApplicationController extends Controller
                 'last_name' => $validated['last_name'],
                 'suffix' => $validated['suffix'] ?? null,
                 'sex' => $validated['sex'] ?? null,
-                'birth_date' => $validated['birth_date'],
+                'birth_date' => $validated['birth_date'] ?? null,
                 'civil_status' => $validated['civil_status'] ?? null,
                 'mobile_number' => $validated['mobile_number'] ?? null,
                 'address' => $validated['address'] ?? null,

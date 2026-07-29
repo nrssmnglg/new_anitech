@@ -10,7 +10,7 @@ class StoreMembershipApplicationRequest extends StoreFarmerRequest
     {
         $rules = parent::rules();
 
-        $rules['birth_date'] = ['required', 'date', 'before_or_equal:today'];
+        $rules['birth_date'] = ['nullable', 'date', 'before_or_equal:today'];
         $rules['source'] = ['required', Rule::in(['walk_in'])];
         $rules['application_remarks'] = ['nullable', 'string'];
         $rules['reapply_from_application_id'] = ['nullable', 'integer', 'exists:membership_applications,id'];

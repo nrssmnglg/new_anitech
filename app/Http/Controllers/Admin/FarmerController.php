@@ -105,13 +105,13 @@ class FarmerController extends Controller
                 ],
                 'qualityIssues' => $this->registry->detectQualityIssues($farmer),
                 'renewal' => [
-                    ...$this->renewalEligibility($farmer, (int) ($farmer->current_year_membership_payment_count ?? 0)),
+                    ...$this->renewalEligibility($farmer),
                 ],
                 'actions' => [
                     'showUrl' => route('admin.farmers.show', $farmer),
                     'editUrl' => $request->user()?->role === User::ROLE_ADMIN ? route('admin.farmers.edit', $farmer) : null,
-                    'renewalUrl' => $this->renewalEligibility($farmer, (int) ($farmer->current_year_membership_payment_count ?? 0))['isAvailable']
-                        ? route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => now()->year])
+                    'renewalUrl' => $this->renewalEligibility($farmer)['isAvailable']
+                        ? route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)])
                         : null,
                 ],
                 'accountability' => $this->accountability($farmer),
@@ -374,7 +374,7 @@ class FarmerController extends Controller
                 'index' => route('admin.farmers.index'),
                 'edit' => route('admin.farmers.edit', $farmer),
                 'createApplication' => route('admin.membership-applications.create'),
-                'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => now()->year]),
+                'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)]),
                 'reactivate' => route('admin.farmers.reactivate', $farmer),
                 'recover' => route('admin.backups.farmers.recover', $farmer),
                 'storeInternalNote' => route('admin.farmers.internal-notes.store', $farmer),
@@ -1202,16 +1202,25 @@ class FarmerController extends Controller
         ];
     }
 
-    private function renewalEligibility(Farmer $farmer, ?int $currentYearMembershipPaymentCount = null): array
+    private function renewalEligibility(Farmer $farmer, ?int $year = null): array
     {
-        $currentYearMembershipPaymentCount ??= MembershipLedger::query()
-            ->whereHas('membershipTransaction', fn (Builder $query) => $query->where('farmer_id', $farmer->id))
-            ->where('year', now()->year)
-            ->where('amount_paid', '>', 0)
-            ->count();
+        $targetYear = $year ?? $this->preferredRenewalYear($farmer);
+
+        if ($targetYear === null) {
+            return [
+                'year' => null,
+                'isAvailable' => false,
+                'disabledReason' => 'No unrecorded renewal year is available.',
+                'dialogTitle' => 'Renewal Already Recorded',
+                'dialogMessage' => 'All available renewal years are already recorded for this farmer.',
+            ];
+        }
+
+        $targetYearRecorded = $this->hasRenewalRecordForYear($farmer, $targetYear);
 
         if ($farmer->status === FarmerStatus::DECEASED) {
             return [
+                'year' => $targetYear,
                 'isAvailable' => false,
                 'disabledReason' => 'This farmer is tagged as deceased and cannot be renewed.',
                 'dialogTitle' => 'Farmer Not Eligible for Renewal',
@@ -1221,6 +1230,7 @@ class FarmerController extends Controller
 
         if ($farmer->status === FarmerStatus::INACTIVE) {
             return [
+                'year' => $targetYear,
                 'isAvailable' => false,
                 'disabledReason' => 'This farmer is inactive and cannot be renewed from this screen.',
                 'dialogTitle' => 'Farmer Not Eligible for Renewal',
@@ -1230,6 +1240,7 @@ class FarmerController extends Controller
 
         if ($farmer->status === FarmerStatus::PENDING) {
             return [
+                'year' => $targetYear,
                 'isAvailable' => false,
                 'disabledReason' => 'This farmer has no active registry status yet.',
                 'dialogTitle' => 'Farmer Not Eligible for Renewal',
@@ -1237,21 +1248,58 @@ class FarmerController extends Controller
             ];
         }
 
-        if ($currentYearMembershipPaymentCount > 0) {
+        if ($targetYearRecorded) {
             return [
+                'year' => $targetYear,
                 'isAvailable' => false,
-                'disabledReason' => 'Annual due already recorded for ' . now()->year . '.',
+                'disabledReason' => 'Annual due already recorded for ' . $targetYear . '.',
                 'dialogTitle' => 'Renewal Already Recorded',
-                'dialogMessage' => 'A renewal or annual due for ' . now()->year . ' is already recorded for this farmer.',
+                'dialogMessage' => 'A renewal or annual due for ' . $targetYear . ' is already recorded for this farmer.',
             ];
         }
 
         return [
+            'year' => $targetYear,
             'isAvailable' => true,
             'disabledReason' => null,
             'dialogTitle' => null,
             'dialogMessage' => null,
         ];
+    }
+
+    private function preferredRenewalYear(Farmer $farmer): ?int
+    {
+        $currentYear = now()->year;
+
+        if (! $this->hasRenewalRecordForYear($farmer, $currentYear)) {
+            return $currentYear;
+        }
+
+        for ($year = $currentYear - 1; $year >= 2000; $year--) {
+            if (! $this->hasRenewalRecordForYear($farmer, $year)) {
+                return $year;
+            }
+        }
+
+        return null;
+    }
+
+    private function hasRenewalRecordForYear(Farmer $farmer, int $year): bool
+    {
+        $hasPaidLedger = MembershipLedger::query()
+            ->whereHas('membershipTransaction', fn (Builder $query) => $query->where('farmer_id', $farmer->id))
+            ->where('year', $year)
+            ->where('amount_paid', '>', 0)
+            ->exists();
+
+        if ($hasPaidLedger) {
+            return true;
+        }
+
+        return RenewalRequest::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', $year)
+            ->exists();
     }
 
     private function serializeApplicationSummary(MembershipApplication $application): array
