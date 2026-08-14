@@ -229,17 +229,6 @@ const feeScheduleRows = computed(() => props.dashboard.breakdowns.feeSchedules.s
     secondaryAmount: currencyFormatter.format(Number(row.mortuaryFee || 0)),
 })));
 
-const membershipStatusRows = computed(() => {
-    const total = props.dashboard.breakdowns.membershipStatus.reduce((sum, row) => sum + Number(row.total || 0), 0);
-    const colors = ['bg-[#003e32]', 'bg-[#467915]', 'bg-[#c7ece5]', 'bg-[#d16161]'];
-
-    return props.dashboard.breakdowns.membershipStatus.map((row, index) => ({
-        ...row,
-        percent: total ? Math.round((Number(row.total || 0) / total) * 100) : 0,
-        color: colors[index % colors.length],
-    }));
-});
-
 const memberTypeRows = computed(() => {
     const labels = ['High', 'Stable', 'High', 'Steady', 'Tracking'];
     const icons = ['agriculture', 'groups', 'map', 'chart', 'pie'];
@@ -270,12 +259,10 @@ const recentFarmers = computed(() => props.dashboard.recentFarmers.slice(0, 5).m
     shortDate: formatDate(row.registeredAt),
 })));
 
-const officeUsers = computed(() => props.dashboard.officeUsers.slice(0, 4));
 const adminOperations = computed(() => props.dashboard.adminOperations ?? { queueCards: [], recentPayments: { totalCollectedToday: 0, items: [] }, alerts: [] });
 const adminQueueCards = computed(() => adminOperations.value.queueCards ?? []);
 const recentPayments = computed(() => adminOperations.value.recentPayments?.items ?? []);
 const todayCollectionTotal = computed(() => adminOperations.value.recentPayments?.totalCollectedToday ?? 0);
-const adminAlerts = computed(() => adminOperations.value.alerts ?? []);
 const collections = computed(() => props.dashboard.collections ?? {
     totals: { overall: 0, applications: 0, renewals: 0, mortuary: 0 },
     counts: { applicationPayments: 0, renewalPayments: 0, mortuaryClaims: 0 },
@@ -479,7 +466,7 @@ const linePoints = computed(() => {
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-[1536px] space-y-8 pb-10">
+    <div class="mx-auto w-full max-w-[1536px] space-y-6 pb-8 lg:space-y-8 lg:pb-10">
         <section class="relative overflow-hidden rounded-[2.2rem] bg-[#004438] px-6 py-7 text-white shadow-[0_18px_60px_rgba(0,54,41,0.18)] sm:px-8 sm:py-8 lg:px-10 lg:py-9">
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(166,214,123,0.18),_transparent_26%),linear-gradient(180deg,rgba(8,77,63,0.36),rgba(0,68,56,0.92))]"></div>
             <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 32px 32px;"></div>
@@ -784,23 +771,6 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
-                    <h3 class="text-[1.15rem] font-medium text-[#14202c]">Registry Alerts</h3>
-
-                    <div v-if="adminAlerts.length" class="mt-6 space-y-4">
-                        <Link v-for="alert in adminAlerts" :key="alert.key" :href="alert.href" class="block rounded-[1.5rem] border border-[#eadfd2] bg-[#fff8f0] px-5 py-5 transition hover:bg-[#fff4e7]">
-                            <div class="flex items-center justify-between gap-4">
-                                <div>
-                                    <p class="text-[1rem] font-semibold text-[#14202c]">{{ alert.label }}</p>
-                                </div>
-                                <span class="text-[1.8rem] font-medium text-[#b56a00]">{{ formatNumber(alert.value) }}</span>
-                            </div>
-                        </Link>
-                    </div>
-                    <div v-else class="mt-6 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
-                        No registry alerts right now.
-                    </div>
-                </article>
             </div>
         </section>
 
@@ -936,38 +906,9 @@ const linePoints = computed(() => {
             </article>
         </section>
 
-        <section class="grid grid-cols-1 items-start gap-6 xl:grid-cols-12">
-            <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:col-span-8">
-                <article class="h-fit rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
-                    <div class="flex items-center justify-between gap-4">
-                        <h3 class="flex items-center gap-4 text-[1.1rem] font-medium text-[#14202c]">
-                            <span class="h-8 w-2 rounded-full bg-[#003e32]"></span>
-                            Membership Status Breakdown
-                        </h3>
-                        <svg viewBox="0 0 24 24" class="h-5 w-5 text-[#495560]" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="5" r="1.5" />
-                            <circle cx="12" cy="12" r="1.5" />
-                            <circle cx="12" cy="19" r="1.5" />
-                        </svg>
-                    </div>
-
-                    <div v-if="membershipStatusRows.length" class="mt-10 space-y-9">
-                        <div v-for="row in membershipStatusRows" :key="row.label">
-                            <div class="flex items-center justify-between text-[1.05rem] font-semibold text-[#14202c]">
-                                <span>{{ row.label }}</span>
-                                <span>{{ row.percent }}%</span>
-                            </div>
-                            <div class="mt-3 h-2.5 rounded-full bg-[#edf0ee]">
-                                <div :class="['h-2.5 rounded-full', row.color]" :style="{ width: `${Math.max(row.percent, 10)}%` }"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="mt-10 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
-                        No farmer records for the selected filter.
-                    </div>
-                </article>
-
-                <article class="h-fit rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+        <section class="grid grid-cols-1 items-start gap-5 lg:gap-6 xl:grid-cols-12">
+            <div class="space-y-5 lg:space-y-6 xl:col-span-8">
+                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
                     <div class="flex items-center justify-between gap-4">
                         <h3 class="flex items-center gap-4 text-[1.1rem] font-medium text-[#14202c]">
                             <span class="h-8 w-2 rounded-full bg-[#5f8418]"></span>
@@ -981,8 +922,8 @@ const linePoints = computed(() => {
                         </svg>
                     </div>
 
-                    <div v-if="memberTypeRows.length" class="mt-10 space-y-8">
-                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-4">
+                    <div v-if="memberTypeRows.length" class="mt-7 grid gap-4 sm:grid-cols-2 lg:mt-8">
+                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-4 rounded-[1.4rem] bg-[#f7f9f8] p-4">
                             <div :class="['flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl', row.bgColor]">
                                 <svg viewBox="0 0 24 24" :class="['h-6 w-6', row.textColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path v-for="path in iconPath(row.icon)" :key="path" :d="path" />
@@ -1000,7 +941,7 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article class="h-fit md:col-span-2 rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
                     <div class="flex items-center justify-between gap-4">
                         <h3 class="text-[1.15rem] font-medium text-[#14202c]">Recent Farmer Registry Entries</h3>
                         <Link :href="dashboard.actions.viewFarmersUrl" class="text-[1.1rem] font-bold text-[#003e32] transition hover:text-[#0f5b46]">
@@ -1052,35 +993,10 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article v-if="isAdmin" class="h-fit md:col-span-2 rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
-                    <div class="flex items-center justify-between gap-4">
-                        <h3 class="text-[1.15rem] font-medium text-[#14202c]">Office Users</h3>
-                        <Link :href="dashboard.actions.viewUsersUrl" class="text-sm font-bold text-[#003e32] transition hover:text-[#0f5b46]">
-                            View Users
-                        </Link>
-                    </div>
-
-                    <div v-if="officeUsers.length" class="mt-8 space-y-5">
-                        <div v-for="user in officeUsers" :key="user.id" class="flex items-center gap-4">
-                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#e7ece9] bg-[#f7f8f8] text-sm font-bold text-[#0f5b46]">
-                                {{ initials(user.name) }}
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-[1.05rem] font-semibold text-[#14202c]">{{ user.name }}</p>
-                                <p class="truncate text-sm text-[#55616b]">{{ user.jobTitle || user.role }}</p>
-                            </div>
-                            <span class="h-3 w-3 rounded-full" :class="user.status === 'Active' ? 'bg-[#527d22]' : 'bg-[#d5dcda]'"></span>
-                        </div>
-                    </div>
-                    <div v-else class="mt-8 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
-                        No office users found.
-                    </div>
-                </article>
-
             </div>
 
-            <div class="space-y-6 xl:col-span-4">
-                <article v-if="isAdmin" class="h-fit rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+            <div class="space-y-5 lg:space-y-6 xl:col-span-4">
+                <article v-if="isAdmin" class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
                     <h3 class="text-[1.15rem] font-medium text-[#14202c]">Top Barangays</h3>
                     <div v-if="topBarangays.length" class="mt-9 space-y-8">
                         <div v-for="row in topBarangays" :key="row.label">
@@ -1099,7 +1015,7 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article v-if="isAdmin" class="h-fit rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+                <article v-if="isAdmin" class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
                     <div class="flex items-center justify-between gap-4">
                         <h3 class="text-[1.15rem] font-medium text-[#14202c]">Fee Schedules</h3>
                         <span class="rounded-xl bg-[#1d5f4f] px-4 py-1.5 text-sm font-bold text-[#bfe5d2]">{{ selectedYearLabel }}</span>
