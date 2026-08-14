@@ -91,9 +91,7 @@ class DashboardController extends Controller
                 'adminOperations' => $isAdmin ? $this->adminOperations($selectedYear, $selectedBarangayId) : null,
                 'staffWorkspace' => ! $isAdmin ? $this->staffWorkspace($request, $selectedYear, $selectedBarangayId) : null,
                 'collections' => $this->collectionsSummary($selectedYear, $selectedBarangayId),
-                'renewalStatistics' => $isAdmin
-                    ? $this->renewalDecisionStatistics($selectedYear, $selectedBarangayId)
-                    : null,
+                'renewalStatistics' => $this->renewalDecisionStatistics($selectedYear, $selectedBarangayId),
                 'breakdowns' => [
                     'membershipStatus' => $this->membershipStatusBreakdown($selectedYear, $selectedBarangayId),
                     'memberTypes' => $this->memberTypeBreakdown($selectedYear, $selectedBarangayId),

@@ -111,116 +111,60 @@ const collections = computed(() => props.dashboard.collections ?? {
     counts: { applicationPayments: 0, renewalPayments: 0, mortuaryClaims: 0 },
     links: {},
 });
-
-const operationAccentClasses = {
-    emerald: {
-        badge: 'bg-[#dff6ea] text-[#0c7a58]',
-        number: 'text-[#0b5c46]',
-        ring: 'border-[#d7ebe1]',
-    },
-    lime: {
-        badge: 'bg-[#eef7d6] text-[#5f8418]',
-        number: 'text-[#486814]',
-        ring: 'border-[#e0e9ca]',
-    },
-    amber: {
-        badge: 'bg-[#fff1d6] text-[#c57a00]',
-        number: 'text-[#a55f00]',
-        ring: 'border-[#efe0c3]',
-    },
-    sky: {
-        badge: 'bg-[#e3f2ff] text-[#0c7cc2]',
-        number: 'text-[#0b649e]',
-        ring: 'border-[#d6e6f0]',
-    },
-    rose: {
-        badge: 'bg-[#ffe4e7] text-[#cf3657]',
-        number: 'text-[#ae1d44]',
-        ring: 'border-[#edd8dc]',
-    },
-};
-
-function operationTone(accent) {
-    return operationAccentClasses[accent] ?? operationAccentClasses.emerald;
-}
-
 const workspaceCards = computed(() => staffWorkspace.value.cards ?? []);
-const mobileSupportCards = computed(() => staffWorkspace.value.mobileSupport ?? []);
-const topOperation = computed(() => staffWorkspace.value.priority ?? null);
-
-function iconForKey(key) {
-    const value = String(key || '').toLowerCase();
-
-    if (value.includes('application')) {
-        return 'document';
-    }
-
-    if (value.includes('renewal')) {
-        return 'refresh';
-    }
-
-    if (value.includes('quer') || value.includes('inquir')) {
-        return 'chat';
-    }
-
-    if (value.includes('today') || value.includes('action')) {
-        return 'spark';
-    }
-
-    if (value.includes('record')) {
-        return 'folder';
-    }
-
-    if (value.includes('payment')) {
-        return 'wallet';
-    }
-
-    return 'grid';
-}
+const todayActionCount = computed(() => workspaceCards.value.find((card) => card.key === 'today_actions')?.count ?? 0);
+const registrationTrend = computed(() => props.dashboard.breakdowns.registrationTrend ?? { series: [], currentYearTotal: 0 });
+const maximumMonthlyRegistrations = computed(() => Math.max(
+    ...(registrationTrend.value.series ?? []).map((row) => Number(row.total || 0)),
+    1,
+));
+const renewalStatistics = computed(() => props.dashboard.renewalStatistics ?? {
+    year: new Date().getFullYear(),
+    eligibleFarmers: 0,
+    renewedFarmers: 0,
+    unrenewedFarmers: 0,
+    complianceRate: 0,
+    pendingRequests: 0,
+});
+const renewalRate = computed(() => Math.min(Math.max(Number(renewalStatistics.value.complianceRate || 0), 0), 100));
+const renewalDonutStyle = computed(() => ({
+    background: `conic-gradient(#5f8418 0 ${renewalRate.value}%, #e6ece8 ${renewalRate.value}% 100%)`,
+}));
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-[1536px] space-y-8 pb-10">
-        <section class="relative overflow-hidden rounded-[2.2rem] bg-[linear-gradient(135deg,#003e32,#0f5b46_58%,#b7e29a)] px-6 py-7 text-white shadow-[0_18px_60px_rgba(0,54,41,0.18)] sm:px-8 sm:py-8 lg:px-10 lg:py-9">
+    <div class="mx-auto w-full max-w-[1536px] space-y-5 pb-8 lg:space-y-6 lg:pb-10">
+        <section class="relative overflow-hidden rounded-[1.8rem] bg-[linear-gradient(135deg,#003e32,#0f5b46_58%,#b7e29a)] px-5 py-5 text-white shadow-[0_14px_42px_rgba(0,54,41,0.16)] sm:px-6 lg:px-8">
             <div class="absolute inset-0 opacity-15" style="background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-            <div class="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
-                <div class="max-w-3xl">
+            <div class="relative z-10 flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-wrap items-center gap-3">
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-[#e6f5da]">
                         Staff Workspace
                     </div>
-                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.2rem]">Assigned work dashboard for {{ selectedYearLabel }}</h2>
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <Link
-                            :href="dashboard.actions.tasksUrl"
-                            class="inline-flex items-center justify-center rounded-[1.2rem] bg-white px-5 py-3 text-sm font-extrabold text-[#003e32] transition hover:bg-[#f3f7f5]"
-                        >
-                            Open My Tasks
-                        </Link>
-                        <button type="button" class="inline-flex items-center justify-center rounded-[1.2rem] border border-white/25 bg-white/10 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-white/15" @click="openExportModal">
-                            Generate Report
-                        </button>
-                    </div>
+                    <button type="button" class="inline-flex items-center justify-center rounded-[1.1rem] border border-white/25 bg-white/10 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-white/15" @click="openExportModal">
+                        Generate Report
+                    </button>
                 </div>
 
-                <form class="grid w-full max-w-[470px] gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-5 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
-                    <label class="space-y-2">
+                <form class="grid w-full max-w-[470px] gap-3 rounded-[1.5rem] border border-white/20 bg-white/12 p-4 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
+                    <label class="space-y-1.5">
                         <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
-                        <select v-model="state.year" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.year" class="w-full rounded-xl border-0 bg-white/14 px-4 py-2.5 text-base font-semibold text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
-                    <label class="space-y-2">
+                    <label class="space-y-1.5">
                         <span class="ml-1 block text-sm font-bold text-white/70">Barangay</span>
-                        <select v-model="state.barangayId" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.barangayId" class="w-full rounded-xl border-0 bg-white/14 px-4 py-2.5 text-base font-semibold text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All Barangays</option>
                             <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-stone-900">
                                 {{ barangay.name }}
                             </option>
                         </select>
                     </label>
-                    <button type="submit" class="flex h-[54px] w-[54px] items-center justify-center self-end rounded-[1.4rem] bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
+                    <button type="submit" class="flex h-12 w-12 items-center justify-center self-end rounded-xl bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
                         <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16" />
                             <path d="M7 12h10" />
@@ -244,57 +188,7 @@ function iconForKey(key) {
             </button>
         </div>
 
-        <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <component
-                :is="card.href ? Link : 'article'"
-                v-for="card in workspaceCards"
-                :key="card.key"
-                :href="card.href || undefined"
-                class="rounded-[1.75rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_30px_rgba(0,54,41,0.05)] transition"
-                :class="card.href ? 'group block hover:-translate-y-0.5 hover:border-[#cdd8d3] hover:shadow-[0_18px_48px_rgba(0,54,41,0.1)] focus:outline-none focus:ring-2 focus:ring-[#b8d9cf]' : ''"
-            >
-                <div class="flex items-start justify-between gap-3">
-                    <div :class="['inline-flex rounded-[1rem] px-3 py-2 text-[0.82rem] font-bold', card.tone]">
-                        {{ card.label }}
-                    </div>
-                    <span class="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#f4f7f5] text-[#003e32]">
-                        <svg v-if="iconForKey(card.key) === 'document'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                            <path d="M14 3v5h5" />
-                        </svg>
-                        <svg v-else-if="iconForKey(card.key) === 'refresh'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 12a9 9 0 0 1-15.5 6.36L3 16" />
-                            <path d="M3 12A9 9 0 0 1 18.5 5.64L21 8" />
-                            <path d="M8 16H3v5" />
-                            <path d="M16 8h5V3" />
-                        </svg>
-                        <svg v-else-if="iconForKey(card.key) === 'chat'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                        <svg v-else-if="iconForKey(card.key) === 'spark'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z" />
-                        </svg>
-                        <svg v-else-if="iconForKey(card.key) === 'folder'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        </svg>
-                        <svg v-else-if="iconForKey(card.key) === 'wallet'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" />
-                            <path d="M16 13h.01" />
-                            <path d="M6 7V5a2 2 0 0 1 2-2h10" />
-                        </svg>
-                        <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h7v7H4z" />
-                            <path d="M13 4h7v7h-7z" />
-                            <path d="M4 13h7v7H4z" />
-                            <path d="M13 13h7v7h-7z" />
-                        </svg>
-                    </span>
-                </div>
-                <p class="mt-4 text-[1.9rem] font-semibold tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
-            </component>
-        </section>
-
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section>
             <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
                 <div class="flex items-center justify-between gap-4">
                     <div>
@@ -326,7 +220,62 @@ function iconForKey(key) {
             </article>
         </section>
 
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+            <article class="rounded-[1.8rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_32px_rgba(0,54,41,0.05)] sm:p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Farmer Registry</p>
+                        <h3 class="mt-1.5 text-[1.2rem] font-semibold text-[#14202c]">Monthly registrations</h3>
+                    </div>
+                    <span class="rounded-full bg-[#eef5ef] px-3 py-1.5 text-sm font-bold text-[#335043]">
+                        {{ formatNumber(registrationTrend.currentYearTotal) }} total
+                    </span>
+                </div>
+
+                <div class="mt-6 flex h-52 items-end gap-2 border-b border-[#dfe6e2] px-1 pb-1 sm:gap-3">
+                    <div v-for="row in registrationTrend.series" :key="row.month" class="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
+                        <span class="text-xs font-bold text-[#53645d]">{{ formatNumber(row.total) }}</span>
+                        <div class="w-full max-w-8 rounded-t-lg bg-[linear-gradient(180deg,#5f8418,#0f5b46)] transition-all" :style="{ height: `${Math.max((Number(row.total || 0) / maximumMonthlyRegistrations) * 75, 3)}%` }"></div>
+                        <span class="text-[0.62rem] font-bold uppercase text-[#7b8882]">{{ row.label }}</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="rounded-[1.8rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_32px_rgba(0,54,41,0.05)] sm:p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Renewal Statistics</p>
+                        <h3 class="mt-1.5 text-[1.2rem] font-semibold text-[#14202c]">Renewal completion for {{ renewalStatistics.year }}</h3>
+                    </div>
+                    <Link :href="dashboard.actions.viewRenewalsUrl" class="text-sm font-bold text-[#0f5b46] hover:underline">View renewals</Link>
+                </div>
+
+                <div class="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+                    <div class="relative h-44 w-44 shrink-0 rounded-full p-5" :style="renewalDonutStyle">
+                        <div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
+                            <span class="text-[2rem] font-semibold text-[#14202c]">{{ renewalRate }}%</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-[#708078]">Completed</span>
+                        </div>
+                    </div>
+                    <div class="w-full max-w-xs space-y-3">
+                        <div class="flex items-center justify-between rounded-xl bg-[#f5f8f6] px-4 py-3">
+                            <span class="text-sm font-semibold text-[#52615b]">Renewed farmers</span>
+                            <strong class="text-[#0f5b46]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl bg-[#f5f8f6] px-4 py-3">
+                            <span class="text-sm font-semibold text-[#52615b]">Still due</span>
+                            <strong class="text-[#a55f00]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl bg-[#f5f8f6] px-4 py-3">
+                            <span class="text-sm font-semibold text-[#52615b]">Pending review</span>
+                            <strong class="text-[#0b649e]">{{ formatNumber(renewalStatistics.pendingRequests) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section v-if="false" class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
                 <div class="flex items-center justify-between gap-4">
                     <div>
@@ -422,12 +371,12 @@ function iconForKey(key) {
             </article>
         </section>
 
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+        <section>
+            <article class="rounded-[1.8rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_32px_rgba(0,54,41,0.05)] sm:p-6">
                 <div class="flex items-center justify-between gap-4">
                     <h3 class="text-[1.15rem] font-semibold text-[#14202c]">Today's Actions</h3>
                     <span class="text-[1rem] font-bold text-[#57736a]">
-                        {{ formatNumber(workspaceCards.find((card) => card.key === 'today_actions')?.count || 0) }} total
+                        {{ formatNumber(todayActionCount) }} total
                     </span>
                 </div>
 
@@ -463,7 +412,7 @@ function iconForKey(key) {
                 </div>
             </article>
 
-            <div class="space-y-6">
+            <div v-if="false" class="space-y-6">
                 <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
                     <div class="flex items-center justify-between gap-4">
                         <div>

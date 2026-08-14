@@ -272,12 +272,6 @@ class HandleInertiaRequests extends Middleware
                             'href' => route('admin.advisories.index'),
                             'activePatterns' => ['admin.advisories.index', 'admin.advisories.show', 'admin.advisories.edit', 'admin.advisories.create'],
                         ],
-                        [
-                            'label' => 'My Tasks',
-                            'icon' => 'audit',
-                            'href' => route('admin.tasks.index'),
-                            'activePatterns' => ['admin.tasks.index'],
-                        ],
                     ],
                 ]],
         ];
