@@ -5,12 +5,18 @@ namespace App\Services\Farmer;
 use App\Enums\NotificationType;
 use App\Models\Farmer;
 use App\Models\Query;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class FarmerNotificationService
 {
+    public function __construct(
+        private readonly PublicRouteKeyService $publicRouteKeyService,
+    ) {
+    }
+
     public function list(Farmer $farmer, int $limit = 20, ?string $module = null, bool $unreadOnly = false)
     {
         return $this->baseQuery($farmer)
@@ -158,7 +164,7 @@ class FarmerNotificationService
     {
         return match ($type) {
             NotificationType::ADVISORY_PUBLISHED->value
-                => isset($payload['slug']) ? url('/farmer/app/advisories/' . $payload['slug']) : null,
+                => $this->advisoryTargetUrl($payload),
             NotificationType::QUERY_RESPONDED->value
                 => isset($payload['query_public_id']) ? url('/farmer/app/inquiries/' . $payload['query_public_id']) : (isset($payload['query_id']) ? url('/farmer/app/inquiries/' . $payload['query_id']) : null),
             NotificationType::PAYMENT_RECORDED->value,
@@ -170,6 +176,17 @@ class FarmerNotificationService
                 => url('/farmer/app/renewals'),
             default => url('/farmer/app/advisories'),
         };
+    }
+
+    private function advisoryTargetUrl(array $payload): ?string
+    {
+        if (isset($payload['advisory_id']) && is_numeric($payload['advisory_id'])) {
+            return url('/farmer/app/advisories/' . $this->publicRouteKeyService->encode((int) $payload['advisory_id']));
+        }
+
+        return isset($payload['slug'])
+            ? url('/farmer/app/advisories/' . $payload['slug'])
+            : null;
     }
 
     private function moduleForType(string $type): array
