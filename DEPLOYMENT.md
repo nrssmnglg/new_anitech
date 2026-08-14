@@ -6,7 +6,7 @@ This repository is a Laravel 12 application with a Vue 3/Inertia frontend. It is
 
 The free configuration runs Nginx, PHP-FPM, one Laravel queue worker, and the Laravel scheduler in the same Render web container. This avoids paid Render worker and cron services. A free Render service sleeps when idle, so queued work and scheduled commands are not guaranteed to execute until the web service wakes. Use dedicated paid worker and cron services when background processing must be timely.
 
-Render's filesystem is ephemeral. The application currently stores uploaded documents and generated exports on the local `public` disk. Those files can disappear after a restart or deploy. Configure durable S3-compatible storage before relying on uploads in production; migrating every explicit `public` disk call is a separate application change.
+Render's filesystem is ephemeral. Production uploads use the private S3-compatible bucket configured below when `FILESYSTEM_DISK=s3`; local development continues to use `storage/app/public`. Generated report exports and application backups still use Render-local storage and are not durable across restarts or deploys.
 
 ## Railway MySQL
 
@@ -83,6 +83,22 @@ Add either `DB_URL`/`MYSQL_PUBLIC_URL` or all five individual `DB_*` connection 
 - SMTP instead of Brevo: the `MAIL_*` variables in `.env.example`
 - S3-compatible storage: the `AWS_*` variables in `.env.example`
 
+### Supabase Storage
+
+Create a private Supabase Storage bucket and enable its S3 protocol connection. Configure Render with the server-side S3 credentials from **Storage > Settings > S3 Configuration**:
+
+```env
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=<Supabase S3 access key ID>
+AWS_SECRET_ACCESS_KEY=<Supabase S3 secret access key>
+AWS_DEFAULT_REGION=<region shown by Supabase>
+AWS_BUCKET=anitech-private
+AWS_ENDPOINT=https://<project-ref>.storage.supabase.co/storage/v1/s3
+AWS_USE_PATH_STYLE_ENDPOINT=true
+```
+
+Keep the bucket private. These credentials bypass Storage RLS and belong only in Render's secret environment settings. Existing files lost from Render cannot be recovered by enabling Supabase; upload them again after deployment.
+
 Generate `APP_KEY` locally and copy the output to Render:
 
 ```bash
@@ -146,7 +162,7 @@ Verify the following without using production-only credentials in logs or screen
 
 - Cold starts are expected after idle periods.
 - Queue workers and scheduled tasks stop when the web container sleeps.
-- Local uploads, backups, and generated report files are not durable.
+- Application backups and generated report files remain local and are not durable. User uploads are durable only when the Supabase S3 variables are configured correctly.
 - Railway public database traffic traverses the public TCP proxy; keep credentials secret and rotate them if exposed.
 
 Upgrade to an always-on Render web instance plus dedicated worker/cron services when the application requires reliable background processing.

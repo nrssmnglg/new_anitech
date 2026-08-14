@@ -103,10 +103,19 @@ class FarmerPaymentService
             'proof_attachments' => $latestPayment?->attachments->map(fn ($attachment) => [
                 'id' => $attachment->id,
                 'name' => $attachment->original_name,
-                'url' => Storage::disk('public')->url($attachment->file_path),
+                'url' => $this->attachmentUrl((string) $attachment->file_path),
                 'uploaded_at' => optional($attachment->uploaded_at)->toIso8601String(),
             ])->values()->all() ?? [],
         ];
+    }
+
+    private function attachmentUrl(string $path): string
+    {
+        $filesystem = Storage::disk('public');
+
+        return config('filesystems.default') === 's3'
+            ? $filesystem->temporaryUrl($path, now()->addMinutes(5))
+            : $filesystem->url($path);
     }
 
     public function uploadProof(Farmer $farmer, int $paymentId, UploadedFile $file): Payment
