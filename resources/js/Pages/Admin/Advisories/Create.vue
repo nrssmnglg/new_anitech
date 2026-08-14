@@ -1,5 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AdvisoryForm from '../../../Components/Admin/Advisories/AdvisoryForm.vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
@@ -18,8 +19,15 @@ const form = useForm({
     attachments: [],
     existingAttachments: [],
 });
+const submitting = ref(false);
 
 function submit() {
+    if (submitting.value || form.processing) {
+        return;
+    }
+
+    submitting.value = true;
+
     form.transform((data) => ({
         ...data,
         barangay_id: data.audience_type === 'barangay' && data.barangay_id ? Number(data.barangay_id) : null,
@@ -27,6 +35,9 @@ function submit() {
     })).post(props.urls.store, {
         preserveScroll: true,
         forceFormData: true,
+        onFinish: () => {
+            submitting.value = false;
+        },
     });
 }
 </script>
@@ -42,7 +53,7 @@ function submit() {
             description=""
             submit-label="Save Draft"
             :cancel-href="urls.index"
-            :disabled="form.processing"
+            :disabled="submitting || form.processing"
             @submit="submit"
         />
     </AdminLayout>

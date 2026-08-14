@@ -1,5 +1,6 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AdvisoryForm from '../../../Components/Admin/Advisories/AdvisoryForm.vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
@@ -18,8 +19,15 @@ const form = useForm({
     attachments: [],
     existingAttachments: props.advisory.existingAttachments || [],
 });
+const submitting = ref(false);
 
 function submit() {
+    if (submitting.value || form.processing) {
+        return;
+    }
+
+    submitting.value = true;
+
     form.transform((data) => ({
         ...data,
         barangay_id: data.audience_type === 'barangay' && data.barangay_id ? Number(data.barangay_id) : null,
@@ -28,6 +36,9 @@ function submit() {
     })).post(props.urls.update, {
         preserveScroll: true,
         forceFormData: true,
+        onFinish: () => {
+            submitting.value = false;
+        },
     });
 }
 
@@ -57,7 +68,7 @@ function removeAttachment(attachment) {
                 description="Update the advisory content, adjust its audience, and keep attachments in sync."
                 submit-label="Save Changes"
                 :cancel-href="urls.show"
-                :disabled="form.processing"
+                :disabled="submitting || form.processing"
                 @submit="submit"
             />
 
