@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\FarmerResetPasswordNotification;
 use App\Services\Analytics\AnalyticsService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +18,9 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class FarmerPasswordResetController extends Controller
 {
-    private const VERIFIED_EMAIL_SESSION_KEY = 'farmer_password_reset.verified_email';
+    private const RESET_AUTHORIZATION_SESSION_KEY = 'farmer_password_reset.authorization';
     private const OTP_TTL_MINUTES = 10;
+    private const RESET_AUTHORIZATION_TTL_MINUTES = 10;
     private const RESEND_COOLDOWN_SECONDS = 60;
     private const RESEND_WINDOW_MINUTES = 15;
     private const RESEND_MAX_ATTEMPTS = 3;
@@ -38,6 +40,8 @@ class FarmerPasswordResetController extends Controller
 
     public function storeForgot(Request $request): JsonResponse|RedirectResponse
     {
+        $this->clearResetAuthorization($request);
+
         $validated = $request->validate([
             'email' => ['required', 'email'],
         ]);
@@ -250,7 +254,34 @@ class FarmerPasswordResetController extends Controller
             );
         }
 
-        $request->session()->put(self::VERIFIED_EMAIL_SESSION_KEY, $farmerUser->email);
+        $otpConsumed = DB::transaction(function () use ($otp, $validated): bool {
+            $lockedOtp = FarmerPasswordResetOtp::query()
+                ->whereKey($otp->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lockedOtp
+                || $lockedOtp->expires_at->isPast()
+                || ! Hash::check($validated['otp'], $lockedOtp->code_hash)) {
+                return false;
+            }
+
+            $lockedOtp->delete();
+
+            return true;
+        });
+
+        if (! $otpConsumed) {
+            return $this->validationFailure(
+                $request,
+                'This OTP has already been used or is no longer valid. Request a new code to continue.',
+                'otp',
+                'otp_already_used',
+                ['support_message' => self::SUPPORT_MESSAGE],
+            );
+        }
+
+        $this->grantResetAuthorization($request, $farmerUser->email);
         $this->clearVerifyState($farmerUser->id);
 
         $this->analyticsService->track('farmer_otp_verified', [
@@ -282,7 +313,7 @@ class FarmerPasswordResetController extends Controller
     {
         $email = (string) $request->string('email');
 
-        if (! $this->hasVerifiedEmail($request, $email)) {
+        if (! $this->hasValidResetAuthorization($request, $email)) {
             return redirect()
                 ->route('farmer.pwa.password.reset', ['email' => $email])
                 ->withErrors(['otp' => 'Verify your OTP first before setting a new password.']);
@@ -309,7 +340,7 @@ class FarmerPasswordResetController extends Controller
             ],
         ]);
 
-        if (! $this->hasVerifiedEmail($request, $validated['email'])) {
+        if (! $this->hasValidResetAuthorization($request, $validated['email'])) {
             return $this->validationFailure(
                 $request,
                 'Verify your OTP first before setting a new password.',
@@ -325,7 +356,7 @@ class FarmerPasswordResetController extends Controller
         $farmerUser = $this->farmerUserByEmail($validated['email']);
 
         if (! $farmerUser) {
-            $request->session()->forget(self::VERIFIED_EMAIL_SESSION_KEY);
+            $this->clearResetAuthorization($request);
 
             return $this->validationFailure(
                 $request,
@@ -344,7 +375,7 @@ class FarmerPasswordResetController extends Controller
         ])->save();
 
         FarmerPasswordResetOtp::query()->where('user_id', $farmerUser->id)->delete();
-        $request->session()->forget(self::VERIFIED_EMAIL_SESSION_KEY);
+        $this->clearResetAuthorization($request);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -369,9 +400,36 @@ class FarmerPasswordResetController extends Controller
             ->first();
     }
 
-    private function hasVerifiedEmail(Request $request, string $email): bool
+    private function grantResetAuthorization(Request $request, string $email): void
     {
-        return $email !== '' && $request->session()->get(self::VERIFIED_EMAIL_SESSION_KEY) === $email;
+        $request->session()->put(self::RESET_AUTHORIZATION_SESSION_KEY, [
+            'email' => Str::lower($email),
+            'nonce' => Str::random(64),
+            'expires_at' => now()->addMinutes(self::RESET_AUTHORIZATION_TTL_MINUTES)->getTimestamp(),
+        ]);
+    }
+
+    private function hasValidResetAuthorization(Request $request, string $email): bool
+    {
+        $authorization = $request->session()->get(self::RESET_AUTHORIZATION_SESSION_KEY);
+
+        if (! is_array($authorization)
+            || ! isset($authorization['email'], $authorization['nonce'], $authorization['expires_at'])
+            || ! is_string($authorization['nonce'])
+            || strlen($authorization['nonce']) < 32
+            || (int) $authorization['expires_at'] < now()->getTimestamp()
+            || ! hash_equals((string) $authorization['email'], Str::lower($email))) {
+            $this->clearResetAuthorization($request);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function clearResetAuthorization(Request $request): void
+    {
+        $request->session()->forget(self::RESET_AUTHORIZATION_SESSION_KEY);
     }
 
     private function otpMeta(string $email, $expiresAt = null, $retryAt = null, int $attempts = 0, int $maxAttempts = 0, bool $isBlocked = false): array

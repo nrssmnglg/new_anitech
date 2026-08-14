@@ -68,7 +68,8 @@ Route::prefix('farmer')->name('farmer.pwa.')->group(function (): void {
         Route::post('/reset-password/verify', [FarmerPasswordResetController::class, 'verifyOtp'])
             ->withoutMiddleware([VerifyCsrfToken::class])
             ->name('password.verify');
-        Route::get('/reset-password/new', fn (\Illuminate\Http\Request $request) => redirect(url('/farmer/app/reset-password/new?email=' . urlencode((string) $request->string('email')))))->name('password.create');
+        Route::get('/reset-password/new', [FarmerPasswordResetController::class, 'createNewPassword'])
+            ->name('password.create');
         Route::post('/reset-password', [FarmerPasswordResetController::class, 'storeReset'])
             ->withoutMiddleware([VerifyCsrfToken::class])
             ->name('password.store');

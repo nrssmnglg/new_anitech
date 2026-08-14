@@ -82,10 +82,9 @@ class FarmerPasswordResetTest extends TestCase
         ]);
 
         $verifyResponse->assertRedirect(route('farmer.pwa.password.create', ['email' => $user->email]));
+        $this->assertDatabaseCount('farmer_password_reset_otps', 0);
 
-        $response = $this->withSession([
-            'farmer_password_reset.verified_email' => $user->email,
-        ])->post(route('farmer.pwa.password.store'), [
+        $response = $this->post(route('farmer.pwa.password.store'), [
             'email' => $user->email,
             'password' => 'newsecret123',
             'password_confirmation' => 'newsecret123',
@@ -95,6 +94,57 @@ class FarmerPasswordResetTest extends TestCase
         $response->assertSessionHas('success');
         $this->assertTrue(password_verify('newsecret123', $user->fresh()->getAuthPassword()));
         $this->assertDatabaseCount('farmer_password_reset_otps', 0);
+    }
+
+    public function test_verified_otp_cannot_be_reused_in_another_browser_session(): void
+    {
+        $user = $this->makeFarmerUser('farmer.single-use@example.test');
+
+        FarmerPasswordResetOtp::query()->create([
+            'user_id' => $user->id,
+            'code_hash' => Hash::make('123456'),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $this->post(route('farmer.pwa.password.verify'), [
+            'email' => $user->email,
+            'otp' => '123456',
+        ])->assertRedirect(route('farmer.pwa.password.create', ['email' => $user->email]));
+
+        $this->assertDatabaseCount('farmer_password_reset_otps', 0);
+        $this->flushSession();
+
+        $this->from(route('farmer.pwa.password.reset', ['email' => $user->email]))
+            ->post(route('farmer.pwa.password.verify'), [
+                'email' => $user->email,
+                'otp' => '123456',
+            ])
+            ->assertSessionHasErrors(['otp']);
+
+        $this->post(route('farmer.pwa.password.store'), [
+            'email' => $user->email,
+            'password' => 'anothersecret123',
+            'password_confirmation' => 'anothersecret123',
+        ])->assertSessionHasErrors(['otp']);
+    }
+
+    public function test_reset_authorization_expires_and_is_single_use(): void
+    {
+        $user = $this->makeFarmerUser('farmer.expiring-reset@example.test');
+
+        $expiredAuthorization = [
+            'email' => $user->email,
+            'nonce' => str_repeat('a', 64),
+            'expires_at' => now()->subSecond()->getTimestamp(),
+        ];
+
+        $this->withSession(['farmer_password_reset.authorization' => $expiredAuthorization])
+            ->post(route('farmer.pwa.password.store'), [
+                'email' => $user->email,
+                'password' => 'newsecret123',
+                'password_confirmation' => 'newsecret123',
+            ])
+            ->assertSessionHasErrors(['otp']);
     }
 
     public function test_farmer_cannot_verify_password_reset_with_invalid_otp(): void
@@ -119,8 +169,7 @@ class FarmerPasswordResetTest extends TestCase
     public function test_farmer_forgot_password_page_is_publicly_available(): void
     {
         $this->get(route('farmer.pwa.password.request'))
-            ->assertOk()
-            ->assertSee('SEND OTP');
+            ->assertRedirect(url('/farmer/app/forgot-password'));
     }
 
     private function makeFarmerUser(string $email): User
