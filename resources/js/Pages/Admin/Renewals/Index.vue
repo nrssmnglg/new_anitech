@@ -1,6 +1,7 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import QueueFilters from '../../../Components/Admin/Renewals/QueueFilters.vue';
 import QueueTable from '../../../Components/Admin/Renewals/QueueTable.vue';
 import RecordsFilters from '../../../Components/Admin/Renewals/RecordsFilters.vue';
 import RecordsTable from '../../../Components/Admin/Renewals/RecordsTable.vue';
@@ -35,6 +36,8 @@ const props = defineProps({
     activeSection: { type: String, required: true },
     renewals: { type: Object, default: null },
     renewalRecords: { type: Object, default: null },
+    queueFilters: { type: Object, required: true },
+    queueFilterOptions: { type: Object, required: true },
     recordFilters: { type: Object, required: true },
     filterOptions: { type: Object, required: true },
     summary: { type: Object, required: true },
@@ -49,6 +52,12 @@ const form = reactive({
     record_barangay_id: props.recordFilters.record_barangay_id || '',
     record_source: props.recordFilters.record_source || '',
     record_status: props.recordFilters.record_status || '',
+});
+const queueForm = reactive({
+    queue_search: props.queueFilters.queue_search || '',
+    queue_year: props.queueFilters.queue_year || '',
+    queue_barangay_id: props.queueFilters.queue_barangay_id || '',
+    queue_member_type_id: props.queueFilters.queue_member_type_id || '',
 });
 const exportModalOpen = ref(false);
 const exportFormat = ref('pdf');
@@ -98,6 +107,22 @@ function resetRecordFilters() {
     form.record_source = '';
     form.record_status = '';
     applyRecordFilters();
+}
+
+function applyQueueFilters() {
+    router.get(props.urls.queue, { ...queueForm }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function resetQueueFilters() {
+    queueForm.queue_search = '';
+    queueForm.queue_year = String(new Date().getFullYear());
+    queueForm.queue_barangay_id = '';
+    queueForm.queue_member_type_id = '';
+    applyQueueFilters();
 }
 
 const exportReportUrl = computed(() => {
@@ -177,7 +202,10 @@ function startExport() {
             <div class="space-y-6">
                 <IndexTabs :active-section="activeSection" :urls="urls" />
 
-                <QueueTable v-if="activeSection === 'queue' && renewals" :renewals="renewals" :compact-mode="compactMode" @toggle-compact="compactMode = !compactMode" />
+                <template v-if="activeSection === 'queue' && renewals">
+                    <QueueFilters :form="queueForm" :filter-options="queueFilterOptions" @apply="applyQueueFilters" @reset="resetQueueFilters" />
+                    <QueueTable :renewals="renewals" :compact-mode="compactMode" @toggle-compact="compactMode = !compactMode" />
+                </template>
 
                 <template v-else-if="activeSection === 'records' && renewalRecords">
                     <RecordsFilters :form="form" :filter-options="filterOptions" :urls="urls" @apply="applyRecordFilters" @reset="resetRecordFilters" @export="openExportModal" />

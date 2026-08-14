@@ -80,6 +80,7 @@ class DashboardController extends Controller
                 'actions' => [
                     'createMembershipApplicationUrl' => route('admin.membership-applications.create'),
                     'viewFarmersUrl' => route('admin.farmers.index'),
+                    'viewRenewalsUrl' => route('admin.renewals.index', ['section' => 'records']),
                     'tasksUrl' => ! $isAdmin ? route('admin.tasks.index') : null,
                     'manageFeeSchedulesUrl' => $isAdmin ? route('admin.fee-schedules.index') : null,
                     'viewUsersUrl' => $isAdmin ? route('admin.users.index') : null,
@@ -90,6 +91,9 @@ class DashboardController extends Controller
                 'adminOperations' => $isAdmin ? $this->adminOperations($selectedYear, $selectedBarangayId) : null,
                 'staffWorkspace' => ! $isAdmin ? $this->staffWorkspace($request, $selectedYear, $selectedBarangayId) : null,
                 'collections' => $this->collectionsSummary($selectedYear, $selectedBarangayId),
+                'renewalStatistics' => $isAdmin
+                    ? $this->renewalDecisionStatistics($selectedYear, $selectedBarangayId)
+                    : null,
                 'breakdowns' => [
                     'membershipStatus' => $this->membershipStatusBreakdown($selectedYear, $selectedBarangayId),
                     'memberTypes' => $this->memberTypeBreakdown($selectedYear, $selectedBarangayId),
@@ -1047,6 +1051,192 @@ class DashboardController extends Controller
         ];
     }
 
+    private function renewalDecisionStatistics(?int $year, ?int $barangayId): array
+    {
+        $targetYear = $year ?? now()->year;
+        $yearlyTrend = $this->renewalYearlyTrend($targetYear, $barangayId);
+        $coverage = $this->coverageFromTrend(
+            collect($yearlyTrend)->firstWhere('year', $targetYear),
+            $targetYear,
+            $barangayId
+        );
+        $previousCoverage = $this->coverageFromTrend(
+            collect($yearlyTrend)->firstWhere('year', $targetYear - 1),
+            $targetYear - 1,
+            $barangayId
+        );
+
+        $renewalPayments = Payment::query()
+            ->where('status', '!=', 'Rejected')
+            ->whereHas('paymentAssessment.membershipTransaction', function (Builder $query) use ($targetYear): void {
+                $query
+                    ->where('transaction_type', 'Renewal')
+                    ->where('year', $targetYear);
+            })
+            ->when($barangayId !== null, function (Builder $query) use ($barangayId): void {
+                $query->whereHas(
+                    'paymentAssessment.membershipTransaction.farmer',
+                    fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId)
+                );
+            });
+
+        $pendingRequests = (clone $this->renewalRecordQuery($targetYear, $barangayId))
+            ->where('status', 'Pending')
+            ->distinct()
+            ->count('farmer_id');
+        $rejectedRequests = (clone $this->renewalRecordQuery($targetYear, $barangayId))
+            ->where('status', 'Rejected')
+            ->distinct()
+            ->count('farmer_id');
+        $lateRenewals = (clone $this->renewalRecordQuery($targetYear, $barangayId))
+            ->where('is_late', true)
+            ->distinct()
+            ->count('farmer_id');
+
+        $barangayPriorities = Barangay::query()
+            ->when($barangayId !== null, fn (Builder $query) => $query->whereKey($barangayId))
+            ->withCount([
+                'farmers as renewed_farmers_count' => function (Builder $query) use ($targetYear): void {
+                    $this->applyRenewedFarmerConstraint($query, $targetYear);
+                },
+                'farmers as due_farmers_count' => function (Builder $query) use ($targetYear): void {
+                    $this->applyRenewalDueConstraint($query, $targetYear);
+                },
+            ])
+            ->get(['id', 'name'])
+            ->map(function (Barangay $barangay) use ($targetYear): array {
+                $renewed = (int) $barangay->renewed_farmers_count;
+                $unrenewed = (int) $barangay->due_farmers_count;
+                $eligible = $renewed + $unrenewed;
+
+                return [
+                    'id' => $barangay->id,
+                    'barangay' => $barangay->name,
+                    'eligible' => $eligible,
+                    'renewed' => $renewed,
+                    'unrenewed' => $unrenewed,
+                    'complianceRate' => $eligible > 0 ? round(($renewed / $eligible) * 100, 1) : 0,
+                    'href' => route('admin.renewals.index', [
+                        'queue_year' => $targetYear,
+                        'queue_barangay_id' => $barangay->id,
+                    ]),
+                ];
+            })
+            ->filter(fn (array $row): bool => $row['eligible'] > 0)
+            ->sort(function (array $left, array $right): int {
+                return [$left['complianceRate'], -$left['unrenewed'], $left['barangay']]
+                    <=> [$right['complianceRate'], -$right['unrenewed'], $right['barangay']];
+            })
+            ->take(5)
+            ->values()
+            ->all();
+
+        return [
+            'year' => $targetYear,
+            'eligibleFarmers' => $coverage['eligible'],
+            'renewedFarmers' => $coverage['renewed'],
+            'unrenewedFarmers' => $coverage['unrenewed'],
+            'complianceRate' => $coverage['rate'],
+            'previousYearComplianceRate' => $previousCoverage['rate'],
+            'yearOverYearChange' => round($coverage['rate'] - $previousCoverage['rate'], 1),
+            'pendingRequests' => $pendingRequests,
+            'rejectedRequests' => $rejectedRequests,
+            'lateRenewals' => $lateRenewals,
+            'collectionAmount' => round((float) (clone $renewalPayments)->sum('amount_paid'), 2),
+            'paymentCount' => (clone $renewalPayments)->count(),
+            'yearlyTrend' => $yearlyTrend,
+            'barangayPriorities' => $barangayPriorities,
+            'links' => [
+                'records' => route('admin.renewals.index', array_filter([
+                    'section' => 'records',
+                    'record_year' => $targetYear,
+                    'record_barangay_id' => $barangayId,
+                ], fn ($value) => $value !== null && $value !== '')),
+                'queue' => route('admin.renewals.index', array_filter([
+                    'queue_year' => $targetYear,
+                    'queue_barangay_id' => $barangayId,
+                ], fn ($value) => $value !== null && $value !== '')),
+            ],
+        ];
+    }
+
+    private function coverageFromTrend(?array $trend, int $year, ?int $barangayId): array
+    {
+        if ($trend === null) {
+            return $this->renewalCoverageForYear($year, $barangayId);
+        }
+
+        return [
+            'eligible' => $trend['eligible'],
+            'renewed' => $trend['renewed'],
+            'unrenewed' => $trend['unrenewed'],
+            'rate' => $trend['complianceRate'],
+        ];
+    }
+
+    private function renewalYearlyTrend(int $targetYear, ?int $barangayId): array
+    {
+        $earliestRecordedYear = (int) $this->renewalRecordQuery(null, $barangayId)
+            ->whereNotNull('year')
+            ->where('year', '<=', $targetYear)
+            ->min('year');
+        $fallbackStartYear = $targetYear - 1;
+        $startYear = max(
+            $targetYear - 4,
+            min($earliestRecordedYear > 0 ? $earliestRecordedYear : $fallbackStartYear, $fallbackStartYear)
+        );
+        $previousRenewed = null;
+        $previousRate = null;
+
+        return collect(range($startYear, $targetYear))
+            ->map(function (int $trendYear) use ($barangayId, &$previousRenewed, &$previousRate): array {
+                $coverage = $this->renewalCoverageForYear($trendYear, $barangayId);
+                $renewedChange = $previousRenewed === null ? null : $coverage['renewed'] - $previousRenewed;
+                $complianceChange = $previousRate === null ? null : round($coverage['rate'] - $previousRate, 1);
+                $direction = match (true) {
+                    $renewedChange === null => 'baseline',
+                    $renewedChange > 0 => 'increased',
+                    $renewedChange < 0 => 'decreased',
+                    default => 'unchanged',
+                };
+
+                $previousRenewed = $coverage['renewed'];
+                $previousRate = $coverage['rate'];
+
+                return [
+                    'year' => $trendYear,
+                    'eligible' => $coverage['eligible'],
+                    'renewed' => $coverage['renewed'],
+                    'unrenewed' => $coverage['unrenewed'],
+                    'complianceRate' => $coverage['rate'],
+                    'renewedChange' => $renewedChange,
+                    'complianceChange' => $complianceChange,
+                    'direction' => $direction,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function renewalCoverageForYear(int $year, ?int $barangayId): array
+    {
+        $renewed = Farmer::query()
+            ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
+            ->where(function (Builder $query) use ($year): void {
+                $this->applyRenewedFarmerConstraint($query, $year);
+            })
+            ->count();
+        $unrenewed = $this->renewalQueueQuery($year, $barangayId)->count();
+        $eligible = $renewed + $unrenewed;
+
+        return [
+            'eligible' => $eligible,
+            'renewed' => $renewed,
+            'unrenewed' => $unrenewed,
+            'rate' => $eligible > 0 ? round(($renewed / $eligible) * 100, 1) : 0,
+        ];
+    }
+
     private function memberTypeBreakdown(?int $year, ?int $barangayId): array
     {
         return MemberType::query()
@@ -1256,15 +1446,37 @@ class DashboardController extends Controller
     {
         $selectedYear = $year ?? now()->year;
 
-        return Farmer::query()
-            ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
+        $query = Farmer::query()
+            ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId));
+
+        $this->applyRenewalDueConstraint($query, $selectedYear);
+
+        return $query;
+    }
+
+    private function applyRenewalDueConstraint(Builder $query, int $year): void
+    {
+        $query
             ->whereRaw("TRIM(COALESCE(inactive_reason, '')) = ''")
-            ->where(function (Builder $query) use ($selectedYear): void {
-                $query
+            ->where(function (Builder $farmerQuery) use ($year): void {
+                $farmerQuery
                     ->where('membership_status', MembershipStatus::ACTIVE->value)
-                    ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $selectedYear - 1));
+                    ->orWhereHas('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year - 1));
             })
-            ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $selectedYear));
+            ->whereDoesntHave('membershipLedgers', fn (Builder $ledgerQuery) => $this->applySettledMembershipYearConstraint($ledgerQuery, $year));
+    }
+
+    private function applyRenewedFarmerConstraint(Builder $query, int $year): void
+    {
+        $query
+            ->whereRaw("TRIM(COALESCE(inactive_reason, '')) = ''")
+            ->whereHas('membershipLedgers', function (Builder $ledgerQuery) use ($year): void {
+                $this->applySettledMembershipYearConstraint($ledgerQuery, $year);
+                $ledgerQuery->whereHas(
+                    'membershipTransaction',
+                    fn (Builder $transactionQuery) => $transactionQuery->where('transaction_type', 'Renewal')
+                );
+            });
     }
 
     private function renewalRecordQuery(?int $year, ?int $barangayId): Builder

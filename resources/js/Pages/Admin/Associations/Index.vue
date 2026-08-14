@@ -168,6 +168,9 @@ const summaryCards = [
                                 <td class="px-6 py-4">
                                     <div class="font-semibold text-[#12372a]">{{ association.name }}</div>
                                     <div class="mt-1 text-sm text-[#6b7280]">{{ association.code || 'No code' }}</div>
+                                    <div class="mt-1 text-xs text-[#7b8b80]">
+                                        President: {{ association.president_name || 'Not set' }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-[#3d4c43]">{{ association.barangay?.name || 'Unassigned' }}</td>
                                 <td class="px-6 py-4 text-sm font-medium text-[#12372a]">{{ association.farmersCount ?? 0 }}</td>

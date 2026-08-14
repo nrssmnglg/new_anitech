@@ -27,7 +27,6 @@ const { errorList, flashStatus, form, showPassword, submit } = useOfficeLogin(pr
 
     <AdminAuthShell
         :hero-title="'Rural-Base Organization Portal\nCity Agriculture'"
-        hero-copy="Log in to support agricultural services through efficient management of farmers, records, and staff operations."
         :logo-url="logoUrl"
     >
         <OfficeLoginForm

@@ -43,6 +43,22 @@ class MobileMembershipApplicationTest extends TestCase
         $this->assertCount(3, $application->documents);
     }
 
+    public function test_mobile_membership_application_requires_sex(): void
+    {
+        [$barangay, $association] = $this->makeLookups();
+        $payload = $this->applicationPayload($barangay, $association);
+        $payload['sex'] = '';
+
+        $response = $this->postJson(route('api.v1.membership-applications.store'), $payload);
+
+        $response
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['sex']);
+
+        $this->assertDatabaseCount('farmers', 0);
+        $this->assertDatabaseCount('membership_applications', 0);
+    }
+
     public function test_mobile_application_can_be_tracked_by_application_number_and_birth_date(): void
     {
         [$barangay, $association] = $this->makeLookups();

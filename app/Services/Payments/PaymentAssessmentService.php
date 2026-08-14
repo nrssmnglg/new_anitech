@@ -63,10 +63,11 @@ class PaymentAssessmentService
 
         $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year);
 
-        $calculation = $this->feeCalculator->calculateRenewal([
-            'member_type' => $memberTypeCode,
-            'fee_schedule' => $feeSchedule,
-        ]);
+        $calculation = $this->calculateRenewalFees(
+            $memberTypeCode,
+            $feeSchedule,
+            (bool) ($context['include_membership_fee'] ?? false),
+        );
 
         return PaymentAssessment::query()->updateOrCreate(
             [
@@ -121,5 +122,21 @@ class PaymentAssessmentService
                 ->orderByDesc('id')
                 ->first()
             ?? throw new DomainException('No fee schedule is available for the selected member type.');
+    }
+
+    private function calculateRenewalFees(
+        string $memberTypeCode,
+        FeeSchedule $feeSchedule,
+        bool $includeMembershipFee,
+    ): array
+    {
+        $context = [
+            'member_type' => $memberTypeCode,
+            'fee_schedule' => $feeSchedule,
+        ];
+
+        return $includeMembershipFee
+            ? $this->feeCalculator->calculateApplication($context)
+            : $this->feeCalculator->calculateRenewal($context);
     }
 }

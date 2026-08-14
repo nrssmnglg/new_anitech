@@ -34,6 +34,24 @@ body.admin-sidebar-open {
     overflow: hidden;
 }
 
+form :is(p, small)[class*="text-rose-"],
+form :is(p, small)[class*="text-red-"],
+form :is(p, small).text-error {
+    display: block;
+    margin-top: 0.35rem;
+    color: #f10d3f !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+}
+
+form label:has(> :is(p, small)[class*="text-rose-"]) :is(input, select, textarea),
+form label:has(> :is(p, small)[class*="text-red-"]) :is(input, select, textarea),
+form label:has(> :is(p, small).text-error) :is(input, select, textarea) {
+    border-color: #fb7185 !important;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.08);
+}
+
 .main-wrapper {
     flex: 1 1 auto;
     margin-left: var(--sidebar-width);

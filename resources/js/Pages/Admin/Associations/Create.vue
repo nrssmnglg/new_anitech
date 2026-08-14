@@ -22,6 +22,7 @@ const form = useForm({
     barangay_id: '',
     name: '',
     code: '',
+    president_name: '',
     status: 'active',
 });
 

@@ -177,10 +177,12 @@ class Farmer extends Model
     {
         $inactiveReason = trim((string) $this->inactive_reason);
 
-        if ($inactiveReason !== '') {
-            return str_contains(strtolower($inactiveReason), 'deceas')
-                ? FarmerStatus::DECEASED
-                : FarmerStatus::INACTIVE;
+        if (str_contains(strtolower($inactiveReason), 'deceas')) {
+            return FarmerStatus::DECEASED;
+        }
+
+        if ($this->inactive_at !== null || $inactiveReason !== '') {
+            return FarmerStatus::INACTIVE;
         }
 
         return $this->membership_status === MembershipStatus::ACTIVE

@@ -220,17 +220,21 @@ class FarmerRegistryService
             $payload['activated_at'] = $farmer?->activated_at?->toDateTimeString() ?? now()->toDateTimeString();
         }
 
-        if ($status !== FarmerStatus::INACTIVE) {
+        if (! in_array($status, [FarmerStatus::INACTIVE, FarmerStatus::DECEASED], true)) {
             $payload['inactive_at'] = null;
             $payload['inactive_reason'] = null;
         } elseif (empty($payload['inactive_at'])) {
             $payload['inactive_at'] = $farmer?->inactive_at?->toDateTimeString() ?? now()->toDateTimeString();
         }
 
-        if ($status === FarmerStatus::INACTIVE && trim((string) ($payload['inactive_reason'] ?? '')) === '') {
-            $payload['inactive_reason'] = $this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt)
-                ? 'Old registry record requires reactivation.'
-                : 'Marked inactive during old record encoding.';
+        if (in_array($status, [FarmerStatus::INACTIVE, FarmerStatus::DECEASED], true) && trim((string) ($payload['inactive_reason'] ?? '')) === '') {
+            $payload['inactive_reason'] = $status === FarmerStatus::DECEASED
+                ? 'Deceased record'
+                : (
+                    $this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt)
+                        ? 'Old registry record requires reactivation.'
+                        : 'Marked inactive during old record encoding.'
+                );
         }
 
         if ($this->shouldAutoMarkOldRecordInactive($payload['record_origin'], $registeredAt) && $status === FarmerStatus::ACTIVE) {
@@ -387,7 +391,9 @@ class FarmerRegistryService
                 'sex' => $sex,
                 'civil_status' => $civilStatus,
                 'birth_date' => $data['birth_date'] ?? null,
-                'address' => $data['address'] ?? null,
+                'address' => filled($data['address'] ?? null)
+                    ? trim((string) $data['address'])
+                    : null,
                 'mobile_number' => $data['mobile_number'] ?? null,
             ],
         );

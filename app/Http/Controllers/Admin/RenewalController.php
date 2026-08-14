@@ -16,6 +16,7 @@ use App\Models\Barangay;
 use App\Models\Farmer;
 use App\Models\FarmerDocument;
 use App\Models\FeeSchedule;
+use App\Models\MemberType;
 use App\Models\MembershipLedger;
 use App\Models\RenewalRequest;
 use App\Models\User;
@@ -65,10 +66,14 @@ class RenewalController extends Controller
     {
         $activeSection = $request->query('section') === 'records' ? 'records' : 'queue';
         $recordFilters = $this->recordFilters($request);
-        $queueYear = now()->year;
+        $queueFilters = $this->queueFilters($request);
+        $queueYear = (int) $queueFilters['queue_year'];
 
-        $this->renewalReminderService->syncInactiveLapsedFarmers($queueYear);
-        $renewalsQuery = $this->renewalReminderService->eligibleFarmerQuery($queueYear);
+        if ($queueYear === now()->year) {
+            $this->renewalReminderService->syncInactiveLapsedFarmers($queueYear);
+        }
+
+        $renewalsQuery = $this->renewalQueueQuery($queueYear, $queueFilters);
         $renewals = null;
         $availableYears = collect();
         $availableBarangays = collect();
@@ -124,12 +129,42 @@ class RenewalController extends Controller
             'activeSection' => $activeSection,
             'renewals' => $renewals,
             'renewalRecords' => $renewalRecords,
+            'queueFilters' => $queueFilters,
             'recordFilters' => [
                 'record_search' => (string) ($recordFilters['record_search'] ?? ''),
                 'record_year' => (string) ($recordFilters['record_year'] ?? ''),
                 'record_barangay_id' => (string) ($recordFilters['record_barangay_id'] ?? ''),
                 'record_source' => (string) ($recordFilters['record_source'] ?? ''),
                 'record_status' => (string) ($recordFilters['record_status'] ?? ''),
+            ],
+            'queueFilterOptions' => [
+                'years' => FeeSchedule::query()
+                    ->select('year')
+                    ->distinct()
+                    ->pluck('year')
+                    ->push($queueYear)
+                    ->push(now()->year)
+                    ->filter()
+                    ->unique()
+                    ->sortDesc()
+                    ->map(fn ($year): array => ['value' => (string) $year, 'label' => (string) $year])
+                    ->values()
+                    ->all(),
+                'barangays' => Barangay::query()
+                    ->orderBy('name')
+                    ->get(['id', 'name'])
+                    ->map(fn (Barangay $barangay): array => ['id' => $barangay->id, 'name' => $barangay->name])
+                    ->values()
+                    ->all(),
+                'memberTypes' => MemberType::query()
+                    ->orderBy('code')
+                    ->get(['id', 'code', 'name'])
+                    ->map(fn (MemberType $memberType): array => [
+                        'id' => $memberType->id,
+                        'label' => $memberType->code . ' - ' . $memberType->name,
+                    ])
+                    ->values()
+                    ->all(),
             ],
             'filterOptions' => [
                 'years' => $availableYears
@@ -185,23 +220,17 @@ class RenewalController extends Controller
             ->get();
 
         $selectedBarangay = filled($recordFilters['record_barangay_id'])
-            ? Barangay::query()->find($recordFilters['record_barangay_id'], ['id', 'name'])
+            ? Barangay::query()->with('association:id,barangay_id,name,president_name')->find($recordFilters['record_barangay_id'], ['id', 'name'])
             : null;
 
         if ($selectedBarangay) {
             $selectedColumns = $this->selectedMasterlistColumns($request);
-            $masterlistRows = $this->buildMasterlistRows($renewalRecords, $feeSchedule);
-            $totals = [
-                'annual_due' => $masterlistRows->sum('annual_due'),
-                'mortuary_fee' => $masterlistRows->sum('mortuary_fee'),
-                'membership_fee' => $masterlistRows->sum('membership_fee'),
-                'total_amount' => $masterlistRows->sum('total_amount'),
-                'new_member_count' => $masterlistRows->sum('is_new_member'),
-                'old_member_count' => $masterlistRows->sum(fn (array $row): int => $row['is_new_member'] ? 0 : 1),
-                'with_mortuary_count' => $masterlistRows->sum(fn (array $row): int => $row['has_mortuary'] ? 1 : 0),
-                'without_mortuary_count' => $masterlistRows->sum(fn (array $row): int => $row['has_mortuary'] ? 0 : 1),
-                'total_member_count' => $masterlistRows->count(),
-            ];
+            $masterlistRecords = $this->masterlistRecordsQuery($recordFilters)
+                ->latest('year')
+                ->latest('id')
+                ->get();
+            $masterlistRows = $this->buildMasterlistRows($masterlistRecords);
+            $totals = $this->masterlistTotals($masterlistRows);
 
             if ($format === 'xlsx') {
                 $fileName = 'Barangay-Masterlist-' . now()->format('m-d-Y') . '.xlsx';
@@ -214,11 +243,12 @@ class RenewalController extends Controller
                 $pdfContent = $this->renewalSummaryPdfService->buildMasterlist(
                     $masterlistRows,
                     $totals,
-                    $selectedColumns,
                     (string) ($selectedBarangay->name ?? 'N/A'),
-                    'No association recorded',
+                    (string) ($selectedBarangay->association?->name ?? 'No association recorded'),
+                    (string) ($selectedBarangay->association?->president_name ?? 'No president recorded'),
                     now()->format('F d, Y h:i A'),
-                    $reportYear
+                    $reportYear,
+                    $selectedColumns,
                 );
                 $export = $this->storedPdfExportService->store(
                     'renewal_barangay_masterlist',
@@ -236,6 +266,7 @@ class RenewalController extends Controller
                 'reportYear' => $reportYear,
                 'recordFilters' => $recordFilters,
                 'selectedBarangay' => $selectedBarangay,
+                'selectedAssociation' => $selectedBarangay?->association,
                 'masterlistRows' => $masterlistRows,
                 'totals' => $totals,
                 'selectedColumns' => collect($selectedColumns)
@@ -851,6 +882,19 @@ class RenewalController extends Controller
         ];
     }
 
+    private function masterlistReportRelations(): array
+    {
+        return [
+            'membershipTransaction:id,farmer_id,transaction_type,source,submitted_at',
+            'membershipTransaction.farmer:id,farmer_code,member_type_id,barangay_id,association_id',
+            'membershipTransaction.farmer.profile:farmer_id,first_name,middle_name,last_name,suffix,sex',
+            'membershipTransaction.farmer.memberType:id,code,requires_membership_fee',
+            'membershipTransaction.farmer.barangay:id,name',
+            'membershipTransaction.farmer.association:id,name,president_name',
+            'membershipTransaction.paymentAssessments:id,membership_transaction_id,status,total_amount_due,membership_fee,annual_due,mortuary_fee',
+        ];
+    }
+
     private function recordFilters(Request $request): array
     {
         return [
@@ -860,6 +904,50 @@ class RenewalController extends Controller
             'record_source' => $request->filled('record_source') ? (string) $request->input('record_source') : '',
             'record_status' => $request->filled('record_status') ? (string) $request->input('record_status') : '',
         ];
+    }
+
+    private function queueFilters(Request $request): array
+    {
+        $queueYear = $request->filled('queue_year')
+            ? (int) $request->input('queue_year')
+            : now()->year;
+
+        return [
+            'queue_search' => (string) $request->string('queue_search'),
+            'queue_year' => (string) ($queueYear > 0 ? $queueYear : now()->year),
+            'queue_barangay_id' => $request->filled('queue_barangay_id')
+                ? (string) $request->input('queue_barangay_id')
+                : '',
+            'queue_member_type_id' => $request->filled('queue_member_type_id')
+                ? (string) $request->input('queue_member_type_id')
+                : '',
+        ];
+    }
+
+    private function renewalQueueQuery(int $queueYear, array $queueFilters): Builder
+    {
+        return $this->renewalReminderService
+            ->eligibleFarmerQuery($queueYear)
+            ->when($queueFilters['queue_search'] ?? null, function (Builder $query, string $search): void {
+                $query->where(function (Builder $farmerQuery) use ($search): void {
+                    $farmerQuery
+                        ->where('farmer_code', 'like', "%{$search}%")
+                        ->orWhereHas('profile', function (Builder $profileQuery) use ($search): void {
+                            $profileQuery
+                                ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('middle_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when(
+                $queueFilters['queue_barangay_id'] ?? null,
+                fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId)
+            )
+            ->when(
+                $queueFilters['queue_member_type_id'] ?? null,
+                fn (Builder $query, string $memberTypeId) => $query->where('member_type_id', $memberTypeId)
+            );
     }
 
     private function renewalRecordsQuery(array $recordFilters, array $relations): Builder
@@ -899,6 +987,45 @@ class RenewalController extends Controller
                     }
 
                     $query->where('status', $status);
+                }
+            );
+    }
+
+    private function masterlistRecordsQuery(array $recordFilters): Builder
+    {
+        return MembershipLedger::query()
+            ->with($this->masterlistReportRelations())
+            ->where('amount_paid', '>', 0)
+            ->when($recordFilters['record_search'] ?? null, function (Builder $query, string $search): void {
+                $query->whereHas('membershipTransaction.farmer', function (Builder $farmerQuery) use ($search): void {
+                    $farmerQuery
+                        ->where('farmer_code', 'like', "%{$search}%")
+                        ->orWhereHas('profile', function (Builder $profileQuery) use ($search): void {
+                            $profileQuery
+                                ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('middle_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
+            ->when($recordFilters['record_barangay_id'] ?? null, fn (Builder $query, string $barangayId) => $query->whereHas('membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId)))
+            ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->whereHas('membershipTransaction', fn (Builder $transactionQuery) => $transactionQuery->where('source', $source)))
+            ->when(
+                $recordFilters['record_status'] ?? null,
+                function (Builder $query, string $status): void {
+                    $query->whereHas('membershipTransaction', function (Builder $transactionQuery) use ($status): void {
+                        if ($status === 'pending') {
+                            $transactionQuery->whereIn('status', [
+                                RenewalStatus::SUBMITTED->value,
+                                RenewalStatus::UNDER_REVIEW->value,
+                            ]);
+
+                            return;
+                        }
+
+                        $transactionQuery->where('status', $status);
+                    });
                 }
             );
     }
@@ -976,10 +1103,13 @@ class RenewalController extends Controller
         $requested = collect($request->input('columns', []))
             ->map(fn ($value): string => (string) $value)
             ->filter(fn (string $value): bool => in_array($value, $available, true))
+            ->unique()
             ->values()
             ->all();
 
-        return $requested !== [] ? $requested : array_keys(RenewalSummaryExport::availableColumns());
+        return $requested !== []
+            ? collect($available)->filter(fn (string $column): bool => in_array($column, $requested, true))->values()->all()
+            : $available;
     }
 
     private function selectedMasterlistColumns(Request $request): array
@@ -1029,31 +1159,92 @@ class RenewalController extends Controller
                     'male_count' => $rows->sum('male_count'),
                 ];
             })
-            ->sortBy('barangay', SORT_NATURAL)
+            ->sortBy('barangay', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
     }
 
-    private function buildMasterlistRows(iterable $renewalRecords, ?FeeSchedule $feeSchedule): Collection
+    private function buildMasterlistRows(iterable $masterlistRecords): Collection
     {
-        return $this->distinctRenewalsByFarmer($renewalRecords)
-            ->filter(fn ($renewal) => $renewal instanceof RenewalRequest && $renewal->farmer)
-            ->map(function (RenewalRequest $renewal) use ($feeSchedule): array {
-                $fees = $this->renewalFeeBreakdown($renewal, $feeSchedule);
-                $memberTypeCode = strtoupper((string) ($renewal->farmer?->memberType?->code ?? ''));
+        return collect($masterlistRecords)
+            ->filter(fn ($ledger): bool => $ledger instanceof MembershipLedger && $ledger->farmer !== null)
+            ->sortByDesc(fn (MembershipLedger $ledger): string => sprintf(
+                '%04d-%010d',
+                (int) $ledger->year,
+                (int) $ledger->id
+            ))
+            ->unique(fn (MembershipLedger $ledger): int => (int) $ledger->farmer->id)
+            ->values()
+            ->map(function (MembershipLedger $ledger): array {
+                $farmer = $ledger->farmer;
+                $profile = $farmer?->profile;
+                $assessment = $ledger->membershipTransaction?->paymentAssessments?->sortByDesc('id')->first();
+                $memberTypeCode = strtoupper((string) ($farmer?->memberType?->code ?? ''));
+                $isNewMember = in_array($memberTypeCode, ['NM', 'NSC'], true);
+                $annualDue = round((float) ($assessment?->annual_due ?? 0), 2);
+                $mortuaryFee = round((float) ($assessment?->mortuary_fee ?? 0), 2);
+                $membershipFee = round((float) ($assessment?->membership_fee ?? 0), 2);
+
+                if ($assessment === null && ! $isNewMember) {
+                    $membershipFee = 0.0;
+                }
+
+                $givenNames = collect([
+                    $profile?->first_name,
+                    $profile?->middle_name,
+                    $profile?->suffix,
+                ])->filter()->implode(' ');
+                $reportName = collect([
+                    $profile?->last_name,
+                    $givenNames,
+                ])->filter()->implode(', ');
 
                 return [
-                    'name' => $renewal->farmer?->full_name ?? 'Unknown Farmer',
-                    'annual_due' => $fees['annual_due'],
-                    'mortuary_fee' => $fees['mortuary_fee'],
-                    'membership_fee' => $fees['membership_fee'],
-                    'total_amount' => $fees['total_amount'],
+                    'name' => $reportName !== '' ? $reportName : ($farmer?->full_name ?? 'Unknown Farmer'),
+                    'sort_name' => trim(collect([
+                        $profile?->last_name,
+                        $profile?->first_name,
+                        $profile?->middle_name,
+                        $profile?->suffix,
+                        $farmer?->farmer_code,
+                    ])->filter()->implode(' ')),
+                    'annual_due' => $annualDue,
+                    'mortuary_fee' => $mortuaryFee,
+                    'membership_fee' => $membershipFee,
+                    'total_amount' => round($annualDue + $mortuaryFee + $membershipFee, 2),
                     'remarks' => $memberTypeCode,
-                    'is_new_member' => in_array($memberTypeCode, ['NM', 'NSC'], true),
-                    'has_mortuary' => $fees['mortuary_fee'] > 0,
+                    'is_new_member' => $isNewMember,
+                    'has_mortuary' => $mortuaryFee > 0,
                 ];
             })
-            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
+            ->sortBy('sort_name', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->map(function (array $row): array {
+                unset($row['sort_name']);
+
+                return $row;
+            });
+    }
+
+    private function masterlistTotals(Collection $rows): array
+    {
+        $memberTypeCounts = collect(['OSC', 'NM', 'OM', 'NSC'])
+            ->mapWithKeys(fn (string $code): array => [
+                $code => $rows->where('remarks', $code)->count(),
+            ])
+            ->all();
+
+        return [
+            'annual_due' => $rows->sum('annual_due'),
+            'mortuary_fee' => $rows->sum('mortuary_fee'),
+            'membership_fee' => $rows->sum('membership_fee'),
+            'total_amount' => $rows->sum('total_amount'),
+            'new_member_count' => $rows->sum('is_new_member'),
+            'old_member_count' => $rows->sum(fn (array $row): int => $row['is_new_member'] ? 0 : 1),
+            'with_mortuary_count' => $rows->sum(fn (array $row): int => $row['has_mortuary'] ? 1 : 0),
+            'without_mortuary_count' => $rows->sum(fn (array $row): int => $row['has_mortuary'] ? 0 : 1),
+            'total_member_count' => $rows->count(),
+            'member_type_counts' => $memberTypeCounts,
+        ];
     }
 
     private function distinctRenewalsByFarmer(iterable $renewalRecords): Collection
@@ -1165,9 +1356,11 @@ class RenewalController extends Controller
                 'canRequestCorrection' => Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false,
                 'canForwardToAdmin' => ! (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false),
             ],
+            'renewalYearsCount' => 1,
             'record' => $includeRecordFields ? [
                 'submittedAt' => optional($recordDate)->format('M d, Y h:i A'),
                 'paymentReference' => $latestPayment?->reference_no,
+                'renewalYearsCount' => 1,
             ] : null,
         ];
     }
@@ -1221,6 +1414,7 @@ class RenewalController extends Controller
             'recordKey' => $baseRow['recordKey'],
             'years' => $renewals->pluck('year')->map(fn ($year): int => (int) $year)->unique()->sortDesc()->values()->all(),
             'yearRangeLabel' => $renewals->pluck('year')->unique()->sortDesc()->values()->implode(', '),
+            'renewalYearsCount' => $renewals->pluck('year')->unique()->count(),
             'sourceLabel' => $renewals
                 ->pluck('source')
                 ->filter()
@@ -1238,6 +1432,7 @@ class RenewalController extends Controller
                 'submittedAt' => $baseRow['submittedAt'],
                 'paymentReference' => $baseRow['paymentReference'],
                 'renewalCount' => $renewals->count(),
+                'renewalYearsCount' => $baseRow['renewalYearsCount'],
             ],
         ]);
     }

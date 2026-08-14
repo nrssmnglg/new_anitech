@@ -7,11 +7,28 @@ const props = defineProps({
     schedules: { type: Object, required: true },
     activeSchedules: { type: Array, default: () => [] },
     summary: { type: Object, required: true },
+    filters: { type: Object, default: () => ({}) },
     urls: { type: Object, required: true },
 });
 
 const activatingId = ref(null);
 const deletingId = ref(null);
+const search = ref(props.filters.search || '');
+
+function applySearch() {
+    router.get(props.urls.index, {
+        search: search.value.trim() || undefined,
+    }, {
+        preserveScroll: true,
+        preserveState: false,
+        replace: true,
+    });
+}
+
+function clearSearch() {
+    search.value = '';
+    applySearch();
+}
 
 function activate(schedule) {
     if (!schedule.actions.activateUrl || activatingId.value !== null) {
@@ -205,8 +222,30 @@ const AppIcon = defineComponent({
             </section>
 
             <section class="overflow-hidden rounded-[1.35rem] border border-[#dde4de] bg-white shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                <div class="border-b border-[#edf2ee] bg-[#fbfcfb] px-6 py-4">
+                <div class="flex flex-col gap-4 border-b border-[#edf2ee] bg-[#fbfcfb] px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
                     <h2 class="text-lg font-black text-[#0f172a]">Fee Schedule Records</h2>
+
+                    <form class="flex w-full max-w-xl flex-col gap-2 sm:flex-row" @submit.prevent="applySearch">
+                        <label class="relative flex-1">
+                            <span class="sr-only">Search fee schedules</span>
+                            <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a9791]" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <path d="m20 20-3.5-3.5"></path>
+                            </svg>
+                            <input
+                                v-model="search"
+                                type="search"
+                                placeholder="Search year, member type, or status"
+                                class="w-full rounded-xl border border-[#d7e0db] bg-white py-2.5 pl-10 pr-4 text-sm text-[#1a2420] outline-none transition placeholder:text-[#98a39e] focus:border-[#376757] focus:ring-4 focus:ring-[#376757]/10"
+                            >
+                        </label>
+                        <button v-if="filters.search" type="button" class="rounded-xl border border-[#d7e0db] bg-white px-4 py-2.5 text-sm font-bold text-[#64748b] transition hover:bg-[#f3f6f4]" @click="clearSearch">
+                            Clear
+                        </button>
+                        <button type="submit" class="rounded-xl bg-[#014d3c] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#01362a]">
+                            Search
+                        </button>
+                    </form>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -281,7 +320,9 @@ const AppIcon = defineComponent({
                                 </td>
                             </tr>
                             <tr v-if="schedules.data.length === 0">
-                                <td colspan="8" class="px-6 py-16 text-center text-sm text-[#64748b]">No fee schedules found.</td>
+                                <td colspan="8" class="px-6 py-16 text-center text-sm text-[#64748b]">
+                                    {{ filters.search ? `No fee schedules match "${filters.search}".` : 'No fee schedules found.' }}
+                                </td>
                             </tr>
                         </tbody>
                     </table>

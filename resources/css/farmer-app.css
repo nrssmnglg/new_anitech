@@ -835,9 +835,19 @@
 }
 
 .farmer-app__field-error {
-    margin-left: 4px;
-    color: #b33d34;
-    font-size: 0.78rem;
+    display: block;
+    margin: 2px 2px 0;
+    color: #f10d3f;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+label:has(> .farmer-app__field-error) input,
+label:has(> .farmer-app__field-error) select,
+label:has(> .farmer-app__field-error) textarea {
+    border-color: #fb7185;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.08);
 }
 
 .farmer-app__login-links {

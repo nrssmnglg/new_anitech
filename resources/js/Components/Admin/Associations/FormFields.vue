@@ -38,5 +38,11 @@ defineProps({
             <input v-model="form.code" type="text" class="w-full rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
             <p v-if="form.errors.code" class="text-sm font-medium text-error">{{ form.errors.code }}</p>
         </label>
+
+        <label class="space-y-2 md:col-span-2">
+            <span class="ml-1 text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Association President</span>
+            <input v-model="form.president_name" type="text" placeholder="Name of association president" class="w-full rounded-xl border border-outline-variant bg-white px-4 py-3 text-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
+            <p v-if="form.errors.president_name" class="text-sm font-medium text-error">{{ form.errors.president_name }}</p>
+        </label>
     </div>
 </template>

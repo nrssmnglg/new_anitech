@@ -44,7 +44,14 @@ class RenewalMasterlistExport implements FromArray, ShouldAutoSize, WithHeadings
                 'mortuary_fee' => $this->totals['mortuary_fee'],
                 'membership_fee' => $this->totals['membership_fee'],
                 'total_amount' => $this->totals['total_amount'],
-                'remarks' => '',
+                'remarks' => ($this->totals['total_member_count'] ?? 0) . ' members',
+            ]);
+            $memberTypeCounts = $this->totals['member_type_counts'] ?? [];
+            $rows[] = $this->mapRow([
+                'name' => 'MEMBER TYPE TOTALS',
+                'remarks' => collect(['OSC', 'NM', 'OM', 'NSC'])
+                    ->map(fn (string $code): string => $code . ': ' . number_format((int) ($memberTypeCounts[$code] ?? 0)))
+                    ->implode(' | '),
             ]);
         }
 

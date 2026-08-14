@@ -42,4 +42,10 @@ return [
         'qrph_test_amount' => env('PAYMONGO_QRPH_TEST_AMOUNT'),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+        'sender_name' => env('BREVO_SENDER_NAME', env('APP_NAME', 'AniTech')),
+        'sender_email' => env('BREVO_SENDER_EMAIL'),
+    ],
+
 ];

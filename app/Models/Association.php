@@ -15,6 +15,7 @@ class Association extends Model
         'barangay_id',
         'code',
         'name',
+        'president_name',
         'status',
     ];
 

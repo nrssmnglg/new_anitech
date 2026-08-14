@@ -15,7 +15,7 @@ class BrevoChannel
         }
 
         $message = $notification->toBrevo($notifiable);
-        $apiKey = (string) env('BREVO_API_KEY');
+        $apiKey = (string) config('services.brevo.api_key');
 
         if ($apiKey === '') {
             throw new RuntimeException('BREVO_API_KEY is not configured.');
@@ -43,7 +43,7 @@ class BrevoChannel
         ]);
 
         if ($response->failed()) {
-            throw new RuntimeException('Brevo send failed: ' . $response->body());
+            throw new RuntimeException('Brevo send failed with HTTP status ' . $response->status() . '.');
         }
     }
 }

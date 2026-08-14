@@ -388,8 +388,12 @@ onMounted(() => run());
 }
 
 .farmer-app__field-error {
-    color: #b42318;
-    font-size: 0.8rem;
+    display: block;
+    margin: 2px 2px 0;
+    color: #f10d3f;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.4;
 }
 
 .farmer-app__profile-local-warning {

@@ -220,6 +220,7 @@ class FarmerController extends Controller
             'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
             'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
             'nextFarmerCode' => $this->registry->previewFarmerCode(),
+            'defaultRenewalYear' => now()->year,
             'storeUrl' => route('admin.farmers.store'),
             'indexUrl' => route('admin.farmers.index'),
             'duplicateMatches' => session('duplicate_matches', []),
@@ -248,11 +249,32 @@ class FarmerController extends Controller
                 ->with('duplicate_matches', $this->formatDuplicateMatches($duplicates));
         }
 
-        $farmer = $this->registry->create([
-            ...$validated,
-            'record_origin' => 'Old Record',
-        ]);
-        $farmer = $this->legacyMembershipRecorder->syncForOldRecord($farmer);
+        $renewalYear = $request->boolean('create_renewal_record') && filled($validated['renewal_year'] ?? null)
+            ? (int) $validated['renewal_year']
+            : null;
+
+        try {
+            $farmer = DB::transaction(function () use ($validated, $renewalYear): Farmer {
+                $farmer = $this->registry->create([
+                    ...$validated,
+                    'record_origin' => 'Old Record',
+                ]);
+
+                return $this->legacyMembershipRecorder->syncForOldRecord($farmer, $renewalYear);
+            });
+        } catch (DomainException $exception) {
+            $errorField = str_contains(strtolower($exception->getMessage()), 'renewal')
+                ? 'renewal_year'
+                : 'member_type_id';
+
+            throw ValidationException::withMessages([
+                $errorField => $exception->getMessage(),
+            ]);
+        }
+
+        $successMessage = $renewalYear !== null
+            ? 'Old farmer record saved successfully and renewal for ' . $renewalYear . ' was recorded.'
+            : 'Old farmer record saved successfully.';
 
         $this->auditTrailService->recordChange(
             'farmers',
@@ -284,7 +306,7 @@ class FarmerController extends Controller
 
         return redirect()
             ->route('admin.farmers.show', $farmer)
-            ->with('success', 'Old farmer record saved successfully.');
+            ->with('success', $successMessage);
     }
 
     public function show(Farmer $farmer): InertiaResponse
@@ -1635,7 +1657,7 @@ class FarmerController extends Controller
         return sprintf(
             "CASE
                 WHEN LOWER(TRIM(COALESCE(inactive_reason, ''))) LIKE '%%deceas%%' THEN '%s'
-                WHEN TRIM(COALESCE(inactive_reason, '')) <> '' THEN '%s'
+                WHEN inactive_at IS NOT NULL OR TRIM(COALESCE(inactive_reason, '')) <> '' THEN '%s'
                 WHEN LOWER(TRIM(COALESCE(membership_status, ''))) = '%s' THEN '%s'
                 ELSE '%s'
             END",

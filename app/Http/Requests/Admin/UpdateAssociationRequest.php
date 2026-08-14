@@ -18,6 +18,7 @@ class UpdateAssociationRequest extends FormRequest
         $this->merge([
             'name' => trim((string) $this->input('name')),
             'code' => filled($this->input('code')) ? trim((string) $this->input('code')) : null,
+            'president_name' => filled($this->input('president_name')) ? trim((string) $this->input('president_name')) : null,
         ]);
     }
 
@@ -30,6 +31,7 @@ class UpdateAssociationRequest extends FormRequest
             'barangay_id' => ['required', 'exists:barangays,id', Rule::unique('associations', 'barangay_id')->ignore($association)],
             'name' => ['required', 'string', 'max:255', Rule::unique('associations', 'name')->ignore($association)],
             'code' => ['nullable', 'string', 'max:50', Rule::unique('associations', 'code')->ignore($association)],
+            'president_name' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

@@ -75,6 +75,27 @@ const stepItems = computed(() => [
     { id: 4, label: 'Review & Submit' },
 ]);
 
+const applicationFieldSteps = {
+    first_name: 1,
+    middle_name: 1,
+    last_name: 1,
+    suffix: 1,
+    birth_date: 1,
+    sex: 1,
+    civil_status: 1,
+    mobile_number: 1,
+    email: 1,
+    barangay_id: 2,
+    association_id: 2,
+    address: 2,
+    remarks: 2,
+};
+
+const requiredFieldLabels = {
+    first_name: 'first name',
+    last_name: 'last name',
+};
+
 const applicantName = computed(() => [form.first_name, form.middle_name, form.last_name, form.suffix].filter(Boolean).join(' '));
 const selectedBarangay = computed(() => barangays.value.find((item) => String(item.id) === String(form.barangay_id))?.name || '');
 const selectedAssociation = computed(() => associations.value.find((item) => String(item.id) === String(form.association_id))?.name || '');
@@ -194,7 +215,7 @@ const validateMobileNumber = () => {
 
 const validateBirthDate = () => {
     if (!form.birth_date) {
-        setLocalError('birth_date', 'Birth date is required.');
+        setLocalError('birth_date', 'The birth date field is required.');
         return false;
     }
 
@@ -218,7 +239,7 @@ const validateStep = (step) => {
     if (step === 1) {
         ['first_name', 'last_name'].forEach((field) => {
             if (!form[field]) {
-                setLocalError(field, 'This field is required.');
+                setLocalError(field, `The ${requiredFieldLabels[field]} field is required.`);
                 valid = false;
             } else {
                 clearLocalError(field);
@@ -226,14 +247,14 @@ const validateStep = (step) => {
         });
 
         if (!form.sex) {
-            setLocalError('sex', 'Please select a gender.');
+            setLocalError('sex', 'The sex field is required.');
             valid = false;
         } else {
             clearLocalError('sex');
         }
 
         if (!form.civil_status) {
-            setLocalError('civil_status', 'Please select a civil status.');
+            setLocalError('civil_status', 'The civil status field is required.');
             valid = false;
         } else {
             clearLocalError('civil_status');
@@ -245,14 +266,14 @@ const validateStep = (step) => {
 
     if (step === 2) {
         if (!form.barangay_id) {
-            setLocalError('barangay_id', 'Barangay is required.');
+            setLocalError('barangay_id', 'The barangay field is required.');
             valid = false;
         } else {
             clearLocalError('barangay_id');
         }
 
         if (!form.address) {
-            setLocalError('address', 'Home address is required.');
+            setLocalError('address', 'The home address field is required.');
             valid = false;
         } else {
             clearLocalError('address');
@@ -391,8 +412,15 @@ const submit = async () => {
             clearDraft();
             success.value = t('apply.offline_saved');
         } else {
-            error.value = extractApiMessage(err, t('apply.submit_failed'));
             validationErrors.value = extractedErrors;
+
+            const firstInvalidField = Object.keys(extractedErrors).find((field) => applicationFieldSteps[field]);
+            if (firstInvalidField) {
+                currentStep.value = applicationFieldSteps[firstInvalidField];
+                error.value = 'Please review the highlighted fields and correct the information below.';
+            } else {
+                error.value = extractApiMessage(err, t('apply.submit_failed'));
+            }
         }
 
         if (extractedErrors.application) {

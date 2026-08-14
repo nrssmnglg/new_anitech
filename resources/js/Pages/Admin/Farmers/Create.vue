@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import EditSectionCard from '../../../Components/Admin/Farmers/EditSectionCard.vue';
 
@@ -10,6 +10,7 @@ const props = defineProps({
     associations: { type: Array, required: true },
     memberTypes: { type: Array, required: true },
     nextFarmerCode: { type: String, required: true },
+    defaultRenewalYear: { type: Number, required: true },
     storeUrl: { type: String, required: true },
     indexUrl: { type: String, required: true },
     duplicateMatches: { type: Array, default: () => [] },
@@ -30,9 +31,27 @@ const form = useForm({
     member_type_id: '',
     status: 'active',
     registered_at: new Date().toISOString().slice(0, 10),
+    renewal_year: '',
+    create_renewal_record: true,
     remarks: '',
     confirm_duplicate_override: false,
 });
+
+watch(
+    [() => form.registered_at, () => form.create_renewal_record],
+    ([value, shouldCreate]) => {
+        if (!shouldCreate || !value) {
+            form.renewal_year = '';
+            return;
+        }
+
+        const registeredYear = Number(String(value).slice(0, 4));
+        if (!Number.isNaN(registeredYear)) {
+            form.renewal_year = String(registeredYear);
+        }
+    },
+    { immediate: true }
+);
 
 const filteredAssociations = computed(() => {
     if (!form.barangay_id) {
@@ -72,7 +91,6 @@ function submit() {
                     <div class="space-y-2">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.28em] text-[#7a8781]">Farmer Registry</p>
                         <h1 class="text-3xl font-black tracking-[-0.03em] text-[#16352c]">Encode Old Record</h1>
-                        <p class="max-w-3xl text-sm text-[#5f6c67]">Create a farmer registry record directly for old manual records without sending it to the membership application queue.</p>
                     </div>
                     <div class="rounded-[22px] border border-[#d7e0db] bg-[#f5f8f6] px-5 py-4">
                         <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Next Farmer Code</p>
@@ -144,6 +162,31 @@ function submit() {
                     </div>
                 </EditSectionCard>
 
+                <EditSectionCard eyebrow="Renewal Setup" title="Optional renewal year">
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <label class="space-y-2 md:col-span-2 xl:col-span-2">
+                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Renewal Year (Optional)</span>
+                            <input
+                                v-model="form.renewal_year"
+                                type="number"
+                                :min="2000"
+                                :max="defaultRenewalYear"
+                                :disabled="!form.create_renewal_record"
+                                placeholder="Enter year to create renewal"
+                                class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"
+                            >
+                            <p class="text-[0.72rem] italic text-[#7a8781]">When renewal recording is enabled, this uses the registered date year.</p>
+                            <p v-if="form.errors.renewal_year" class="text-xs font-medium text-rose-600">{{ form.errors.renewal_year }}</p>
+                        </label>
+                        <label class="inline-flex items-start gap-3 rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-4 md:col-span-2 xl:col-span-2">
+                            <input v-model="form.create_renewal_record" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
+                            <span class="text-sm text-[#4f5d58]">
+                                Create a renewal payment record for the registered year.
+                            </span>
+                        </label>
+                    </div>
+                </EditSectionCard>
+
                 <EditSectionCard eyebrow="Identity" title="Personal details">
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">First Name</span><input v-model="form.first_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"><p v-if="form.errors.first_name" class="text-xs font-medium text-rose-600">{{ form.errors.first_name }}</p></label>
@@ -161,7 +204,7 @@ function submit() {
                             <p v-if="form.errors.sex" class="text-xs font-medium text-rose-600">{{ form.errors.sex }}</p>
                         </label>
                         <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Civil Status</span>
+                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Civil Status (Optional)</span>
                             <select v-model="form.civil_status" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
                                 <option value="">Select status</option>
                                 <option value="single">Single</option>
@@ -194,8 +237,8 @@ function submit() {
                             <p v-if="form.errors.association_id" class="text-xs font-medium text-rose-600">{{ form.errors.association_id }}</p>
                         </label>
                         <label class="space-y-2 md:col-span-2 xl:col-span-4">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Address</span>
-                            <textarea v-model="form.address" rows="4" class="w-full rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></textarea>
+                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Address (Optional)</span>
+                            <textarea v-model="form.address" rows="4" placeholder="Leave blank if not available" class="w-full rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></textarea>
                             <p v-if="form.errors.address" class="text-xs font-medium text-rose-600">{{ form.errors.address }}</p>
                         </label>
                         <label class="space-y-2 md:col-span-2 xl:col-span-4">

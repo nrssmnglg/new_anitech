@@ -1,4 +1,6 @@
-# Deployment Guide
+# Deployment Guide (Legacy Location)
+
+The current production instructions are maintained in the repository-root `DEPLOYMENT.md`. Use that guide for the Render web service and Railway MySQL deployment. The notes below are retained only for historical context.
 
 This repository is prepared for both Railway and Render. The app should be deployed as three Laravel services plus a database:
 

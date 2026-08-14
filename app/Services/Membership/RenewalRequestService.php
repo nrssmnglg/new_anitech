@@ -37,45 +37,16 @@ class RenewalRequestService
 
     public function create(array $attributes): RenewalRequest
     {
-        return DB::transaction(function () use ($attributes): RenewalRequest {
-            $year = (int) ($attributes['year'] ?? now()->year);
-            $farmerId = (int) $attributes['farmer_id'];
+        return $this->createRenewalRequest($attributes);
+    }
 
-            if (RenewalRequest::query()->where('farmer_id', $farmerId)->where('year', $year)->exists()) {
-                throw new DomainException('A renewal request already exists for this farmer and year.');
-            }
-
-            if ($this->hasSettledApplicationCoverage($farmerId, $year)) {
-                throw new DomainException('Your membership for ' . $year . ' is already covered by your paid membership application. Renewal will be available next year.');
-            }
-
-            $renewalRequest = RenewalRequest::query()->create([
-                'farmer_id' => $farmerId,
-                'year' => $year,
-                'source' => $attributes['source'],
-                'status' => RenewalStatus::APPROVED,
-                'submitted_at' => CarbonImmutable::now(),
-                'reviewed_at' => CarbonImmutable::now(),
-                'is_late' => $this->isLate($year),
-            ]);
-
-            $this->farmerDocumentService->ensureRenewalChecklist($renewalRequest);
-            $this->paymentAssessmentService->createForRenewal($renewalRequest);
-            $this->auditTrailService->recordById(
-                'renewals',
-                'renewal_created',
-                'Created a renewal request.',
-                null,
-                $renewalRequest,
-                [
-                    'year' => $renewalRequest->year,
-                    'source' => $renewalRequest->source,
-                    'farmer_id' => $renewalRequest->farmer_id,
-                ]
-            );
-
-            return $renewalRequest->refresh()->load(['farmer.memberType', 'documents']);
-        });
+    public function createForLegacyRecord(array $attributes, array $assessmentContext = []): RenewalRequest
+    {
+        return $this->createRenewalRequest(
+            $attributes,
+            skipApplicationCoverageCheck: true,
+            assessmentContext: $assessmentContext,
+        );
     }
 
     public function markDocumentReceived(RenewalRequest $renewalRequest, int $documentId, bool $received, ?int $userId = null): FarmerDocument
@@ -202,9 +173,14 @@ class RenewalRequestService
         });
     }
 
-    public function recordPayment(RenewalRequest $renewalRequest, array $attributes, ?int $userId = null): array
+    public function recordPayment(
+        RenewalRequest $renewalRequest,
+        array $attributes,
+        ?int $userId = null,
+        array $assessmentContext = [],
+    ): array
     {
-        return DB::transaction(function () use ($renewalRequest, $attributes, $userId): array {
+        return DB::transaction(function () use ($renewalRequest, $attributes, $userId, $assessmentContext): array {
             $renewalRequest->loadMissing(['farmer.memberType', 'documents']);
 
             if ($renewalRequest->status === RenewalStatus::REJECTED) {
@@ -215,7 +191,7 @@ class RenewalRequestService
                 throw new DomainException('This renewal cannot accept payment right now.');
             }
 
-            $assessment = $this->paymentAssessmentService->createForRenewal($renewalRequest);
+            $assessment = $this->paymentAssessmentService->createForRenewal($renewalRequest, $assessmentContext);
             $paymentResult = $this->paymentPostingService->record($assessment, $attributes, $userId);
             $summary = $paymentResult['summary'];
 
@@ -460,6 +436,59 @@ class RenewalRequestService
             ->where('year', $year)
             ->where('payment_status', 'Paid')
             ->exists();
+    }
+
+    private function createRenewalRequest(
+        array $attributes,
+        bool $skipApplicationCoverageCheck = false,
+        array $assessmentContext = [],
+    ): RenewalRequest
+    {
+        return DB::transaction(function () use ($attributes, $skipApplicationCoverageCheck, $assessmentContext): RenewalRequest {
+            $year = (int) ($attributes['year'] ?? now()->year);
+            $farmerId = (int) $attributes['farmer_id'];
+            $submittedAt = filled($attributes['submitted_at'] ?? null)
+                ? CarbonImmutable::parse((string) $attributes['submitted_at'])
+                : CarbonImmutable::now();
+            $reviewedAt = filled($attributes['reviewed_at'] ?? null)
+                ? CarbonImmutable::parse((string) $attributes['reviewed_at'])
+                : $submittedAt;
+
+            if (RenewalRequest::query()->where('farmer_id', $farmerId)->where('year', $year)->exists()) {
+                throw new DomainException('A renewal request already exists for this farmer and year.');
+            }
+
+            if (! $skipApplicationCoverageCheck && $this->hasSettledApplicationCoverage($farmerId, $year)) {
+                throw new DomainException('Your membership for ' . $year . ' is already covered by your paid membership application. Renewal will be available next year.');
+            }
+
+            $renewalRequest = RenewalRequest::query()->create([
+                'farmer_id' => $farmerId,
+                'year' => $year,
+                'source' => $attributes['source'],
+                'status' => RenewalStatus::APPROVED,
+                'submitted_at' => $submittedAt,
+                'reviewed_at' => $reviewedAt,
+                'is_late' => $this->isLate($year),
+            ]);
+
+            $this->farmerDocumentService->ensureRenewalChecklist($renewalRequest);
+            $this->paymentAssessmentService->createForRenewal($renewalRequest, $assessmentContext);
+            $this->auditTrailService->recordById(
+                'renewals',
+                'renewal_created',
+                'Created a renewal request.',
+                null,
+                $renewalRequest,
+                [
+                    'year' => $renewalRequest->year,
+                    'source' => $renewalRequest->source,
+                    'farmer_id' => $renewalRequest->farmer_id,
+                ]
+            );
+
+            return $renewalRequest->refresh()->load(['farmer.memberType', 'documents', 'paymentAssessments.payments']);
+        });
     }
 
     private function isLate(int $year): bool

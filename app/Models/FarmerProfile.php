@@ -23,6 +23,11 @@ class FarmerProfile extends Model
         'mobile_number',
     ];
 
+    protected $attributes = [
+        'civil_status' => null,
+        'address' => null,
+    ];
+
     protected $casts = [
         'birth_date' => 'date',
     ];

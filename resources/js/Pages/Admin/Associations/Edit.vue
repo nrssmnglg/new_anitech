@@ -26,6 +26,7 @@ const form = useForm({
     barangay_id: props.association.barangay_id ?? '',
     name: props.association.name ?? '',
     code: props.association.code ?? '',
+    president_name: props.association.president_name ?? '',
     status: props.association.status ?? 'active',
 });
 

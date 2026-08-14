@@ -27,5 +27,10 @@ class StoreMembershipApplicationRequest extends StoreFarmerRequest
             'application_remarks' => 'application remarks',
         ]);
     }
+
+    protected function validatesLegacyRenewalSetup(): bool
+    {
+        return false;
+    }
 }
 

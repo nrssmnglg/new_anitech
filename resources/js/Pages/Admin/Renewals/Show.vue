@@ -180,8 +180,6 @@ function submitDocumentAction(document, action) {
                         />
                     </div>
 
-                    <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Renewal Internal Notes" />
-
                     <section id="renewal-profile-section" class="overflow-hidden rounded-[20px] border border-[#dddeda] bg-white shadow-sm">
                         <div class="flex items-center justify-between border-b border-[#e1e3e2] bg-[#f2f4f3] px-5 py-3.5">
                             <h2 class="text-[1.02rem] font-bold text-[#003629]">Farmer Demographics</h2>
@@ -319,6 +317,8 @@ function submitDocumentAction(document, action) {
                             </div>
                         </div>
                     </section>
+
+                    <InternalNotesPanel compact :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Internal Notes" />
                 </div>
 
                 <div class="space-y-5">

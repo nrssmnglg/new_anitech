@@ -282,6 +282,75 @@ const collections = computed(() => props.dashboard.collections ?? {
     breakdown: { membershipFee: 0, annualDue: 0, mortuaryContribution: 0 },
     links: {},
 });
+const renewalStatistics = computed(() => props.dashboard.renewalStatistics ?? {
+    year: new Date().getFullYear(),
+    eligibleFarmers: 0,
+    renewedFarmers: 0,
+    unrenewedFarmers: 0,
+    complianceRate: 0,
+    previousYearComplianceRate: 0,
+    yearOverYearChange: 0,
+    pendingRequests: 0,
+    rejectedRequests: 0,
+    lateRenewals: 0,
+    collectionAmount: 0,
+    paymentCount: 0,
+    yearlyTrend: [],
+    barangayPriorities: [],
+    links: {},
+});
+const renewalPriorityBarangays = computed(() => renewalStatistics.value.barangayPriorities ?? []);
+const renewalYearlyTrend = computed(() => renewalStatistics.value.yearlyTrend ?? []);
+const maximumYearlyRenewals = computed(() => Math.max(
+    ...renewalYearlyTrend.value.map((row) => Number(row.renewed || 0)),
+    1,
+));
+const renewalComplianceWidth = computed(() => `${Math.min(Math.max(Number(renewalStatistics.value.complianceRate || 0), 0), 100)}%`);
+const renewalDecisionMessage = computed(() => {
+    const unrenewed = Number(renewalStatistics.value.unrenewedFarmers || 0);
+    const pending = Number(renewalStatistics.value.pendingRequests || 0);
+
+    if (unrenewed === 0 && Number(renewalStatistics.value.eligibleFarmers || 0) > 0) {
+        return 'All eligible farmers have a recorded renewal for this year.';
+    }
+
+    if (pending > 0) {
+        return `${formatNumber(pending)} submitted renewal request${pending === 1 ? '' : 's'} should be reviewed before outreach begins.`;
+    }
+
+    if (unrenewed > 0) {
+        return `${formatNumber(unrenewed)} eligible farmer${unrenewed === 1 ? '' : 's'} still need renewal follow-up.`;
+    }
+
+    return 'No eligible renewal population is available for the selected filter.';
+});
+
+function renewalChangeLabel(row) {
+    if (row.direction === 'baseline' || row.renewedChange === null) {
+        return 'Baseline';
+    }
+
+    const change = Number(row.renewedChange || 0);
+
+    if (change > 0) {
+        return `Increased by ${formatNumber(change)}`;
+    }
+
+    if (change < 0) {
+        return `Decreased by ${formatNumber(Math.abs(change))}`;
+    }
+
+    return 'No change';
+}
+
+function renewalChangeTone(direction) {
+    return {
+        increased: 'bg-[#e2f6e9] text-[#08724f]',
+        decreased: 'bg-[#ffe5e7] text-[#b5364e]',
+        unchanged: 'bg-[#eef1ef] text-[#5f6d67]',
+        baseline: 'bg-[#e8eef6] text-[#536a82]',
+    }[direction] ?? 'bg-[#eef1ef] text-[#5f6d67]';
+}
 
 function operationTone(tone) {
     const tones = {
@@ -503,6 +572,162 @@ const linePoints = computed(() => {
                     <div :class="['h-1.5 rounded-full', card.progress]" :style="{ width: card.value > 0 ? '100%' : '12%' }"></div>
                 </div>
             </component>
+        </section>
+
+        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <article class="rounded-[2rem] border border-[#dce7e2] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.06)]">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#5e756b]">Renewal Decision Support</p>
+                        <h3 class="mt-2 text-[1.45rem] font-semibold text-[#142c24]">Renewal performance for CY {{ renewalStatistics.year }}</h3>
+                        <p class="mt-2 max-w-2xl text-sm leading-6 text-[#62716a]">{{ renewalDecisionMessage }}</p>
+                    </div>
+                    <Link :href="renewalStatistics.links.records || dashboard.actions.viewRenewalsUrl" class="inline-flex shrink-0 items-center justify-center rounded-2xl bg-[#064f40] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#003e32]">
+                        View Renewal Records
+                    </Link>
+                </div>
+
+                <div class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="rounded-[1.4rem] bg-[#edf8f2] px-5 py-5">
+                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#547067]">Compliance</p>
+                        <p class="mt-3 text-[2rem] font-semibold text-[#075a46]">{{ renewalStatistics.complianceRate }}%</p>
+                        <p class="mt-1 text-xs text-[#64736c]">{{ renewalStatistics.yearOverYearChange >= 0 ? '+' : '' }}{{ renewalStatistics.yearOverYearChange }} points vs previous year</p>
+                    </div>
+                    <div class="rounded-[1.4rem] bg-[#f4f7f5] px-5 py-5">
+                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#68756f]">Renewed</p>
+                        <p class="mt-3 text-[2rem] font-semibold text-[#172b24]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</p>
+                        <p class="mt-1 text-xs text-[#64736c]">of {{ formatNumber(renewalStatistics.eligibleFarmers) }} eligible farmers</p>
+                    </div>
+                    <Link :href="renewalStatistics.links.queue" class="rounded-[1.4rem] bg-[#fff5df] px-5 py-5 transition hover:bg-[#ffefd0]">
+                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#8a681d]">Still Unrenewed</p>
+                        <p class="mt-3 text-[2rem] font-semibold text-[#9b5f00]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</p>
+                        <p class="mt-1 text-xs text-[#7c6b45]">Farmers requiring follow-up</p>
+                    </Link>
+                    <div class="rounded-[1.4rem] bg-[#edf3fb] px-5 py-5">
+                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#587084]">Collections</p>
+                        <p class="mt-3 text-[1.45rem] font-semibold text-[#1d4f73]">{{ currencyFormatter.format(Number(renewalStatistics.collectionAmount || 0)) }}</p>
+                        <p class="mt-1 text-xs text-[#64736c]">{{ formatNumber(renewalStatistics.paymentCount) }} renewal payments</p>
+                    </div>
+                </div>
+
+                <div class="mt-7 rounded-[1.5rem] border border-[#e2e9e5] bg-[#fafcfb] p-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-sm font-bold text-[#263a32]">Annual renewal completion</span>
+                        <span class="text-sm font-black text-[#075a46]">{{ renewalStatistics.complianceRate }}%</span>
+                    </div>
+                    <div class="mt-3 h-3 overflow-hidden rounded-full bg-[#e4ebe7]">
+                        <div class="h-full rounded-full bg-gradient-to-r from-[#0a7358] to-[#78a725]" :style="{ width: renewalComplianceWidth }"></div>
+                    </div>
+                    <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                            <span class="text-[#65736d]">Pending review</span>
+                            <strong class="text-[#a66a00]">{{ formatNumber(renewalStatistics.pendingRequests) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                            <span class="text-[#65736d]">Late renewals</span>
+                            <strong class="text-[#9b5f00]">{{ formatNumber(renewalStatistics.lateRenewals) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                            <span class="text-[#65736d]">Rejected</span>
+                            <strong class="text-[#b53d50]">{{ formatNumber(renewalStatistics.rejectedRequests) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.06)]">
+                <div>
+                    <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#75694d]">Outreach Priority</p>
+                    <h3 class="mt-2 text-[1.3rem] font-semibold text-[#142c24]">Barangays needing follow-up</h3>
+                    <p class="mt-2 text-sm leading-6 text-[#68756f]">Lowest renewal compliance appears first.</p>
+                </div>
+
+                <div v-if="renewalPriorityBarangays.length" class="mt-7 space-y-5">
+                    <Link v-for="row in renewalPriorityBarangays" :key="row.id" :href="row.href" class="block rounded-[1.4rem] border border-[#e5eae7] px-5 py-4 transition hover:border-[#cbd9d2] hover:bg-[#f8fbf9]">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="truncate text-[1rem] font-semibold text-[#172b24]">{{ row.barangay }}</p>
+                                <p class="mt-1 text-xs text-[#6a7771]">{{ formatNumber(row.renewed) }} of {{ formatNumber(row.eligible) }} renewed</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[1.05rem] font-black text-[#8c6100]">{{ row.complianceRate }}%</p>
+                                <p class="mt-1 text-xs font-semibold text-[#a35f37]">{{ formatNumber(row.unrenewed) }} pending</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 h-2 overflow-hidden rounded-full bg-[#ecefeb]">
+                            <div class="h-full rounded-full bg-[#91a85b]" :style="{ width: `${Math.min(Math.max(Number(row.complianceRate || 0), 0), 100)}%` }"></div>
+                        </div>
+                    </Link>
+                </div>
+                <div v-else class="mt-7 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    No barangay renewal workload is available for this filter.
+                </div>
+            </article>
+        </section>
+
+        <section class="rounded-[2rem] border border-[#e1e8e4] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.05)]">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#5e756b]">Annual Comparison</p>
+                    <h3 class="mt-2 text-[1.35rem] font-semibold text-[#142c24]">Renewal increase or decrease by year</h3>
+                    <p class="mt-2 text-sm text-[#68756f]">Compares completed renewals with the immediately preceding year for {{ selectedBarangayName }}.</p>
+                </div>
+                <span class="inline-flex w-fit rounded-xl bg-[#edf4f0] px-4 py-2 text-sm font-bold text-[#315448]">
+                    Through CY {{ renewalStatistics.year }}
+                </span>
+            </div>
+
+            <div v-if="renewalYearlyTrend.length" class="mt-7 overflow-x-auto">
+                <table class="min-w-[820px] w-full text-left">
+                    <thead class="border-b border-[#dfe7e2] text-xs font-black uppercase tracking-[0.1em] text-[#66756e]">
+                        <tr>
+                            <th class="px-4 py-4">Year</th>
+                            <th class="px-4 py-4">Renewal Volume</th>
+                            <th class="px-4 py-4 text-center">Eligible</th>
+                            <th class="px-4 py-4 text-center">Renewed</th>
+                            <th class="px-4 py-4 text-center">Unrenewed</th>
+                            <th class="px-4 py-4 text-center">Compliance</th>
+                            <th class="px-4 py-4 text-right">Yearly Change</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#edf1ee]">
+                        <tr v-for="row in renewalYearlyTrend" :key="row.year" class="transition hover:bg-[#f9fbfa]">
+                            <td class="px-4 py-5">
+                                <span class="text-[1.05rem] font-black text-[#18342b]">{{ row.year }}</span>
+                            </td>
+                            <td class="px-4 py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-2.5 min-w-[130px] flex-1 overflow-hidden rounded-full bg-[#e9eeeb]">
+                                        <div
+                                            class="h-full rounded-full"
+                                            :class="row.direction === 'decreased' ? 'bg-[#d77a82]' : 'bg-[#4c8c70]'"
+                                            :style="{ width: `${Math.max((Number(row.renewed || 0) / maximumYearlyRenewals) * 100, row.renewed > 0 ? 8 : 0)}%` }"
+                                        ></div>
+                                    </div>
+                                    <span class="w-10 text-right text-sm font-bold text-[#31443d]">{{ formatNumber(row.renewed) }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-5 text-center font-semibold text-[#3f4e48]">{{ formatNumber(row.eligible) }}</td>
+                            <td class="px-4 py-5 text-center font-bold text-[#0b684f]">{{ formatNumber(row.renewed) }}</td>
+                            <td class="px-4 py-5 text-center font-bold text-[#a36420]">{{ formatNumber(row.unrenewed) }}</td>
+                            <td class="px-4 py-5 text-center">
+                                <span class="font-black text-[#244b3f]">{{ row.complianceRate }}%</span>
+                                <span v-if="row.complianceChange !== null" class="ml-1 text-xs" :class="row.complianceChange >= 0 ? 'text-[#16805e]' : 'text-[#bd4658]'">
+                                    ({{ row.complianceChange >= 0 ? '+' : '' }}{{ row.complianceChange }} pts)
+                                </span>
+                            </td>
+                            <td class="px-4 py-5 text-right">
+                                <span :class="['inline-flex rounded-full px-3 py-1.5 text-xs font-black', renewalChangeTone(row.direction)]">
+                                    {{ renewalChangeLabel(row) }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-else class="mt-7 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                No annual renewal history is available.
+            </div>
         </section>
 
         <section v-if="isAdmin" class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">

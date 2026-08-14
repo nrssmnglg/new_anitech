@@ -18,8 +18,10 @@ use App\Models\MembershipApplication;
 use App\Models\MembershipLedger;
 use App\Models\Payment;
 use App\Models\PaymentAssessment;
+use App\Models\RenewalRequest;
 use App\Models\User;
 use App\Services\Documents\FarmerDocumentService;
+use App\Services\Farmers\LegacyMembershipRecorderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -85,8 +87,8 @@ class FarmerRegistryTest extends TestCase
             'last_name' => 'Farmer',
             'barangay_id' => $barangay->id,
             'member_type_id' => MemberType::query()->where('code', MemberTypeCode::NM->value)->value('id'),
-            'status' => FarmerStatus::ACTIVE->value,
-            'inactive_at' => now(),
+            'membership_status' => MembershipStatus::ACTIVE->value,
+            'inactive_at' => null,
             'inactive_reason' => null,
             'registered_at' => now(),
         ]);
@@ -97,9 +99,9 @@ class FarmerRegistryTest extends TestCase
             'last_name' => 'Farmer',
             'barangay_id' => $barangay->id,
             'member_type_id' => MemberType::query()->where('code', MemberTypeCode::OM->value)->value('id'),
-            'status' => FarmerStatus::INACTIVE->value,
+            'membership_status' => MembershipStatus::ACTIVE->value,
             'inactive_at' => now(),
-            'inactive_reason' => 'No renewal',
+            'inactive_reason' => null,
             'registered_at' => now(),
         ]);
 
@@ -109,7 +111,7 @@ class FarmerRegistryTest extends TestCase
             'last_name' => 'Farmer',
             'barangay_id' => $barangay->id,
             'member_type_id' => MemberType::query()->where('code', MemberTypeCode::OM->value)->value('id'),
-            'status' => FarmerStatus::DECEASED->value,
+            'membership_status' => MembershipStatus::ACTIVE->value,
             'inactive_at' => now(),
             'inactive_reason' => 'Deceased record',
             'registered_at' => now(),
@@ -306,6 +308,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->from(route('admin.farmers.create'))->post(route('admin.farmers.store'), [
             'first_name' => 'Ana',
             'last_name' => 'Lopez',
+            'sex' => 'female',
             'birth_date' => '1990-05-10',
             'barangay_id' => $barangay->id,
             'association_id' => $association->id,
@@ -339,6 +342,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->post(route('admin.farmers.store'), [
             'first_name' => 'Ana',
             'last_name' => 'Lopez',
+            'sex' => 'female',
             'birth_date' => '1990-05-10',
             'barangay_id' => $barangay->id,
             'association_id' => $association->id,
@@ -447,6 +451,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->post(route('admin.farmers.store'), [
             'first_name' => 'Pedro',
             'last_name' => 'Ramirez',
+            'sex' => 'male',
             'birth_date' => now()->subYears(65)->toDateString(),
             'barangay_id' => $barangay->id,
             'association_id' => $association->id,
@@ -461,6 +466,217 @@ class FarmerRegistryTest extends TestCase
         $this->assertSame($memberType->id, $farmer->member_type_id);
         $this->assertStringStartsWith('FRM-' . now()->format('Y') . '-', $farmer->farmer_code);
         $this->assertSame('Pedro', $farmer->first_name);
+    }
+
+    public function test_old_record_encoding_preserves_selected_type_and_inactive_status_when_recording_historical_renewal(): void
+    {
+        [$barangay, $association] = $this->seedLookups();
+        $memberType = MemberType::query()->where('code', MemberTypeCode::OM->value)->firstOrFail();
+        $this->makeLegacyFeeSchedule($memberType, 2024);
+        $this->makeLegacyFeeSchedule($memberType, 2025);
+
+        $response = $this->post(route('admin.farmers.store'), [
+            'first_name' => 'Legacy',
+            'last_name' => 'Farmer',
+            'sex' => 'female',
+            'civil_status' => null,
+            'address' => null,
+            'mobile_number' => null,
+            'birth_date' => null,
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'status' => FarmerStatus::INACTIVE->value,
+            'registered_at' => '2024-07-15',
+            'create_renewal_record' => true,
+            'renewal_year' => 2025,
+        ]);
+
+        $farmer = Farmer::query()->with(['profile', 'memberType'])->firstOrFail();
+        $renewal = RenewalRequest::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', 2025)
+            ->firstOrFail();
+        $payment = Payment::query()
+            ->whereHas('paymentAssessment', fn ($query) => $query->where('membership_transaction_id', $renewal->id))
+            ->firstOrFail();
+
+        $response->assertRedirect(route('admin.farmers.show', $farmer));
+        $this->assertSame(MemberTypeCode::OM->value, $farmer->memberType?->code);
+        $this->assertSame(FarmerStatus::INACTIVE, $farmer->status);
+        $this->assertNull($farmer->profile?->civil_status);
+        $this->assertNull($farmer->profile?->address);
+        $this->assertSame('2025-07-15', $renewal->submitted_at?->toDateString());
+        $this->assertSame('2025-07-15', $payment->paid_at?->toDateString());
+        $this->assertSame('LEGACY-REN-' . $farmer->farmer_code . '-2025', $payment->reference_no);
+        $this->assertDatabaseHas('membership_transactions', [
+            'farmer_id' => $farmer->id,
+            'transaction_type' => 'Application',
+            'year' => 2024,
+        ]);
+        $this->assertDatabaseHas('membership_ledgers', [
+            'membership_transaction_id' => $renewal->id,
+            'year' => 2025,
+        ]);
+    }
+
+    public function test_old_record_encoding_does_not_create_renewal_when_checkbox_is_off(): void
+    {
+        [$barangay, $association] = $this->seedLookups();
+        $memberType = MemberType::query()->where('code', MemberTypeCode::OM->value)->firstOrFail();
+        $this->makeLegacyFeeSchedule($memberType, 2024);
+
+        $response = $this->post(route('admin.farmers.store'), [
+            'first_name' => 'Application',
+            'last_name' => 'Only',
+            'sex' => 'male',
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'status' => FarmerStatus::ACTIVE->value,
+            'registered_at' => '2024-03-10',
+            'create_renewal_record' => false,
+            'renewal_year' => 2024,
+        ]);
+
+        $farmer = Farmer::query()->firstOrFail();
+
+        $response->assertRedirect(route('admin.farmers.show', $farmer));
+        $this->assertDatabaseHas('membership_transactions', [
+            'farmer_id' => $farmer->id,
+            'transaction_type' => 'Application',
+            'year' => 2024,
+        ]);
+        $this->assertDatabaseMissing('membership_transactions', [
+            'farmer_id' => $farmer->id,
+            'transaction_type' => 'Renewal',
+        ]);
+    }
+
+    public function test_old_record_same_registration_and_renewal_year_records_payment_only_once(): void
+    {
+        [$barangay, $association] = $this->seedLookups();
+        $memberType = MemberType::query()->where('code', MemberTypeCode::OM->value)->firstOrFail();
+        $this->makeLegacyFeeSchedule($memberType, 2024);
+
+        $response = $this->post(route('admin.farmers.store'), [
+            'first_name' => 'Single',
+            'last_name' => 'Calculation',
+            'sex' => 'female',
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'status' => FarmerStatus::ACTIVE->value,
+            'registered_at' => '2024-07-15',
+            'create_renewal_record' => true,
+            'renewal_year' => 2024,
+        ]);
+
+        $farmer = Farmer::query()->firstOrFail();
+        $application = MembershipApplication::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', 2024)
+            ->firstOrFail();
+        $renewal = RenewalRequest::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', 2024)
+            ->firstOrFail();
+
+        $response->assertRedirect(route('admin.farmers.show', $farmer));
+        $this->assertDatabaseMissing('payment_assessments', [
+            'membership_transaction_id' => $application->id,
+        ]);
+        $this->assertDatabaseMissing('membership_ledgers', [
+            'membership_transaction_id' => $application->id,
+            'year' => 2024,
+        ]);
+        $this->assertDatabaseHas('membership_ledgers', [
+            'membership_transaction_id' => $renewal->id,
+            'year' => 2024,
+            'amount_paid' => 250,
+        ]);
+        $this->assertSame(1, Payment::query()->count());
+        $this->assertSame(250.0, (float) Payment::query()->sum('amount_paid'));
+    }
+
+    public function test_old_record_new_member_same_year_charges_membership_fee_only_once(): void
+    {
+        [$barangay, $association] = $this->seedLookups();
+        $memberType = MemberType::query()->where('code', MemberTypeCode::NM->value)->firstOrFail();
+        $this->makeLegacyFeeSchedule($memberType, 2024, 100);
+
+        $response = $this->post(route('admin.farmers.store'), [
+            'first_name' => 'New',
+            'last_name' => 'Legacy',
+            'sex' => 'male',
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'status' => FarmerStatus::ACTIVE->value,
+            'registered_at' => '2024-07-15',
+            'create_renewal_record' => true,
+            'renewal_year' => 2024,
+        ]);
+
+        $farmer = Farmer::query()->firstOrFail();
+        $application = MembershipApplication::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', 2024)
+            ->firstOrFail();
+        $renewal = RenewalRequest::query()
+            ->where('farmer_id', $farmer->id)
+            ->where('year', 2024)
+            ->firstOrFail();
+
+        $response->assertRedirect(route('admin.farmers.show', $farmer));
+        $this->assertDatabaseMissing('payment_assessments', [
+            'membership_transaction_id' => $application->id,
+        ]);
+        $this->assertDatabaseHas('payment_assessments', [
+            'membership_transaction_id' => $renewal->id,
+            'membership_fee' => 100,
+            'annual_due' => 100,
+            'mortuary_fee' => 150,
+            'total_amount_due' => 350,
+        ]);
+        $this->assertDatabaseHas('membership_ledgers', [
+            'membership_transaction_id' => $renewal->id,
+            'year' => 2024,
+            'membership_fee' => 100,
+            'amount_paid' => 350,
+        ]);
+        $this->assertSame(1, Payment::query()->count());
+        $this->assertSame(350.0, (float) Payment::query()->sum('amount_paid'));
+    }
+
+    public function test_old_record_encoding_rolls_back_farmer_when_legacy_sync_fails(): void
+    {
+        [$barangay, $association] = $this->seedLookups();
+        $memberType = MemberType::query()->where('code', MemberTypeCode::OM->value)->firstOrFail();
+
+        $this->mock(LegacyMembershipRecorderService::class, function ($mock): void {
+            $mock->shouldReceive('syncForOldRecord')
+                ->once()
+                ->andThrow(new \DomainException('No fee schedule is available for the selected member type.'));
+        });
+
+        $response = $this->from(route('admin.farmers.create'))->post(route('admin.farmers.store'), [
+            'first_name' => 'Rollback',
+            'last_name' => 'Farmer',
+            'sex' => 'male',
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'status' => FarmerStatus::ACTIVE->value,
+            'registered_at' => '2024-03-10',
+            'create_renewal_record' => true,
+            'renewal_year' => 2024,
+        ]);
+
+        $response->assertRedirect(route('admin.farmers.create'));
+        $response->assertSessionHasErrors('member_type_id');
+        $this->assertDatabaseCount('farmers', 0);
+        $this->assertDatabaseCount('farmer_profiles', 0);
     }
 
     public function test_update_changes_farmer_registry_fields(): void
@@ -483,6 +699,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->put(route('admin.farmers.update', $farmer), [
             'first_name' => 'Lina',
             'last_name' => 'Garcia',
+            'sex' => 'female',
             'barangay_id' => $otherBarangay->id,
             'association_id' => $otherAssociation->id,
             'member_type_id' => $osc->id,
@@ -520,6 +737,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->put(route('admin.farmers.update', $farmer), [
             'first_name' => 'Pilar',
             'last_name' => 'Reyes',
+            'sex' => 'female',
             'barangay_id' => $otherBarangay->id,
             'association_id' => $otherAssociation->id,
             'member_type_id' => $memberType->id,
@@ -571,6 +789,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.farmers.update', $farmer), [
             'first_name' => 'Mario',
             'last_name' => 'Flores',
+            'sex' => 'male',
             'barangay_id' => $barangay->id,
             'association_id' => $association->id,
             'member_type_id' => $memberType->id,
@@ -615,6 +834,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->from(route('admin.farmers.create'))->post(route('admin.farmers.store'), [
             'first_name' => 'Ana',
             'last_name' => 'Lopez',
+            'sex' => 'female',
             'barangay_id' => $barangay->id,
             'association_id' => $otherAssociation->id,
             'member_type_id' => $memberType->id,
@@ -633,6 +853,7 @@ class FarmerRegistryTest extends TestCase
         $response = $this->from(route('admin.farmers.create'))->post(route('admin.farmers.store'), [
             'first_name' => 'Jose',
             'last_name' => 'Villanueva',
+            'sex' => 'male',
             'barangay_id' => $barangay->id,
             'status' => FarmerStatus::PENDING->value,
         ]);
@@ -735,6 +956,21 @@ class FarmerRegistryTest extends TestCase
         ]);
 
         return [$barangay, $association, $otherBarangay, $otherAssociation];
+    }
+
+    private function makeLegacyFeeSchedule(MemberType $memberType, int $year, float $membershipFee = 0): FeeSchedule
+    {
+        return FeeSchedule::query()->create([
+            'member_type_id' => $memberType->id,
+            'year' => $year,
+            'membership_fee' => $membershipFee,
+            'annual_due' => 100,
+            'mortuary_fee' => 150,
+            'renewal_deadline' => $year . '-02-14',
+            'effective_from' => $year . '-01-01',
+            'effective_to' => $year . '-12-31',
+            'is_active' => true,
+        ]);
     }
 
     private function makeAdminUser(): User

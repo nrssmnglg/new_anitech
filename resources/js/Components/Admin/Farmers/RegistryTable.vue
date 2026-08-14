@@ -47,11 +47,14 @@ function actionButtonClass(type, disabled = false) {
 
 function qualityIssueClass(issue) {
     if (issue.includes('Duplicate')) return 'border-[#ead7b2] bg-[#fff8ea] text-[#996515]';
-    if (issue.includes('Incomplete')) return 'border-[#d5e4da] bg-[#f3faf6] text-[#245342]';
     if (issue.includes('Invalid')) return 'border-[#edd5cf] bg-[#fff4f1] text-[#a44d3f]';
     if (issue.includes('Mismatch')) return 'border-[#d8daf5] bg-[#f4f5ff] text-[#4655a4]';
 
     return 'border-[#e2d4db] bg-[#fbf5f8] text-[#8d4663]';
+}
+
+function visibleQualityIssues(issues) {
+    return (issues || []).filter((issue) => issue !== 'Incomplete profile');
 }
 </script>
 
@@ -140,11 +143,12 @@ function qualityIssueClass(issue) {
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <p class="text-sm text-[#1b2320]">{{ farmer.contact.mobileNumber || 'No mobile number' }}</p>
-                            <p class="mt-1 text-xs text-[#61706a]">{{ farmer.barangay || 'No barangay' }}</p>
-                            <div v-if="farmer.qualityIssues?.length" class="mt-3 flex flex-wrap gap-2">
+                            <p class="text-base font-bold text-[#1b2320]">{{ farmer.barangay || 'No barangay' }}</p>
+                            <p v-if="farmer.association" class="mt-1 text-xs font-medium text-[#61706a]">{{ farmer.association }}</p>
+                            <p class="mt-2 text-sm text-[#6c7772]">{{ farmer.contact.mobileNumber || 'No mobile number' }}</p>
+                            <div v-if="visibleQualityIssues(farmer.qualityIssues).length" class="mt-3 flex flex-wrap gap-2">
                                 <span
-                                    v-for="issue in farmer.qualityIssues"
+                                    v-for="issue in visibleQualityIssues(farmer.qualityIssues)"
                                     :key="`${farmer.id}-${issue}`"
                                     class="inline-flex rounded-full border px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em]"
                                     :class="qualityIssueClass(issue)"

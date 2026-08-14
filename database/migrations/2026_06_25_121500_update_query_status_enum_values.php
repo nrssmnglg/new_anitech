@@ -7,10 +7,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("
-            ALTER TABLE `queries`
-            MODIFY `status` ENUM('Open', 'Answered', 'Closed', 'New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'Open'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE `queries`
+                MODIFY `status` ENUM('Open', 'Answered', 'Closed', 'New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'Open'
+            ");
+        }
 
         DB::table('queries')
             ->where('status', 'Open')
@@ -24,18 +26,22 @@ return new class extends Migration
             ->where('status', 'Closed')
             ->update(['status' => 'Resolved']);
 
-        DB::statement("
-            ALTER TABLE `queries`
-            MODIFY `status` ENUM('New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'New'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE `queries`
+                MODIFY `status` ENUM('New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'New'
+            ");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("
-            ALTER TABLE `queries`
-            MODIFY `status` ENUM('Open', 'Answered', 'Closed', 'New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'New'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE `queries`
+                MODIFY `status` ENUM('Open', 'Answered', 'Closed', 'New', 'In Progress', 'Resolved', 'Escalated') NOT NULL DEFAULT 'New'
+            ");
+        }
 
         DB::table('queries')
             ->where('status', 'New')
@@ -53,9 +59,11 @@ return new class extends Migration
             ->where('status', 'Escalated')
             ->update(['status' => 'Open']);
 
-        DB::statement("
-            ALTER TABLE `queries`
-            MODIFY `status` ENUM('Open', 'Answered', 'Closed') NOT NULL DEFAULT 'Open'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE `queries`
+                MODIFY `status` ENUM('Open', 'Answered', 'Closed') NOT NULL DEFAULT 'Open'
+            ");
+        }
     }
 };

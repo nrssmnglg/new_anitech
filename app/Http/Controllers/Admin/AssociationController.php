@@ -92,6 +92,7 @@ class AssociationController extends Controller
                 'barangay_id' => '',
                 'name' => '',
                 'code' => '',
+                'president_name' => '',
                 'status' => 'active',
             ],
             'barangays' => $this->availableBarangays()
@@ -144,6 +145,7 @@ class AssociationController extends Controller
                 'barangay_id' => (string) $association->barangay_id,
                 'name' => $association->name,
                 'code' => $association->code,
+                'president_name' => $association->president_name,
                 'status' => $association->status ?: 'active',
             ],
             'barangays' => $this->availableBarangays($association)
@@ -230,6 +232,7 @@ class AssociationController extends Controller
             'id' => $association->id,
             'name' => $association->name,
             'code' => $association->code,
+            'president_name' => $association->president_name,
             'status' => [
                 'value' => $status,
                 'label' => ucfirst($status),
@@ -255,6 +258,7 @@ class AssociationController extends Controller
             'id' => $association->id,
             'name' => $association->name,
             'code' => $association->code,
+            'president_name' => $association->president_name,
             'is_active' => $status === 'active',
             'contact_number' => $association->contact_number,
             'address' => $association->address,

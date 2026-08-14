@@ -59,37 +59,51 @@
 
         .report-sheet {
             background: #fffdfa;
-            border: 1px solid #111827;
-            padding: 16px 14px 18px;
+            border: 2px solid #111827;
+            padding: 18px 16px 20px;
             box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
         }
 
         .report-title {
-            margin: 0 0 12px;
+            margin: 0 0 14px;
             text-align: center;
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 800;
             text-transform: uppercase;
         }
 
         .report-header-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
             margin-bottom: 10px;
             font-size: 13px;
         }
 
-        .report-header-grid p {
+        .report-header-row {
+            display: grid;
+            grid-template-columns: 52mm minmax(0, 1fr);
+            align-items: start;
+            gap: 12px;
+        }
+
+        .report-header-row p {
             margin: 0;
         }
 
-        .report-line {
-            display: inline-block;
-            min-width: 220px;
-            border-bottom: 1px solid #111827;
-            padding: 0 4px 2px;
+        .report-header-label {
             font-weight: 700;
+            white-space: nowrap;
+            line-height: 1.25;
+        }
+
+        .report-header-value {
+            min-width: 0;
+            border-bottom: 2px solid #111827;
+            padding: 0 6px 2px;
+            font-weight: 700;
+            line-height: 1.2;
+            word-break: break-word;
         }
 
         table {
@@ -100,8 +114,8 @@
 
         th,
         td {
-            border: 1px solid #111827;
-            padding: 4px 6px;
+            border: 2px solid #111827;
+            padding: 3px 6px;
             font-size: 12px;
             vertical-align: middle;
         }
@@ -136,7 +150,7 @@
         }
 
         .blank-row td {
-            height: 23px;
+            height: 20px;
         }
 
         .report-total td {
@@ -210,11 +224,22 @@
             <h1 class="report-title">MASTERLIST OF RENEWAL AND MEMBERSHIP</h1>
 
             <div class="report-header-grid">
-                <p>Barangay: <span class="report-line">{{ strtoupper($selectedBarangay?->name ?? 'N/A') }}</span></p>
-                <p>For the Year: <span class="report-line" style="min-width: 90px; text-align: center;">{{ $reportYear }}</span></p>
-                <p>Name of Farmer Association: <span class="report-line">{{ strtoupper($selectedAssociation?->name ?? 'NO ASSOCIATION RECORDED') }}</span></p>
-                <p></p>
-                <p></p>
+                <div class="report-header-row">
+                    <p class="report-header-label">Barangay:</p>
+                    <p class="report-header-value">{{ strtoupper($selectedBarangay?->name ?? 'N/A') }}</p>
+                </div>
+                <div class="report-header-row">
+                    <p class="report-header-label">Name of Farmer Association:</p>
+                    <p class="report-header-value">{{ strtoupper($selectedAssociation?->name ?? 'NO ASSOCIATION RECORDED') }}</p>
+                </div>
+                <div class="report-header-row">
+                    <p class="report-header-label">Name of President:</p>
+                    <p class="report-header-value">{{ strtoupper($selectedAssociation?->president_name ?? 'NO PRESIDENT RECORDED') }}</p>
+                </div>
+                <div class="report-header-row">
+                    <p class="report-header-label">For the Year:</p>
+                    <p class="report-header-value" style="max-width: 120px;">{{ $reportYear }}</p>
+                </div>
             </div>
 
             <table>
@@ -289,6 +314,18 @@
                         <tr>
                             <td>Total no. of members: {{ number_format($totals['total_member_count']) }}</td>
                             <td colspan="3"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4">
+                                <strong>Member type totals:</strong>
+                                OSC: {{ number_format($totals['member_type_counts']['OSC'] ?? 0) }}
+                                &nbsp;|&nbsp;
+                                NM: {{ number_format($totals['member_type_counts']['NM'] ?? 0) }}
+                                &nbsp;|&nbsp;
+                                OM: {{ number_format($totals['member_type_counts']['OM'] ?? 0) }}
+                                &nbsp;|&nbsp;
+                                NSC: {{ number_format($totals['member_type_counts']['NSC'] ?? 0) }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

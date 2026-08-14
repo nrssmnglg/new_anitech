@@ -88,6 +88,10 @@ const statCards = [
                             <dd class="mt-2 text-sm font-medium text-[#12372a]">{{ association.code || 'Not set' }}</dd>
                         </div>
                         <div class="rounded-2xl border border-[#edf2ee] bg-[#fbfcfb] p-4">
+                            <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[#7b8b80]">President</dt>
+                            <dd class="mt-2 text-sm font-medium text-[#12372a]">{{ association.president_name || 'Not set' }}</dd>
+                        </div>
+                        <div class="rounded-2xl border border-[#edf2ee] bg-[#fbfcfb] p-4">
                             <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-[#7b8b80]">Barangay</dt>
                             <dd class="mt-2 text-sm font-medium text-[#12372a]">{{ association.barangay?.name || 'Unassigned' }}</dd>
                         </div>

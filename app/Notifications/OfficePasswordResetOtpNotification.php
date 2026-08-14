@@ -26,8 +26,8 @@ class OfficePasswordResetOtpNotification extends Notification
 
         return [
             'sender' => [
-                'name' => (string) env('BREVO_SENDER_NAME', config('app.name', 'AniTech')),
-                'email' => (string) env('BREVO_SENDER_EMAIL'),
+                'name' => (string) config('services.brevo.sender_name', config('app.name', 'AniTech')),
+                'email' => (string) config('services.brevo.sender_email'),
             ],
             'to' => [
                 'email' => (string) $notifiable->email,

@@ -20,7 +20,7 @@ class SubmitMembershipApplicationRequest extends JsonFormRequest
             'last_name' => ['required', 'string', 'max:100'],
             'suffix' => ['nullable', 'string', 'max:30'],
             'birth_date' => ['required', 'date', 'before_or_equal:today'],
-            'sex' => ['nullable', Rule::in(['male', 'female'])],
+            'sex' => ['required', Rule::in(['male', 'female'])],
             'civil_status' => ['nullable', Rule::in(['single', 'married', 'widowed', 'separated'])],
             'mobile_number' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -29,6 +29,21 @@ class SubmitMembershipApplicationRequest extends JsonFormRequest
             'association_id' => ['nullable', 'integer', 'exists:associations,id'],
             'remarks' => ['nullable', 'string'],
             'reapply_from_application_id' => ['nullable', 'integer', 'exists:membership_applications,id'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'first_name' => 'first name',
+            'middle_name' => 'middle name',
+            'last_name' => 'last name',
+            'birth_date' => 'birth date',
+            'civil_status' => 'civil status',
+            'mobile_number' => 'mobile number',
+            'barangay_id' => 'barangay',
+            'association_id' => 'association',
+            'reapply_from_application_id' => 'previous application',
         ];
     }
 }

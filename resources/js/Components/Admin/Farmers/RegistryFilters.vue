@@ -45,7 +45,7 @@ defineEmits(['apply', 'reset', 'open-export', 'set-quality-filter']);
 
                 <label class="space-y-1.5">
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Status</span>
-                    <select v-model="form.status" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white">
+                    <select v-model="form.status" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white" @change="$emit('apply')">
                         <option value="">All statuses</option>
                         <option v-for="status in filterOptions.statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
                     </select>

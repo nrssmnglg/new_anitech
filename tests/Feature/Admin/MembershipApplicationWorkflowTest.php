@@ -53,6 +53,23 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame(MembershipStatus::PENDING_DOCUMENTS, $farmer->fresh()->membership_status);
     }
 
+    public function test_walk_in_application_requires_sex_before_creating_records(): void
+    {
+        $user = $this->makeAdminUser();
+        $lookups = $this->makeLookups();
+        $payload = $this->walkInPayload($lookups);
+        $payload['sex'] = '';
+
+        $response = $this->actingAs($user)
+            ->from(route('admin.membership-applications.create'))
+            ->post(route('admin.membership-applications.store'), $payload);
+
+        $response->assertRedirect(route('admin.membership-applications.create'));
+        $response->assertSessionHasErrors(['sex']);
+        $this->assertDatabaseCount('farmers', 0);
+        $this->assertDatabaseCount('membership_applications', 0);
+    }
+
     public function test_walk_in_duplicate_farmer_blocks_application_and_returns_error(): void
     {
         $user = $this->makeAdminUser();
@@ -106,6 +123,30 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame(DocumentVerificationStatus::VERIFIED, $document->verification_status);
         $this->assertNotNull($document->verified_by);
         $this->assertNotNull($document->verified_at);
+    }
+
+    public function test_normal_membership_application_ignores_legacy_renewal_fields(): void
+    {
+        $user = $this->makeAdminUser();
+        $lookups = $this->makeLookups();
+        $payload = $this->walkInPayload($lookups);
+        $payload['member_type_id'] = $lookups['memberType']->id;
+        $payload['create_renewal_record'] = true;
+        $payload['renewal_year'] = now()->year;
+
+        $response = $this->actingAs($user)->post(route('admin.membership-applications.store'), $payload);
+
+        $application = MembershipApplication::query()->firstOrFail();
+
+        $response->assertRedirect(route('admin.membership-applications.show', $application));
+        $this->assertDatabaseHas('membership_transactions', [
+            'id' => $application->id,
+            'transaction_type' => 'Application',
+        ]);
+        $this->assertDatabaseMissing('membership_transactions', [
+            'farmer_id' => $application->farmer_id,
+            'transaction_type' => 'Renewal',
+        ]);
     }
 
     public function test_document_review_url_redirects_to_application_review_screen(): void

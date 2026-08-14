@@ -21,7 +21,7 @@ class UpdateFarmerRequest extends FormRequest
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'suffix' => ['nullable', 'string', 'max:50'],
-            'sex' => ['nullable', Rule::in(['male', 'female'])],
+            'sex' => ['required', Rule::in(['male', 'female'])],
             'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'civil_status' => ['nullable', Rule::in(['single', 'married', 'widowed', 'separated'])],
             'mobile_number' => ['nullable', 'string', 'max:30'],

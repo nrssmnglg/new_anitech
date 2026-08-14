@@ -9,6 +9,7 @@ use App\Models\FeeSchedule;
 use App\Models\MemberType;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -20,9 +21,10 @@ class FeeScheduleController extends Controller
         $this->middleware('role.in:' . User::ROLE_ADMIN);
     }
 
-    public function index(): InertiaResponse
+    public function index(Request $request): InertiaResponse
     {
         $this->normalizeActiveSchedules();
+        $search = trim((string) $request->string('search'));
 
         $schedules = FeeSchedule::query()
             ->select([
@@ -39,8 +41,28 @@ class FeeScheduleController extends Controller
             ])
             ->with('memberType:id,code,name')
             ->withCount('paymentAssessments')
+            ->when($search !== '', function ($query) use ($search): void {
+                $normalizedSearch = strtolower($search);
+
+                $query->where(function ($searchQuery) use ($search, $normalizedSearch): void {
+                    $searchQuery
+                        ->where('year', 'like', "%{$search}%")
+                        ->orWhereHas('memberType', function ($memberTypeQuery) use ($search): void {
+                            $memberTypeQuery
+                                ->where('code', 'like', "%{$search}%")
+                                ->orWhere('name', 'like', "%{$search}%");
+                        });
+
+                    if ($normalizedSearch === 'active') {
+                        $searchQuery->orWhere('is_active', true);
+                    } elseif ($normalizedSearch === 'inactive') {
+                        $searchQuery->orWhere('is_active', false);
+                    }
+                });
+            })
             ->orderByDesc('year')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         $schedules->through(fn (FeeSchedule $schedule): array => $this->serializeScheduleRow($schedule));
 
@@ -74,6 +96,9 @@ class FeeScheduleController extends Controller
                 'activeMemberTypes' => FeeSchedule::query()->where('is_active', true)->distinct('member_type_id')->count('member_type_id'),
                 'current_year' => FeeSchedule::query()->where('year', now()->year)->count(),
                 'latest_year' => FeeSchedule::query()->max('year') ?? now()->year,
+            ],
+            'filters' => [
+                'search' => $search,
             ],
             'urls' => [
                 'index' => route('admin.fee-schedules.index'),
