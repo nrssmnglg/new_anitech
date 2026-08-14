@@ -192,11 +192,6 @@ class HandleInertiaRequests extends Middleware
                                 'icon' => 'audit',
                                 'children' => [
                                     [
-                                        'label' => 'Analytics Overview',
-                                        'href' => route('admin.analytics.index'),
-                                        'activePatterns' => ['admin.analytics.index'],
-                                    ],
-                                    [
                                         'label' => 'Activity Logs',
                                         'href' => route('admin.audit-logs.index'),
                                         'activePatterns' => ['admin.audit-logs.index'],
