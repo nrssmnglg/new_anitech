@@ -90,21 +90,11 @@ function exportDashboardReport() {
     closeExportModal();
 }
 
-function initials(name) {
-    return String(name || '')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('') || 'AN';
-}
-
 const staffWorkspace = computed(() => props.dashboard.staffWorkspace ?? {
     headline: { assignedWorkCount: 0 },
     cards: [],
     mobileSupport: [],
     priority: null,
-    recentActions: [],
 });
 const collections = computed(() => props.dashboard.collections ?? {
     totals: { overall: 0, applications: 0, renewals: 0, mortuary: 0 },
@@ -112,7 +102,6 @@ const collections = computed(() => props.dashboard.collections ?? {
     links: {},
 });
 const workspaceCards = computed(() => staffWorkspace.value.cards ?? []);
-const todayActionCount = computed(() => workspaceCards.value.find((card) => card.key === 'today_actions')?.count ?? 0);
 const registrationTrend = computed(() => props.dashboard.breakdowns.registrationTrend ?? { series: [], currentYearTotal: 0 });
 const maximumMonthlyRegistrations = computed(() => Math.max(
     ...(registrationTrend.value.series ?? []).map((row) => Number(row.total || 0)),
@@ -187,6 +176,41 @@ const renewalDonutStyle = computed(() => ({
                 Clear All Filters
             </button>
         </div>
+
+        <section>
+            <div class="mb-3">
+                <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Shortcut Actions</p>
+                <h2 class="mt-1 text-[1.2rem] font-semibold text-[#14202c]">Go directly to common staff tasks</h2>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Link :href="dashboard.actions.createMembershipApplicationUrl" class="group rounded-[1.5rem] border border-[#dce5df] bg-white p-5 shadow-[0_8px_24px_rgba(0,54,41,0.05)] transition hover:-translate-y-0.5 hover:border-[#9eb9aa] hover:shadow-[0_14px_30px_rgba(0,54,41,0.1)]">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8f2eb] text-2xl font-light text-[#003e32]">+</span>
+                    <h3 class="mt-4 font-bold text-[#14202c]">New Application</h3>
+                    <p class="mt-1 text-sm text-[#66756f]">Register a new membership application.</p>
+                </Link>
+                <Link :href="dashboard.actions.viewFarmersUrl" class="group rounded-[1.5rem] border border-[#dce5df] bg-white p-5 shadow-[0_8px_24px_rgba(0,54,41,0.05)] transition hover:-translate-y-0.5 hover:border-[#9eb9aa] hover:shadow-[0_14px_30px_rgba(0,54,41,0.1)]">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8f2eb] text-[#003e32]">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                    </span>
+                    <h3 class="mt-4 font-bold text-[#14202c]">Farmer Records</h3>
+                    <p class="mt-1 text-sm text-[#66756f]">Search and manage farmer profiles.</p>
+                </Link>
+                <Link :href="dashboard.actions.viewRenewalsUrl" class="group rounded-[1.5rem] border border-[#dce5df] bg-white p-5 shadow-[0_8px_24px_rgba(0,54,41,0.05)] transition hover:-translate-y-0.5 hover:border-[#9eb9aa] hover:shadow-[0_14px_30px_rgba(0,54,41,0.1)]">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef3df] text-[#5f8418]">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-15.5 6.36L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.64L21 8"/><path d="M8 16H3v5"/><path d="M16 8h5V3"/></svg>
+                    </span>
+                    <h3 class="mt-4 font-bold text-[#14202c]">Membership Renewals</h3>
+                    <p class="mt-1 text-sm text-[#66756f]">Review and process renewal records.</p>
+                </Link>
+                <Link :href="dashboard.actions.tasksUrl" class="group rounded-[1.5rem] border border-[#dce5df] bg-white p-5 shadow-[0_8px_24px_rgba(0,54,41,0.05)] transition hover:-translate-y-0.5 hover:border-[#9eb9aa] hover:shadow-[0_14px_30px_rgba(0,54,41,0.1)]">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8eef3] text-[#315d78]">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </span>
+                    <h3 class="mt-4 font-bold text-[#14202c]">Assigned Tasks</h3>
+                    <p class="mt-1 text-sm text-[#66756f]">Open work currently assigned to you.</p>
+                </Link>
+            </div>
+        </section>
 
         <section>
             <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
@@ -371,47 +395,7 @@ const renewalDonutStyle = computed(() => ({
             </article>
         </section>
 
-        <section>
-            <article class="rounded-[1.8rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_32px_rgba(0,54,41,0.05)] sm:p-6">
-                <div class="flex items-center justify-between gap-4">
-                    <h3 class="text-[1.15rem] font-semibold text-[#14202c]">Today's Actions</h3>
-                    <span class="text-[1rem] font-bold text-[#57736a]">
-                        {{ formatNumber(todayActionCount) }} total
-                    </span>
-                </div>
-
-                <div v-if="staffWorkspace.recentActions.length" class="mt-8 overflow-x-auto">
-                    <table class="min-w-full text-left">
-                        <thead class="border-b border-[#e2e7e4] text-[0.82rem] font-bold uppercase tracking-[0.08em] text-[#344654]">
-                            <tr>
-                                <th class="px-5 py-4">Module</th>
-                                <th class="px-5 py-4">Activity</th>
-                                <th class="px-5 py-4">Record</th>
-                                <th class="px-5 py-4 text-right">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-[#edf1ee]">
-                            <tr v-for="action in staffWorkspace.recentActions" :key="action.id" class="transition hover:bg-[#f9fbfa]">
-                                <td class="px-5 py-5">
-                                    <div class="flex items-center gap-4">
-                                        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8ebea] text-sm font-bold text-[#003e32]">
-                                            {{ initials(action.module) }}
-                                        </span>
-                                        <span class="text-[1.05rem] font-semibold text-[#12202b]">{{ action.module }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-5 text-[1.05rem] text-[#364754]">{{ action.description }}</td>
-                                <td class="px-5 py-5 text-[1.05rem] text-[#364754]">{{ action.subjectLabel || '-' }}</td>
-                                <td class="px-5 py-5 text-right text-[1.05rem] text-[#364754]">{{ action.createdAt }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div v-else class="mt-8 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
-                    No staff actions recorded yet for today.
-                </div>
-            </article>
-
+        <section v-if="false">
             <div v-if="false" class="space-y-6">
                 <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
                     <div class="flex items-center justify-between gap-4">

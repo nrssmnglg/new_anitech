@@ -97,7 +97,7 @@ class LoginController extends Controller
                 ->withInput($request->only('email'))
                 ->withErrors([
                     'password' => $remainingAttempts > 0
-                        ? "Incorrect password. You have {$remainingAttempts} attempt".($remainingAttempts === 1 ? '' : 's')." remaining before a 15-minute lockout."
+                        ? 'Incorrect password.'
                         : $this->lockoutMessage($throttleKey),
                 ]);
         }

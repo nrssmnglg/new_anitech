@@ -651,7 +651,6 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $userId = $user?->id;
-        $today = now();
         $baseFilters = array_filter([
             'barangay_id' => $barangayId,
         ], fn ($value) => $value !== null && $value !== '');
@@ -720,25 +719,6 @@ class DashboardController extends Controller
             })
             ->count();
 
-        $todayActionsQuery = AuditLog::query()
-            ->where('actor_user_id', $userId)
-            ->whereDate('created_at', $today->toDateString());
-
-        $todayActions = (clone $todayActionsQuery)->count();
-
-        $recentActions = $todayActionsQuery
-            ->latest('created_at')
-            ->limit(6)
-            ->get(['id', 'module', 'description', 'subject_label', 'created_at'])
-            ->map(fn (AuditLog $log): array => [
-                'id' => $log->id,
-                'module' => str($log->module)->replace('_', ' ')->title()->value(),
-                'description' => $log->description,
-                'subjectLabel' => $log->subject_label,
-                'createdAt' => optional($log->created_at)->format('M d, Y h:i A'),
-            ])
-            ->all();
-
         $cards = [
             [
                 'key' => 'pending_applications',
@@ -782,14 +762,6 @@ class DashboardController extends Controller
                     'priority' => 'high_priority',
                 ]),
                 'accent' => 'amber',
-            ],
-            [
-                'key' => 'today_actions',
-                'label' => "Today's Actions",
-                'count' => $todayActions,
-                'description' => 'Actions you completed today across reviews, updates, and responses.',
-                'href' => null,
-                'accent' => 'rose',
             ],
         ];
 
@@ -841,7 +813,6 @@ class DashboardController extends Controller
             'priority' => collect($cards)
                 ->sortByDesc('count')
                 ->first(),
-            'recentActions' => $recentActions,
         ];
     }
 

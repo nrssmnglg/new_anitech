@@ -39,7 +39,7 @@ class OfficeStaffAccountTest extends TestCase
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors([
-            'password' => 'Incorrect password. You have 2 attempts remaining before a 15-minute lockout.',
+            'password' => 'Incorrect password.',
         ]);
         $this->assertGuest();
     }
