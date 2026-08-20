@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -17,6 +17,54 @@ const emit = defineEmits(['submit']);
 
 const isOfficeRole = computed(() => ['Admin', 'Staff'].includes(props.form.role));
 const isFarmerRole = computed(() => props.form.role === 'Farmer');
+const farmerSearch = ref(
+    props.farmerOptions.find((option) => String(option.value) === String(props.form.farmer_id))?.label ?? '',
+);
+const farmerSelectorOpen = ref(false);
+const farmerSearchInput = ref(null);
+let farmerSelectorCloseTimer;
+
+const selectedFarmerLabel = computed(() => (
+    props.farmerOptions.find((option) => String(option.value) === String(props.form.farmer_id))?.label ?? ''
+));
+
+const filteredFarmerOptions = computed(() => {
+    const search = farmerSearch.value.trim().toLocaleLowerCase();
+
+    if (!search) {
+        return props.farmerOptions;
+    }
+
+    return props.farmerOptions.filter((option) => option.label.toLocaleLowerCase().includes(search));
+});
+
+function openFarmerSelector() {
+    if (!isFarmerRole.value || props.disabled) {
+        return;
+    }
+
+    clearTimeout(farmerSelectorCloseTimer);
+    farmerSearch.value = '';
+    farmerSelectorOpen.value = true;
+}
+
+function closeFarmerSelector() {
+    farmerSelectorCloseTimer = setTimeout(() => {
+        farmerSelectorOpen.value = false;
+        farmerSearch.value = selectedFarmerLabel.value;
+    }, 150);
+}
+
+function chooseFarmer(option) {
+    if (option.disabled) {
+        return;
+    }
+
+    props.form.farmer_id = String(option.value);
+    farmerSearch.value = option.label;
+    farmerSelectorOpen.value = false;
+    farmerSearchInput.value?.blur();
+}
 const currentEmployeeIdPreview = computed(() => {
     if (!isOfficeRole.value) {
         return 'Not required for farmer accounts';
@@ -79,16 +127,44 @@ const currentEmployeeIdPreview = computed(() => {
                         <p v-if="form.errors.status" class="text-sm font-medium text-error">{{ form.errors.status }}</p>
                     </label>
 
-                    <label class="space-y-2 md:col-span-2">
+                    <div class="space-y-2 md:col-span-2">
                         <span class="ml-1 text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Linked Farmer Record</span>
-                        <select v-model="form.farmer_id" :disabled="disabled || !isFarmerRole" class="w-full rounded-2xl border border-[#0f5b46]/15 bg-white px-4 py-3 text-sm text-on-surface outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/15 disabled:cursor-not-allowed disabled:opacity-60">
-                            <option value="">Select farmer record</option>
-                            <option v-for="option in farmerOptions" :key="option.value" :value="String(option.value)" :disabled="option.disabled">
-                                {{ option.label }}
-                            </option>
-                        </select>
+                        <div class="relative">
+                            <input
+                                ref="farmerSearchInput"
+                                v-model="farmerSearch"
+                                :disabled="disabled || !isFarmerRole"
+                                type="search"
+                                role="combobox"
+                                aria-autocomplete="list"
+                                :aria-expanded="farmerSelectorOpen"
+                                aria-controls="farmer-record-options"
+                                :placeholder="selectedFarmerLabel || 'Search by farmer name or code'"
+                                class="w-full rounded-2xl border border-[#0f5b46]/15 bg-white px-4 py-3 pr-10 text-sm text-on-surface outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/15 disabled:cursor-not-allowed disabled:opacity-60"
+                                @focus="openFarmerSelector"
+                                @input="farmerSelectorOpen = true"
+                                @blur="closeFarmerSelector"
+                            >
+                            <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#0f5b46]">⌕</span>
+                            <div v-if="farmerSelectorOpen" id="farmer-record-options" role="listbox" class="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-[#0f5b46]/15 bg-white p-1 shadow-xl shadow-[#003629]/15">
+                                <button
+                                    v-for="option in filteredFarmerOptions"
+                                    :key="option.value"
+                                    type="button"
+                                    role="option"
+                                    :aria-selected="String(form.farmer_id) === String(option.value)"
+                                    :disabled="option.disabled"
+                                    class="block w-full rounded-xl px-4 py-2.5 text-left text-sm text-on-surface transition hover:bg-[#eef5f1] disabled:cursor-not-allowed disabled:opacity-45"
+                                    :class="{ 'bg-[#e1f0e9] font-bold text-[#003629]': String(form.farmer_id) === String(option.value) }"
+                                    @mousedown.prevent="chooseFarmer(option)"
+                                >
+                                    {{ option.label }}
+                                </button>
+                                <p v-if="filteredFarmerOptions.length === 0" class="px-4 py-3 text-sm text-on-surface-variant">No farmer records match your search.</p>
+                            </div>
+                        </div>
                         <p v-if="form.errors.farmer_id" class="text-sm font-medium text-error">{{ form.errors.farmer_id }}</p>
-                    </label>
+                    </div>
 
                 </div>
             </section>

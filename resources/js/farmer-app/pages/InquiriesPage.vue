@@ -276,8 +276,8 @@ onMounted(async () => {
 
                         <label class="farmer-app__inquiries-field">
                             <span>Attachments</span>
-                            <input type="file" accept="image/*,.pdf" capture="environment" multiple @change="setAttachments" />
-                            <p class="farmer-app__inquiries-hint">Upload screenshots, receipts, or document photos. Maximum 5 MB each.</p>
+                            <input type="file" accept="image/*,.pdf" multiple @change="setAttachments" />
+                            <p class="farmer-app__inquiries-hint">Choose photos or files from your device, or use the camera if available. Maximum 5 MB each.</p>
                         </label>
 
                         <div v-if="attachments.length" class="farmer-app__inquiries-attachments">
