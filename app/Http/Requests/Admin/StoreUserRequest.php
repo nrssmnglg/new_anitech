@@ -27,6 +27,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_FARMER])],
             'status' => ['required', Rule::in([User::STATUS_ACTIVE, User::STATUS_INACTIVE])],
+            'farmer_id' => ['nullable', 'required_if:role,' . User::ROLE_FARMER, 'integer', 'exists:farmers,id', 'unique:users,farmer_id'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:30'],
         ];

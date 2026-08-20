@@ -7,6 +7,7 @@ const props = defineProps({
     user: { type: Object, required: true },
     roleOptions: { type: Array, required: true },
     statusOptions: { type: Array, required: true },
+    farmerOptions: { type: Array, required: true },
     employeeIdPreview: { type: String, required: true },
     urls: { type: Object, required: true },
 });
@@ -16,6 +17,7 @@ const form = useForm({
     email: props.user.email ?? '',
     role: props.user.role ?? '',
     status: props.user.status ?? 'Active',
+    farmer_id: props.user.farmer_id ? String(props.user.farmer_id) : '',
     job_title: props.user.job_title ?? '',
     contact_number: props.user.contact_number ?? '',
     employee_id: props.user.employee_id ?? '',
@@ -48,6 +50,7 @@ function submit() {
                 :form="form"
                 :role-options="roleOptions"
                 :status-options="statusOptions"
+                :farmer-options="farmerOptions"
                 :employee-id-preview="employeeIdPreview"
                 :is-create="true"
                 submit-label="Save User"

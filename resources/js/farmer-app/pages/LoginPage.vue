@@ -126,8 +126,7 @@ const submit = async () => {
                         </svg>
                     </span>
                     <div>
-                        <strong>Your farm data is protected and your session stays active until you sign out or it expires.</strong>
-                        <p>Use the same trusted device when possible for faster access.</p>
+                        <strong>Your farm data is protected</strong>
                     </div>
                 </div>
             </main>

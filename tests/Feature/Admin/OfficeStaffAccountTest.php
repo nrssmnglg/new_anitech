@@ -2,6 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Enums\MembershipStatus;
+use App\Models\Association;
+use App\Models\Barangay;
+use App\Models\Farmer;
+use App\Models\FarmerProfile;
+use App\Models\MemberType;
 use App\Models\OfficePasswordResetOtp;
 use App\Models\User;
 use App\Notifications\OfficePasswordResetOtpNotification;
@@ -236,6 +242,32 @@ class OfficeStaffAccountTest extends TestCase
         $this->assertTrue($createdUser->hasRole(User::ROLE_STAFF));
     }
 
+    public function test_admin_can_create_a_farmer_linked_user_that_can_login_to_the_farmer_app(): void
+    {
+        $farmer = $this->createActiveFarmer('linked.farmer@example.test');
+
+        $createdUser = User::query()->create([
+            'name' => 'Linked Farmer',
+            'email' => 'linked.farmer@example.test',
+            'password' => 'secret123',
+            'status' => User::STATUS_ACTIVE,
+            'farmer_id' => $farmer->id,
+            'role' => User::ROLE_FARMER,
+        ]);
+        $createdUser->assignRole(User::ROLE_FARMER);
+
+        $loginResponse = $this->postJson(route('api.farmer.login'), [
+            'email' => 'linked.farmer@example.test',
+            'password' => 'secret123',
+        ]);
+
+        $loginResponse
+            ->assertOk()
+            ->assertJsonPath('data.account.email', 'linked.farmer@example.test')
+            ->assertJsonPath('data.redirect_url', route('farmer.pwa.home'));
+        $this->assertAuthenticated('farmer_pwa');
+    }
+
     public function test_admin_archives_user_account_instead_of_deleting_it(): void
     {
         $admin = User::query()->create([
@@ -268,5 +300,53 @@ class OfficeStaffAccountTest extends TestCase
             'actor_user_id' => $admin->id,
             'subject_id' => $staff->id,
         ]);
+    }
+
+    private function createActiveFarmer(string $email): Farmer
+    {
+        $barangay = Barangay::query()->create([
+            'name' => 'Barangay ' . strtoupper(substr(md5($email), 0, 6)),
+            'code' => 'BRGY-' . strtoupper(substr(md5($email), 0, 6)),
+            'status' => 'Active',
+        ]);
+
+        $association = Association::query()->create([
+            'barangay_id' => $barangay->id,
+            'code' => 'ASC-' . strtoupper(substr(md5($email . '-assoc'), 0, 6)),
+            'name' => 'Association ' . strtoupper(substr(md5($email), 0, 4)),
+            'status' => 'Active',
+        ]);
+
+        $memberType = MemberType::query()->create([
+            'code' => 'REG-' . strtoupper(substr(md5($email . '-member'), 0, 4)),
+            'name' => 'Regular Member ' . strtoupper(substr(md5($email), 0, 4)),
+            'requires_membership_fee' => true,
+            'mortuary_eligible' => true,
+            'status' => 'Active',
+        ]);
+
+        $farmer = Farmer::query()->create([
+            'farmer_code' => 'FRM-' . strtoupper(substr(md5($email . '-farmer'), 0, 8)),
+            'barangay_id' => $barangay->id,
+            'association_id' => $association->id,
+            'member_type_id' => $memberType->id,
+            'membership_status' => MembershipStatus::ACTIVE,
+            'record_origin' => 'admin',
+            'registered_at' => now(),
+            'activated_at' => now(),
+        ]);
+
+        FarmerProfile::query()->create([
+            'farmer_id' => $farmer->id,
+            'first_name' => 'Linked',
+            'last_name' => 'Farmer',
+            'sex' => 'Female',
+            'civil_status' => 'Single',
+            'address' => 'Purok 1',
+            'mobile_number' => '09170000000',
+            'birth_date' => '1990-01-01',
+        ]);
+
+        return $farmer;
     }
 }

@@ -198,6 +198,10 @@ function roleTone(role) {
                                         <p class="font-semibold text-[#0f172a]">{{ user.officeProfile.employeeId || 'Office profile' }}</p>
                                         <p class="text-xs text-[#64748b]">{{ user.officeProfile.jobTitle || 'No job title' }}</p>
                                     </div>
+                                    <div v-else-if="user.farmer" class="space-y-1">
+                                        <p class="font-semibold text-[#0f172a]">{{ user.farmer.code }}</p>
+                                        <p class="text-xs text-[#64748b]">Farmer record linked for mobile login</p>
+                                    </div>
                                     <p v-else class="text-sm text-[#64748b]">{{ user.accountType }}</p>
                                 </td>
                                 <td class="px-6 py-5 align-top">

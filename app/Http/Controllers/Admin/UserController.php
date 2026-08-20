@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\Farmer;
 use App\Models\OfficeProfile;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
@@ -35,6 +36,7 @@ class UserController extends Controller
             ->select(['id', 'name', 'email', 'role', 'status', 'created_at'])
             ->with([
                 'officeProfile:id,user_id,employee_id,job_title,contact_number',
+                'farmer:id,farmer_code',
             ])
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['account_type'] ?? null, function (Builder $query, string $accountType): void {
@@ -94,6 +96,7 @@ class UserController extends Controller
             'user' => $this->serializeFormUser(new User(), new OfficeProfile()),
             'roleOptions' => $this->selectOptions($this->roleOptions()),
             'statusOptions' => $this->selectOptions($this->statusOptions()),
+            'farmerOptions' => $this->farmerOptions(),
             'employeeIdPreview' => $this->previewEmployeeId(),
             'urls' => [
                 'index' => route('admin.users.index'),
@@ -111,6 +114,7 @@ class UserController extends Controller
         $payload['password'] = $generatedPassword;
         $payload['created_by'] = Auth::id();
         $payload['must_change_password'] = $role !== User::ROLE_FARMER;
+        $payload['farmer_id'] = $role === User::ROLE_FARMER ? ($validated['farmer_id'] ?? null) : null;
 
         $user = User::query()->create($payload);
         $this->syncOfficeProfile($user, $validated);
@@ -141,6 +145,7 @@ class UserController extends Controller
     {
         $user->load([
             'officeProfile:id,user_id,employee_id,job_title,contact_number',
+            'farmer:id,farmer_code',
         ]);
 
         return Inertia::render('Admin/Users/Show', [
@@ -158,12 +163,14 @@ class UserController extends Controller
     {
         $user->load([
             'officeProfile:id,user_id,employee_id,job_title,contact_number',
+            'farmer:id,farmer_code',
         ]);
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $this->serializeFormUser($user, $user->officeProfile ?? new OfficeProfile()),
             'roleOptions' => $this->selectOptions($this->roleOptions()),
             'statusOptions' => $this->selectOptions($this->statusOptions()),
+            'farmerOptions' => $this->farmerOptions($user->farmer_id),
             'employeeIdPreview' => $user->officeProfile?->employee_id ?: $this->previewEmployeeId($user->role),
             'canArchive' => $this->canArchive($user),
             'urls' => [
@@ -199,6 +206,7 @@ class UserController extends Controller
         }
 
         $payload = $this->userPayload($validated);
+        $payload['farmer_id'] = $role === User::ROLE_FARMER ? ($validated['farmer_id'] ?? null) : null;
 
         if (filled($validated['password'] ?? null) && $role !== User::ROLE_FARMER) {
             $payload['must_change_password'] = true;
@@ -290,6 +298,9 @@ class UserController extends Controller
             'status' => $user->status,
             'createdAt' => optional($user->created_at)->format('M d, Y'),
             'accountType' => $user->role === User::ROLE_FARMER ? 'Farmer Account' : 'Office Account',
+            'farmer' => $user->farmer ? [
+                'code' => $user->farmer->farmer_code,
+            ] : null,
             'officeProfile' => $user->officeProfile ? [
                 'employeeId' => $user->officeProfile->employee_id,
                 'jobTitle' => $user->officeProfile->job_title,
@@ -313,6 +324,9 @@ class UserController extends Controller
             'createdAt' => optional($user->created_at)->format('M d, Y h:i A') ?? 'Unknown',
             'updatedAt' => optional($user->updated_at)->format('M d, Y h:i A') ?? 'Unknown',
             'canArchive' => $this->canArchive($user),
+            'farmer' => $user->farmer ? [
+                'code' => $user->farmer->farmer_code,
+            ] : null,
             'officeProfile' => $user->officeProfile ? [
                 'employeeId' => $user->officeProfile->employee_id,
                 'jobTitle' => $user->officeProfile->job_title,
@@ -329,10 +343,37 @@ class UserController extends Controller
             'email' => $user->email,
             'role' => $user->role ?: '',
             'status' => $user->status ?: User::STATUS_ACTIVE,
+            'farmer_id' => $user->farmer_id,
             'job_title' => $officeProfile->job_title,
             'contact_number' => $officeProfile->contact_number,
             'employee_id' => $officeProfile->employee_id,
         ];
+    }
+
+    private function farmerOptions(?int $selectedFarmerId = null): array
+    {
+        return Farmer::query()
+            ->with(['profile:id,farmer_id,first_name,middle_name,last_name,suffix'])
+            ->orderByDesc('id')
+            ->limit(500)
+            ->get(['id', 'farmer_code', 'membership_status', 'inactive_at', 'inactive_reason'])
+            ->map(function (Farmer $farmer) use ($selectedFarmerId): array {
+                $profile = $farmer->profile;
+                $name = $profile ? trim(collect([
+                    $profile->first_name,
+                    $profile->middle_name,
+                    $profile->last_name,
+                    $profile->suffix,
+                ])->filter()->implode(' ')) : $farmer->farmer_code;
+
+                return [
+                    'value' => $farmer->id,
+                    'label' => $name . ' (' . $farmer->farmer_code . ')',
+                    'disabled' => $selectedFarmerId !== null && (int) $selectedFarmerId !== (int) $farmer->id && $farmer->users()->exists(),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function selectOptions(array $map): array

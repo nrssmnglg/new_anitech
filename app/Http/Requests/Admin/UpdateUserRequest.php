@@ -27,6 +27,7 @@ class UpdateUserRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user')?->id)],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_FARMER])],
             'status' => ['required', Rule::in([User::STATUS_ACTIVE, User::STATUS_INACTIVE])],
+            'farmer_id' => ['nullable', 'required_if:role,' . User::ROLE_FARMER, 'integer', 'exists:farmers,id', Rule::unique('users', 'farmer_id')->ignore($this->route('user')?->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:30'],

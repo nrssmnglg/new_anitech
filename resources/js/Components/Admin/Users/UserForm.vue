@@ -5,6 +5,7 @@ const props = defineProps({
     form: { type: Object, required: true },
     roleOptions: { type: Array, required: true },
     statusOptions: { type: Array, required: true },
+    farmerOptions: { type: Array, required: true },
     employeeIdPreview: { type: String, required: true },
     isCreate: { type: Boolean, required: true },
     submitLabel: { type: String, required: true },
@@ -15,6 +16,7 @@ const props = defineProps({
 const emit = defineEmits(['submit']);
 
 const isOfficeRole = computed(() => ['Admin', 'Staff'].includes(props.form.role));
+const isFarmerRole = computed(() => props.form.role === 'Farmer');
 const currentEmployeeIdPreview = computed(() => {
     if (!isOfficeRole.value) {
         return 'Not required for farmer accounts';
@@ -75,6 +77,17 @@ const currentEmployeeIdPreview = computed(() => {
                             <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                         <p v-if="form.errors.status" class="text-sm font-medium text-error">{{ form.errors.status }}</p>
+                    </label>
+
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="ml-1 text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Linked Farmer Record</span>
+                        <select v-model="form.farmer_id" :disabled="disabled || !isFarmerRole" class="w-full rounded-2xl border border-[#0f5b46]/15 bg-white px-4 py-3 text-sm text-on-surface outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/15 disabled:cursor-not-allowed disabled:opacity-60">
+                            <option value="">Select farmer record</option>
+                            <option v-for="option in farmerOptions" :key="option.value" :value="String(option.value)" :disabled="option.disabled">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                        <p v-if="form.errors.farmer_id" class="text-sm font-medium text-error">{{ form.errors.farmer_id }}</p>
                     </label>
 
                 </div>
