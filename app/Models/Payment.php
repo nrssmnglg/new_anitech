@@ -73,8 +73,15 @@ class Payment extends Model
                     : strtolower((string) $value);
 
                 return match ($normalized) {
+                    PaymentStatus::PENDING->value => 'Pending',
+                    PaymentStatus::PARTIALLY_PAID->value => 'Partially Paid',
+                    PaymentStatus::PAID->value,
+                    PaymentStatus::VERIFIED->value => 'Verified',
+                    PaymentStatus::OVERPAID->value => 'Overpaid',
+                    PaymentStatus::WAIVED->value => 'Waived',
+                    PaymentStatus::CANCELLED->value => 'Cancelled',
                     PaymentStatus::REJECTED->value => 'Rejected',
-                    default => 'Verified',
+                    default => 'Pending',
                 };
             },
         );

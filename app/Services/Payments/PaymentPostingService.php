@@ -26,6 +26,10 @@ class PaymentPostingService
         $assessment->loadMissing('payments');
         $amountPaid = round((float) $attributes['amount_paid'], 2);
         $allocation = $this->allocateBreakdown($assessment, $amountPaid);
+        $paymentStatus = $this->toPaymentStatus($this->resolveStatus(
+            (float) $assessment->total_amount_due,
+            (float) $assessment->payments->sum('amount_paid') + $amountPaid,
+        ));
 
         $payment = $assessment->payments()->create([
             'payment_method_id' => $paymentMethod->id,
@@ -37,7 +41,7 @@ class PaymentPostingService
             'paid_at' => $attributes['paid_at'],
             'verified_by' => $verifiedBy,
             'verified_at' => CarbonImmutable::now(),
-            'status' => PaymentStatus::VERIFIED,
+            'status' => $paymentStatus,
         ]);
 
         $summary = $this->postPayments($assessment->refresh(), $assessment->payments()->get());
