@@ -17,8 +17,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class RenewalController extends FarmerApiController
 {
@@ -96,6 +98,16 @@ class RenewalController extends FarmerApiController
         } catch (DomainException $exception) {
             throw ValidationException::withMessages([
                 'payment' => $exception->getMessage(),
+            ]);
+        } catch (Throwable $exception) {
+            Log::error('Unable to create farmer renewal QR payment.', [
+                'renewal_id' => $renewal->id,
+                'farmer_id' => $farmer->id,
+                'exception' => $exception,
+            ]);
+
+            throw ValidationException::withMessages([
+                'payment' => 'Unable to open QR payment right now. Please try again shortly.',
             ]);
         }
 

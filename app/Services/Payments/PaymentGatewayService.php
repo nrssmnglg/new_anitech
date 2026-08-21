@@ -8,6 +8,7 @@ use DomainException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Http\Client\ConnectionException;
 
 class PaymentGatewayService
 {
@@ -273,10 +274,19 @@ class PaymentGatewayService
 
     private function payMongoRequest(string $url, array $payload): array
     {
-        $response = Http::withBasicAuth((string) config('services.paymongo.secret_key'), '')
-            ->acceptJson()
-            ->asJson()
-            ->post($url, $payload);
+        try {
+            $response = Http::withBasicAuth((string) config('services.paymongo.secret_key'), '')
+                ->acceptJson()
+                ->asJson()
+                ->post($url, $payload);
+        } catch (ConnectionException $exception) {
+            Log::error('Unable to connect to PayMongo.', [
+                'url' => $url,
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw new DomainException('Unable to connect to PayMongo right now. Please try again shortly.', previous: $exception);
+        }
 
         if ($response->failed()) {
             Log::warning('PayMongo request failed.', [
