@@ -144,15 +144,47 @@ const renewalSteps = (renewal) => {
     ];
 };
 
-const openRenewalRecord = (renewal) => {
-    actionSuccess.value = '';
-    actionError.value = '';
-
-    if (!renewal) {
+const continueToPayment = async (renewal) => {
+    if (!renewal?.id) {
         return;
     }
 
-    router.push({ name: 'renewals' });
+    const assessmentStatus = String(renewal?.assessment?.status || '').toLowerCase();
+    if (!renewal?.assessment || ['paid', 'overpaid', 'waived'].includes(assessmentStatus)) {
+        return;
+    }
+
+    const paymentResponse = await apiPost(`/renewals/${encodeURIComponent(renewal.id)}/payment`, {
+        payment_method: 'qrph',
+    });
+    const qrPageUrl = paymentResponse?.data?.qr_page_url;
+
+    if (qrPageUrl) {
+        const url = new URL(qrPageUrl, window.location.origin);
+        await router.push(`${url.pathname.replace(/.*\/farmer\/app/, '')}${url.search}`);
+
+        return;
+    }
+
+    await router.push({ name: 'payments' });
+};
+
+const openRenewalRecord = async (renewal) => {
+    if (starting.value || currentYearRenewalSettled.value) {
+        return;
+    }
+
+    starting.value = true;
+    actionSuccess.value = '';
+    actionError.value = '';
+
+    try {
+        await continueToPayment(renewal);
+    } catch (err) {
+        actionError.value = err?.apiMessage || t('renewals.open_failed');
+    } finally {
+        starting.value = false;
+    }
 };
 
 const startOrResumeRenewal = async () => {
@@ -187,25 +219,7 @@ const startOrResumeRenewal = async () => {
             await fetchPage();
         }
 
-        const assessmentStatus = String(renewal?.assessment?.status || '').toLowerCase();
-        const needsPayment = renewal?.assessment
-            && !['paid', 'overpaid', 'waived'].includes(assessmentStatus);
-
-        if (needsPayment) {
-            const paymentResponse = await apiPost(`/renewals/${encodeURIComponent(renewal.id)}/payment`, {
-                payment_method: 'qrph',
-            });
-            const qrPageUrl = paymentResponse?.data?.qr_page_url;
-
-            if (qrPageUrl) {
-                const url = new URL(qrPageUrl, window.location.origin);
-                await router.push(`${url.pathname.replace(/.*\/farmer\/app/, '')}${url.search}`);
-                return;
-            }
-
-            router.push({ name: 'payments' });
-            return;
-        }
+        await continueToPayment(renewal);
     } catch (err) {
         if (!err?.response) {
             syncQueue.enqueue({
@@ -326,7 +340,16 @@ onBeforeUnmount(() => {
                 </section>
 
                 <section v-if="hasCurrentYearRenewal" class="farmer-app__renewals-list">
-                    <article :key="`${currentYearRenewal.id}-payment`" class="farmer-app__renewals-card">
+                    <article
+                        :key="`${currentYearRenewal.id}-payment`"
+                        class="farmer-app__renewals-card farmer-app__renewals-card--actionable"
+                        :aria-disabled="starting || currentYearRenewalSettled"
+                        :tabindex="starting || currentYearRenewalSettled ? -1 : 0"
+                        role="button"
+                        @click="openRenewalRecord(currentYearRenewal)"
+                        @keydown.enter.prevent="openRenewalRecord(currentYearRenewal)"
+                        @keydown.space.prevent="openRenewalRecord(currentYearRenewal)"
+                    >
                         <div class="farmer-app__renewals-card-main">
                             <div class="farmer-app__renewals-card-head">
                                 <span class="farmer-app__renewals-app-no">{{ currentYearPayment?.reference_no || currentYearRenewal.application_no }}</span>
@@ -354,6 +377,11 @@ onBeforeUnmount(() => {
                                 <span>{{ currentYearPayment ? 'Payment reference' : 'Payment status' }}</span>
                                 <strong>{{ currentYearPayment?.reference_no || paymentSummary(currentYearRenewal) }}</strong>
                             </div>
+                        </div>
+                        <div v-if="!currentYearRenewalSettled" class="farmer-app__renewals-actions">
+                            <button type="button" class="farmer-app__btn farmer-app__upload-primary" :disabled="starting" @click.stop="openRenewalRecord(currentYearRenewal)">
+                                {{ starting ? 'Opening payment...' : 'Continue to Payment' }}
+                            </button>
                         </div>
                     </article>
                 </section>
@@ -413,6 +441,19 @@ onBeforeUnmount(() => {
     padding-left: 1rem;
     display: grid;
     gap: 0.45rem;
+}
+
+.farmer-app__renewals-card--actionable {
+    cursor: pointer;
+}
+
+.farmer-app__renewals-card--actionable:focus-visible {
+    outline: 3px solid rgba(12, 106, 82, 0.45);
+    outline-offset: 3px;
+}
+
+.farmer-app__renewals-card--actionable[aria-disabled='true'] {
+    cursor: default;
 }
 
 .farmer-app__renewals-warning {
