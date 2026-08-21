@@ -18,7 +18,8 @@ const form = reactive({
     module: props.filters.module ?? '',
     event: props.filters.event ?? '',
     actor_user_id: props.filters.actor_user_id ? String(props.filters.actor_user_id) : '',
-    date: props.filters.date ?? '',
+    date_from: props.filters.date_from ?? '',
+    date_to: props.filters.date_to ?? '',
     search: props.filters.search ?? '',
 });
 
@@ -65,7 +66,8 @@ function applyFilters() {
         module: form.module || undefined,
         event: form.event || undefined,
         actor_user_id: form.actor_user_id || undefined,
-        date: form.date || undefined,
+        date_from: form.date_from || undefined,
+        date_to: form.date_to || undefined,
         search: form.search || undefined,
     }, {
         preserveScroll: true,
@@ -84,7 +86,8 @@ function resetFilters() {
         module: '',
         event: '',
         actor_user_id: '',
-        date: '',
+        date_from: '',
+        date_to: '',
         search: '',
     });
     applyFilters();
@@ -192,7 +195,7 @@ function actorInitials(name) {
                 </div>
 
                 <div v-if="filtersOpen" class="border-t border-[#e4ebe7] bg-[#f8faf9] px-5 py-5 sm:px-6">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                         <label class="space-y-2 text-sm font-semibold text-[#40534a]">
                             <span>Area of the system</span>
                             <select v-model="form.module" class="w-full rounded-xl border border-[#d6e0da] bg-white px-4 py-3 text-sm outline-none focus:border-[#17634d]">
@@ -215,8 +218,12 @@ function actorInitials(name) {
                             </select>
                         </label>
                         <label class="space-y-2 text-sm font-semibold text-[#40534a]">
-                            <span>On a specific date</span>
-                            <input v-model="form.date" type="date" class="w-full rounded-xl border border-[#d6e0da] bg-white px-4 py-3 text-sm outline-none focus:border-[#17634d]">
+                            <span>From date</span>
+                            <input v-model="form.date_from" type="date" :max="form.date_to || undefined" class="w-full rounded-xl border border-[#d6e0da] bg-white px-4 py-3 text-sm outline-none focus:border-[#17634d]">
+                        </label>
+                        <label class="space-y-2 text-sm font-semibold text-[#40534a]">
+                            <span>To date</span>
+                            <input v-model="form.date_to" type="date" :min="form.date_from || undefined" class="w-full rounded-xl border border-[#d6e0da] bg-white px-4 py-3 text-sm outline-none focus:border-[#17634d]">
                         </label>
                     </div>
                     <div class="mt-4 flex flex-wrap items-center gap-3">

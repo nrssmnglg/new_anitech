@@ -33,7 +33,8 @@ class AuditLogController extends Controller
             'module' => $request->query('module'),
             'event' => $request->query('event'),
             'actor_user_id' => $request->integer('actor_user_id') ?: null,
-            'date' => $request->query('date'),
+            'date_from' => $request->query('date_from'),
+            'date_to' => $request->query('date_to'),
             'search' => trim((string) $request->query('search', '')),
         ];
 
@@ -45,7 +46,8 @@ class AuditLogController extends Controller
             ->when($filters['module'], fn (Builder $query, string $module) => $query->where('module', $module))
             ->when($filters['event'], fn (Builder $query, string $event) => $query->where('event', $event))
             ->when($filters['actor_user_id'], fn (Builder $query, int $actorUserId) => $query->where('actor_user_id', $actorUserId))
-            ->when($filters['date'], fn (Builder $query, string $date) => $query->whereDate('created_at', $date))
+            ->when($filters['date_from'], fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'], fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date))
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $search = $filters['search'];
 
