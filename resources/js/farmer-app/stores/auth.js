@@ -57,8 +57,12 @@ export const useAuthStore = defineStore('farmer-auth', () => {
 
             return response;
         } catch (err) {
-            error.value = extractApiMessage(err, 'Unable to sign in.');
-            validationErrors.value = extractValidationErrors(err);
+            const errors = extractValidationErrors(err);
+
+            validationErrors.value = errors;
+            error.value = Object.keys(errors).length
+                ? ''
+                : extractApiMessage(err, 'Unable to sign in.');
             throw err;
         } finally {
             loading.value = false;
