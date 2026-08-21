@@ -46,7 +46,12 @@ const renewalFeeItems = computed(() => ([
 ]).filter((item) => Number(renewalFees.value?.[item.key] || 0) > 0));
 const currentYearPayment = computed(() => currentYearRenewal.value?.latest_payment ?? null);
 const hasCurrentYearRenewal = computed(() => Boolean(currentYearRenewal.value));
-const currentYearRenewalSettled = computed(() => ['paid', 'overpaid', 'waived'].includes(String(currentYearRenewal.value?.assessment?.status || '').toLowerCase()));
+const currentYearRenewalSettled = computed(() => {
+    const settledStatuses = ['paid', 'verified', 'overpaid', 'waived'];
+
+    return settledStatuses.includes(String(currentYearRenewal.value?.assessment?.status || '').toLowerCase())
+        || settledStatuses.includes(String(currentYearPayment.value?.status || '').toLowerCase());
+});
 const renewalBlocker = computed(() => {
     if (!eligibility.value) {
         return '';
