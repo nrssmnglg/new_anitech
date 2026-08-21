@@ -1484,13 +1484,14 @@ class RenewalController extends Controller
     {
         $reviewerName = $renewal->reviewer?->name;
         $latestActivity = AuditLog::query()
+            ->with('actor:id,name')
             ->where('subject_type', $renewal->getMorphClass())
             ->where('subject_id', $renewal->getKey())
             ->latest('created_at')
-            ->first(['actor_name', 'created_at']);
+            ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor_name ?? $reviewerName ?? 'System',
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $reviewerName ?? 'System',
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $renewal->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => $reviewerName,
             'reviewedBy' => $reviewerName,

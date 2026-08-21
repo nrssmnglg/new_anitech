@@ -919,13 +919,14 @@ class MembershipApplicationController extends Controller
     private function accountability(MembershipApplication $application): array
     {
         $latestActivity = AuditLog::query()
+            ->with('actor:id,name')
             ->where('subject_type', $application->getMorphClass())
             ->where('subject_id', $application->getKey())
             ->latest('created_at')
-            ->first(['actor_name', 'created_at']);
+            ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor_name ?? $application->reviewer?->name,
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $application->reviewer?->name,
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $application->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => $application->reviewer?->name,
             'reviewedBy' => $application->reviewer?->name,

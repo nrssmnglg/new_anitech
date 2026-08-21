@@ -1211,13 +1211,14 @@ class FarmerController extends Controller
     private function accountability(Farmer $farmer): array
     {
         $latestActivity = AuditLog::query()
+            ->with('actor:id,name')
             ->where('subject_type', $farmer->getMorphClass())
             ->where('subject_id', $farmer->getKey())
             ->latest('created_at')
-            ->first(['actor_name', 'created_at']);
+            ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor_name ?? 'System',
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? 'System',
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $farmer->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => null,
             'reviewedBy' => null,

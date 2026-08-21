@@ -77,7 +77,7 @@ class AuthController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => 'This farmer account is not active.',
+                'email' => 'This farmer account is inactive. Set up your account again or contact the office for assistance.',
             ]);
         }
 
@@ -92,7 +92,7 @@ class AuthController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => 'This farmer account is not active. Please set up your account again to make it active.',
+                'email' => 'This farmer account is inactive. Set up your account again or contact the office for assistance.',
             ]);
         }
 

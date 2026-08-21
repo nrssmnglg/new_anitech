@@ -392,13 +392,14 @@ class QueryController extends Controller
     private function accountability(Query $query, ?string $assignedStaff = null): array
     {
         $latestActivity = AuditLog::query()
+            ->with('actor:id,name')
             ->where('subject_type', $query->getMorphClass())
             ->where('subject_id', $query->getKey())
             ->latest('created_at')
-            ->first(['actor_name', 'created_at']);
+            ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor_name ?? $assignedStaff ?? 'System',
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $assignedStaff ?? 'System',
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $query->created_at)->format('M d, Y h:i A'),
             'assignedStaff' => $assignedStaff,
             'reviewedBy' => null,
