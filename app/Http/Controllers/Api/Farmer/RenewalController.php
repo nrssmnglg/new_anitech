@@ -216,7 +216,7 @@ class RenewalController extends FarmerApiController
 
     private function renewalQrCacheKey(RenewalRequest $renewal, int $farmerId): string
     {
-        return 'farmer_pwa.renewal_qr_payment_cache.' . $farmerId . '.' . $renewal->getRouteKey();
+        return 'farmer_pwa.renewal_qr_payment_cache.' . $farmerId . '.' . $renewal->id;
     }
 
     private function resolveRenewalAssessment(RenewalRequest $renewal): mixed
