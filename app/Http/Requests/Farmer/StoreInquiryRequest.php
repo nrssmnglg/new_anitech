@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Farmer;
 
+use App\Services\Farmer\FarmerInquiryService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInquiryRequest extends FormRequest
@@ -9,6 +10,11 @@ class StoreInquiryRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        app(FarmerInquiryService::class)->ensureDefaultCategories();
     }
 
     public function rules(): array

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -168,6 +169,12 @@ class QueryController extends Controller
 
     public function respond(RespondToQueryRequest $request, Query $query): RedirectResponse
     {
+        if ($query->status === 'Resolved') {
+            throw ValidationException::withMessages([
+                'response' => 'Reopen this inquiry before sending another response.',
+            ]);
+        }
+
         $attachmentCount = count(array_filter((array) $request->file('attachments', [])));
 
         DB::transaction(function () use ($request, $query): void {
@@ -444,6 +451,7 @@ class QueryController extends Controller
 
             $response->attachments()->create([
                 'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
                 'file_path' => $path,
                 'uploaded_at' => now(),
             ]);

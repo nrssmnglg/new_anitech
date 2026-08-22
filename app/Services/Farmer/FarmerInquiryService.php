@@ -18,6 +18,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use DomainException;
 
 class FarmerInquiryService
 {
@@ -202,6 +203,10 @@ class FarmerInquiryService
             ->where('farmer_id', $farmer->id)
             ->findOrFail($inquiryId);
 
+        if ($query->status === 'Resolved') {
+            throw new DomainException('This inquiry is closed and cannot receive replies.');
+        }
+
         $payload = $this->queryWorkflowService->respond($query, $validated);
 
         DB::transaction(function () use ($query, $user, $payload, $files, $farmer): void {
@@ -235,7 +240,7 @@ class FarmerInquiryService
             ->value('id');
     }
 
-    private function ensureDefaultCategories(): void
+    public function ensureDefaultCategories(): void
     {
         foreach ($this->defaultCategories() as $category) {
             QueryCategory::query()->updateOrCreate(

@@ -15,6 +15,6 @@ class FarmerQueryPolicy
 
     public function reply(User $user, Query $query): bool
     {
-        return $this->view($user, $query);
+        return $this->view($user, $query) && $query->status !== 'Resolved';
     }
 }

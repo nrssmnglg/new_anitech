@@ -42,6 +42,7 @@ const { data, error, loading, fetchFresh, fromCache, lastSyncedAt } = useCachedR
 });
 
 const detail = computed(() => data.value ?? inquiry.value);
+const isResolved = computed(() => String(detail.value?.status ?? '').toLowerCase() === 'resolved');
 
 const statusTone = computed(() => {
     const status = String(detail.value?.status ?? '').toLowerCase();
@@ -302,7 +303,11 @@ onBeforeUnmount(() => {
                     </article>
                 </section>
 
-                <section class="farmer-app__inquiry-detail-reply-card">
+                <section v-if="isResolved" class="farmer-app__inquiry-detail-reply-card">
+                    <p>This inquiry is closed. Contact the office to reopen it if you need to add more information.</p>
+                </section>
+
+                <section v-else class="farmer-app__inquiry-detail-reply-card">
                     <div class="farmer-app__inquiry-detail-reply-compose">
                         <div ref="attachmentPickerRef" class="farmer-app__inquiry-detail-attach-wrap">
                             <button
