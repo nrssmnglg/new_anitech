@@ -8,11 +8,26 @@ use App\Models\Payment;
 use App\Models\PaymentAssessment;
 use App\Models\PaymentMethod;
 use Carbon\CarbonImmutable;
+use DomainException;
 
 class PaymentPostingService
 {
     public function record(PaymentAssessment $assessment, array $attributes, ?int $verifiedBy = null): array
     {
+        // The caller records payments inside a transaction. Locking the
+        // assessment prevents concurrent requests from posting twice.
+        $assessment = PaymentAssessment::query()
+            ->lockForUpdate()
+            ->findOrFail($assessment->id);
+
+        $referenceNo = filled($attributes['reference_no'] ?? null)
+            ? trim((string) $attributes['reference_no'])
+            : null;
+
+        if ($referenceNo !== null && $assessment->payments()->where('reference_no', $referenceNo)->exists()) {
+            throw new DomainException('This payment reference has already been recorded for the assessment.');
+        }
+
         $paymentMethodCode = strtolower(trim((string) ($attributes['payment_method'] ?? 'cash')));
         $paymentMethod = PaymentMethod::query()->firstOrCreate(
             ['code' => $paymentMethodCode],
@@ -33,7 +48,7 @@ class PaymentPostingService
 
         $payment = $assessment->payments()->create([
             'payment_method_id' => $paymentMethod->id,
-            'reference_no' => $attributes['reference_no'] ?? null,
+            'reference_no' => $referenceNo,
             'amount_paid' => $amountPaid,
             'membership_fee' => $allocation['membership_fee'],
             'annual_due' => $allocation['annual_due'],

@@ -21,6 +21,9 @@ Route::post('farmers/{farmer}/internal-notes', [InternalNoteController::class, '
     ->name('farmers.internal-notes.store');
 
 Route::middleware('role.in:' . User::ROLE_ADMIN . ',' . User::ROLE_STAFF)->group(function (): void {
+    Route::resource('farmers', FarmerController::class)
+        ->only(['edit', 'update']);
+
     Route::post('farmers/bulk-notify', [FarmerController::class, 'bulkNotify'])
         ->name('farmers.bulk-notify');
     Route::post('farmers/bulk-assign', [FarmerController::class, 'bulkAssign'])
@@ -35,5 +38,5 @@ Route::middleware('role.in:' . User::ROLE_ADMIN)->group(function (): void {
     Route::post('farmers/bulk-archive', [FarmerController::class, 'bulkArchive'])
         ->name('farmers.bulk-archive');
     Route::resource('farmers', FarmerController::class)
-        ->only(['edit', 'update', 'destroy']);
+        ->only(['destroy']);
 });

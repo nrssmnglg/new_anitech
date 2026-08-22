@@ -109,7 +109,9 @@ class FarmerController extends Controller
                 ],
                 'actions' => [
                     'showUrl' => route('admin.farmers.show', $farmer),
-                    'editUrl' => $request->user()?->role === User::ROLE_ADMIN ? route('admin.farmers.edit', $farmer) : null,
+                    'editUrl' => $request->user()?->hasRole([User::ROLE_ADMIN, User::ROLE_STAFF])
+                        ? route('admin.farmers.edit', $farmer)
+                        : null,
                     'renewalUrl' => $this->renewalEligibility($farmer)['isAvailable']
                         ? route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)])
                         : null,
@@ -394,7 +396,9 @@ class FarmerController extends Controller
                 ->all(),
             'urls' => [
                 'index' => route('admin.farmers.index'),
-                'edit' => route('admin.farmers.edit', $farmer),
+                'edit' => Auth::user()?->hasRole([User::ROLE_ADMIN, User::ROLE_STAFF])
+                    ? route('admin.farmers.edit', $farmer)
+                    : null,
                 'createApplication' => route('admin.membership-applications.create'),
                 'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)]),
                 'reactivate' => route('admin.farmers.reactivate', $farmer),
@@ -402,7 +406,7 @@ class FarmerController extends Controller
                 'storeInternalNote' => route('admin.farmers.internal-notes.store', $farmer),
             ],
             'permissions' => [
-                'canEdit' => Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false,
+                'canEdit' => Auth::user()?->hasRole([User::ROLE_ADMIN, User::ROLE_STAFF]) ?? false,
                 'canReactivate' => Auth::user()?->hasRole([User::ROLE_ADMIN, User::ROLE_STAFF]) ?? false,
             ],
             'renewal' => $this->renewalEligibility($farmer),

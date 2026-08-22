@@ -16,6 +16,7 @@ use DomainException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -83,7 +84,7 @@ class PayMongoWebhookController extends Controller
         }
 
         try {
-            $handled = $this->handlePaidEvent($eventType, $payload);
+            $handled = DB::transaction(fn (): array => $this->handlePaidEvent($eventType, $payload));
             $this->markWebhookEvent($webhookEvent, $handled['event']);
             $this->recordAuditWebhookResult($handled['event'], $eventType);
         } catch (DomainException | InvalidArgumentException | ModelNotFoundException $exception) {
@@ -173,6 +174,14 @@ class PayMongoWebhookController extends Controller
         $candidateReferences = $this->candidateReferences($eventType, $resource, $metadata);
         $target = $this->resolveTarget($metadata, $candidateReferences, $resource);
         $assessment = $target['assessment'];
+
+        if ($assessment !== null) {
+            $assessment = PaymentAssessment::query()
+                ->lockForUpdate()
+                ->findOrFail($assessment->id);
+            $target['assessment'] = $assessment;
+        }
+
         $referenceNo = $this->resolveStoredReference($candidateReferences);
         $amountPaid = $this->resolveAmountPaid($eventType, $resource, $assessment);
         $baseEvent = $this->eventAttributes($target, $assessment, $referenceNo, $amountPaid);
