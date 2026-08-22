@@ -57,7 +57,7 @@ class QueryController extends Controller
 
         $queries = (clone $baseQuery)
             ->select(['id', 'farmer_id', 'subject', 'message', 'status', 'created_at'])
-            ->with(['farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix', 'farmer:id,farmer_code', 'responses.responder:id,name'])
+            ->with(['farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix', 'farmer:id,farmer_code', 'responses.responder:id,name,role'])
             ->withCount('responses')
             ->latest('created_at')
             ->latest('id')
@@ -140,7 +140,7 @@ class QueryController extends Controller
             'farmer.association:id,name',
             'attachments',
             'responses.attachments',
-            'responses.responder:id,name',
+            'responses.responder:id,name,role',
             'internalNotes.creator:id,name',
         ]);
 
@@ -320,8 +320,12 @@ class QueryController extends Controller
         $isAdmin = Auth::user()?->role === \App\Models\User::ROLE_ADMIN;
         $canMarkComplete = ! in_array($query->status, ['Resolved'], true);
         $latestResponder = $query->relationLoaded('responses')
-            ? $query->responses->sortByDesc('responded_at')->first()?->responder?->name
-            : $query->responses()->with('responder:id,name')->latest('responded_at')->first()?->responder?->name;
+            ? $this->latestStaffResponderName($query->responses)
+            : $query->responses()
+                ->whereHas('responder', fn (Builder $responderQuery) => $responderQuery->whereIn('role', [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF]))
+                ->with('responder:id,name,role')
+                ->latest('responded_at')
+                ->first()?->responder?->name;
 
         return [
             'id' => $query->id,
@@ -351,7 +355,7 @@ class QueryController extends Controller
     private function serializeThread(Query $query): array
     {
         $isAdmin = Auth::user()?->role === \App\Models\User::ROLE_ADMIN;
-        $latestResponder = $query->responses->sortByDesc('responded_at')->first()?->responder?->name;
+        $latestResponder = $this->latestStaffResponderName($query->responses);
 
         return [
             'id' => $query->id,
@@ -411,6 +415,14 @@ class QueryController extends Controller
             'assignedStaff' => $assignedStaff,
             'reviewedBy' => null,
         ];
+    }
+
+    private function latestStaffResponderName(iterable $responses): ?string
+    {
+        return collect($responses)
+            ->filter(fn (QueryResponse $response): bool => in_array($response->responder?->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_STAFF], true))
+            ->sortByDesc('responded_at')
+            ->first()?->responder?->name;
     }
 
     private function responseTemplates(): array
