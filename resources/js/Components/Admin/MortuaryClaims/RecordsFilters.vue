@@ -6,12 +6,12 @@ defineProps({
     urls: { type: Object, required: true },
 });
 
-defineEmits(['apply', 'reset', 'export']);
+const emit = defineEmits(['apply', 'reset', 'export']);
 </script>
 
 <template>
     <section class="rounded-[24px] border border-[#dfe5e1] bg-[#f2f4f3] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-        <form class="grid gap-4 xl:grid-cols-[1.35fr_0.75fr_0.85fr_1fr_auto]" @submit.prevent="$emit('apply')">
+        <form class="grid gap-4 xl:grid-cols-[1.35fr_0.75fr_0.85fr_1fr_auto]" @submit.prevent="emit('apply')">
             <label class="space-y-2">
                 <span class="text-[0.66rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Search</span>
                 <div class="relative">
@@ -41,10 +41,10 @@ defineEmits(['apply', 'reset', 'export']);
                 </select>
             </label>
             <div class="flex items-end gap-2">
-                <button type="button" class="inline-flex h-[48px] items-center justify-center rounded-xl border border-[#cfd7d3] bg-white px-4 text-sm font-bold text-[#697772] transition hover:bg-[#f9fbfa]" @click="$emit('reset')">
+                    <button type="button" class="inline-flex h-[48px] items-center justify-center rounded-xl border border-[#cfd7d3] bg-white px-4 text-sm font-bold text-[#697772] transition hover:bg-[#f9fbfa]" @click="emit('reset')">
                     Reset
                 </button>
-                <button type="button" class="inline-flex h-[48px] items-center justify-center rounded-xl border border-[#d6eadf] bg-[#eef8f2] px-4 text-sm font-extrabold text-[#047857] transition hover:bg-[#dff2e6]" @click="$emit('export')">
+                    <button type="button" class="inline-flex h-[48px] items-center justify-center rounded-xl border border-[#d6eadf] bg-[#eef8f2] px-4 text-sm font-extrabold text-[#047857] transition hover:bg-[#dff2e6]" @click="emit('export')">
                     Export
                 </button>
                 <button type="submit" class="inline-flex h-[48px] items-center justify-center rounded-xl border border-[#003629] bg-white px-5 text-sm font-extrabold text-[#003629] transition hover:bg-[#edf5f2]">
