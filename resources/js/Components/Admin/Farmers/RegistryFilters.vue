@@ -5,10 +5,9 @@ defineProps({
     activeFilterCount: { type: Number, required: true },
     totalPages: { type: Number, required: true },
     filteredTargetCount: { type: Number, required: true },
-    qualityCards: { type: Array, required: true },
 });
 
-defineEmits(['apply', 'reset', 'open-export', 'set-quality-filter']);
+defineEmits(['apply', 'reset', 'open-export']);
 </script>
 
 <template>

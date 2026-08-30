@@ -188,6 +188,8 @@ function visibleQualityIssues(issues) {
                                 <Link
                                     v-if="farmer.actions.renewalUrl"
                                     :href="farmer.actions.renewalUrl"
+                                    :aria-label="`Process renewal for ${farmer.fullName}`"
+                                    :title="`Process renewal for ${farmer.fullName}`"
                                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition"
                                     :class="actionButtonClass('renewal')"
                                 >
@@ -199,6 +201,7 @@ function visibleQualityIssues(issues) {
                                 <span
                                     v-else
                                     :title="farmer.renewal?.disabledReason || ''"
+                                    :aria-label="`Renewal unavailable: ${farmer.renewal?.disabledReason || 'not eligible'}`"
                                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border"
                                     :class="actionButtonClass('renewal', true)"
                                 >

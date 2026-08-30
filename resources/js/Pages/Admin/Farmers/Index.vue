@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import RegistryFilters from '../../../Components/Admin/Farmers/RegistryFilters.vue';
@@ -32,16 +32,15 @@ const props = defineProps({
     bulkPermissions: { type: Object, required: true },
 });
 
+const page = usePage();
+const flashSuccess = computed(() => page.props.flash?.success || '');
+const flashError = computed(() => page.props.flash?.error || '');
+
 const frozenSummary = {
     total: props.summary.total,
     active: props.summary.active,
     inactive: props.summary.inactive,
     deceased: props.summary.deceased,
-    duplicates: props.summary.duplicates,
-    incompleteProfiles: props.summary.incompleteProfiles,
-    invalidMobileNumbers: props.summary.invalidMobileNumbers,
-    barangayAssociationMismatches: props.summary.barangayAssociationMismatches,
-    inactiveForReview: props.summary.inactiveForReview,
 };
 
 const form = reactive({
@@ -100,14 +99,6 @@ const selectedCount = computed(() => selectedIds.value.length);
 const filteredTargetCount = computed(() => props.farmers.total || 0);
 const allCurrentPageSelected = computed(() => props.farmers.data.length > 0 && props.farmers.data.every((farmer) => selectedIds.value.includes(farmer.id)));
 
-const qualityCards = computed(() => [
-    { value: 'duplicate', label: 'Duplicate Detection', count: frozenSummary.duplicates, tone: 'border-[#ead7b2] bg-[#fff8ea] text-[#996515]' },
-    { value: 'incomplete_profile', label: 'Incomplete Profiles', count: frozenSummary.incompleteProfiles, tone: 'border-[#d5e4da] bg-[#f3faf6] text-[#245342]' },
-    { value: 'invalid_mobile', label: 'Invalid Mobile Numbers', count: frozenSummary.invalidMobileNumbers, tone: 'border-[#edd5cf] bg-[#fff4f1] text-[#a44d3f]' },
-    { value: 'barangay_association_mismatch', label: 'Barangay Mismatch', count: frozenSummary.barangayAssociationMismatches, tone: 'border-[#d8daf5] bg-[#f4f5ff] text-[#4655a4]' },
-    { value: 'inactive_review', label: 'Inactive Needing Review', count: frozenSummary.inactiveForReview, tone: 'border-[#e2d4db] bg-[#fbf5f8] text-[#8d4663]' },
-]);
-
 const assignmentAssociations = computed(() => {
     if (!assignmentForm.barangay_id) {
         return props.filterOptions.associations || [];
@@ -115,11 +106,6 @@ const assignmentAssociations = computed(() => {
 
     return (props.filterOptions.associations || []).filter((association) => String(association.barangay_id) === String(assignmentForm.barangay_id));
 });
-
-function setQualityFilter(value) {
-    form.quality = form.quality === value ? '' : value;
-    applyFilters();
-}
 
 function setStatusFilter(value) {
     form.status = value || '';
@@ -277,6 +263,13 @@ function submitBulkArchive() {
 
     <AdminLayout title="Farmer Registry">
         <div class="space-y-7">
+            <section v-if="flashSuccess" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
+                {{ flashSuccess }}
+            </section>
+            <section v-if="flashError" class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800">
+                {{ flashError }}
+            </section>
+
             <RegistryHero
                 :total="frozenSummary.total"
                 :create-url="createApplicationUrl"
@@ -291,11 +284,9 @@ function submitBulkArchive() {
                 :active-filter-count="activeFilterCount"
                 :total-pages="totalPages"
                 :filtered-target-count="filteredTargetCount"
-                :quality-cards="qualityCards"
                 @apply="applyFilters"
                 @reset="resetFilters"
                 @open-export="openExportModal"
-                @set-quality-filter="setQualityFilter"
             />
 
             <RegistryTable

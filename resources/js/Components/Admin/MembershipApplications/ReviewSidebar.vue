@@ -95,5 +95,44 @@ defineEmits(['submit-payment', 'submit-rejection']);
                 </article>
             </div>
         </section>
+
+        <section
+            v-if="permissions.canRejectDecision && !flow.paymentSettled && application.status.value !== 'rejected'"
+            class="rounded-[24px] border border-[#f1c9c9] bg-[#fff8f8] shadow-[0_14px_32px_rgba(127,29,29,0.05)]"
+        >
+            <div class="border-b border-[#f1dada] px-5 py-4">
+                <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#a34d4d]">Review decision</p>
+                <h2 class="mt-1 text-base font-bold text-[#7f1d1d]">Reject application</h2>
+                <p class="mt-2 text-sm leading-6 text-[#7f5555]">Use this only when the application cannot proceed. The applicant may submit a replacement application afterward.</p>
+            </div>
+
+            <form class="space-y-4 px-5 py-5" @submit.prevent="$emit('submit-rejection')">
+                <label class="space-y-2">
+                    <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7f5555]">Rejection Reason</span>
+                    <select v-model="rejectionForm.rejection_reason" required class="w-full rounded-2xl border border-[#e7bebe] bg-white px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#b42318]">
+                        <option value="">Select a reason</option>
+                        <option v-for="reason in rejectionReasonOptions" :key="reason.value" :value="reason.value">{{ reason.label }}</option>
+                    </select>
+                </label>
+
+                <label v-if="rejectionForm.rejection_reason === 'other'" class="space-y-2">
+                    <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7f5555]">Rejection Details</span>
+                    <textarea v-model="rejectionForm.rejection_details" required rows="3" class="w-full resize-none rounded-2xl border border-[#e7bebe] bg-white px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#b42318]"></textarea>
+                </label>
+
+                <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-[#a62828] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#8f1e1e] disabled:cursor-not-allowed disabled:opacity-60" :disabled="rejectionForm.processing || !rejectionForm.rejection_reason">
+                    {{ rejectionForm.processing ? 'Rejecting...' : 'Reject Application' }}
+                </button>
+            </form>
+        </section>
+
+        <section v-if="application.status.value === 'rejected' && urls.reapply" class="rounded-[24px] border border-[#f0d8a8] bg-[#fffaf0] p-5 shadow-[0_14px_32px_rgba(120,82,20,0.05)]">
+            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#9a6700]">Next step</p>
+            <h2 class="mt-1 text-base font-bold text-[#6e4a00]">Create a replacement application</h2>
+            <p class="mt-2 text-sm leading-6 text-[#745b2f]">The rejected record remains in history. Start a new application using the corrected details.</p>
+            <Link :href="urls.reapply" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-[#d6ad59] bg-white px-5 py-3 text-sm font-extrabold text-[#765000] transition hover:bg-[#fff4d9]">
+                Reapply for Membership
+            </Link>
+        </section>
     </div>
 </template>

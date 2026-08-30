@@ -62,7 +62,6 @@ class FarmerController extends Controller
     public function index(Request $request): InertiaResponse
     {
         $filters = $this->filters($request);
-        $qualityCounts = $this->qualityIssueCounts();
         $summaryQuery = $this->applyIndexFilters($this->listedFarmersQuery(), $filters, includeStatus: false);
         $farmers = $this->applyIndexFilters($this->listedFarmersQuery(), $filters)
             ->withCount([
@@ -130,11 +129,6 @@ class FarmerController extends Controller
                 'active' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::ACTIVE)->count(),
                 'inactive' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::INACTIVE)->count(),
                 'deceased' => $this->applyStatusFilter(clone $summaryQuery, FarmerStatus::DECEASED)->count(),
-                'duplicates' => $qualityCounts['duplicates'],
-                'incompleteProfiles' => $qualityCounts['incomplete_profiles'],
-                'invalidMobileNumbers' => $qualityCounts['invalid_mobile_numbers'],
-                'barangayAssociationMismatches' => $qualityCounts['barangay_association_mismatches'],
-                'inactiveForReview' => $qualityCounts['inactive_for_review'],
             ],
             'createApplicationUrl' => route('admin.membership-applications.create'),
             'exportBaseUrl' => route('admin.farmers.export'),
@@ -613,18 +607,32 @@ class FarmerController extends Controller
 
         $farmers = $this->resolveBulkFarmers($validated);
 
+        $farmers->load('users:id,farmer_id,email,role,status');
+
         $recipients = $farmers
-            ->filter(fn (Farmer $farmer): bool => filled($farmer->profile?->mobile_number))
-            ->map(fn (Farmer $farmer): array => [
-                'farmer_id' => $farmer->id,
-                'recipient_address' => $farmer->profile?->mobile_number,
-                'mobile_number' => $farmer->profile?->mobile_number,
-            ])
+            ->map(function (Farmer $farmer): ?array {
+                $account = $farmer->users
+                    ->first(fn (User $user): bool => $user->role === User::ROLE_FARMER
+                        && $user->status === User::STATUS_ACTIVE
+                        && filled($user->email));
+
+                if (! $account) {
+                    return null;
+                }
+
+                return [
+                    'user_id' => $account->id,
+                    'farmer_id' => $farmer->id,
+                    'recipient_address' => $account->email,
+                    'email' => $account->email,
+                ];
+            })
+            ->filter()
             ->values()
             ->all();
 
         if ($recipients === []) {
-            return back()->with('error', 'No selected farmer has a mobile number available for notification.');
+            return back()->with('error', 'No selected farmer has an active account email available for notification.');
         }
 
         $this->notificationDispatchService->persist(
@@ -969,8 +977,8 @@ class FarmerController extends Controller
                         });
                 });
             })
-            ->when($includeStatus && ($filters['status'] ?? null), function (Builder $builder, string $status): void {
-                $this->applyStatusFilter($builder, $status);
+            ->when($includeStatus && ($filters['status'] ?? null), function (Builder $builder) use ($filters): void {
+                $this->applyStatusFilter($builder, $filters['status']);
             })
             ->when($filters['barangay_id'] ?? null, fn (Builder $builder, string $barangayId) => $builder->where('barangay_id', $barangayId))
             ->when($filters['member_type_id'] ?? null, fn (Builder $builder, string $memberTypeId) => $builder->where('member_type_id', $memberTypeId))
@@ -1067,25 +1075,6 @@ class FarmerController extends Controller
                     ->whereNull('inactive_reason')
                     ->orWhere('inactive_reason', '');
             });
-    }
-
-    private function qualityIssueCounts(): array
-    {
-        return [
-            'duplicates' => $this->countForQualityIssue(fn (Builder $query) => $this->applyDuplicateFilter($query)),
-            'incomplete_profiles' => $this->countForQualityIssue(fn (Builder $query) => $this->applyIncompleteProfileFilter($query)),
-            'invalid_mobile_numbers' => $this->countForQualityIssue(fn (Builder $query) => $this->applyInvalidMobileFilter($query)),
-            'barangay_association_mismatches' => $this->countForQualityIssue(fn (Builder $query) => $this->applyBarangayAssociationMismatchFilter($query)),
-            'inactive_for_review' => $this->countForQualityIssue(fn (Builder $query) => $this->applyInactiveReviewFilter($query)),
-        ];
-    }
-
-    private function countForQualityIssue(\Closure $callback): int
-    {
-        $query = $this->listedFarmersQuery();
-        $callback($query);
-
-        return (clone $query)->count();
     }
 
     private function exportFarmersQuery(array $filters): Builder

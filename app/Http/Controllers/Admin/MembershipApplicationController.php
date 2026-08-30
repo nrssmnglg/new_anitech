@@ -29,6 +29,7 @@ use App\Services\Farmers\FarmerStatusWorkflowService;
 use App\Services\Membership\FeeCalculatorService;
 use App\Services\Membership\MemberTypeResolverService;
 use App\Services\Membership\MembershipApplicationService;
+use App\Services\Payments\PaymentAssessmentService;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -52,6 +53,7 @@ class MembershipApplicationController extends Controller
         private readonly MemberTypeResolverService $memberTypeResolverService,
         private readonly DocumentRequirementService $documentRequirementService,
         private readonly FeeCalculatorService $feeCalculatorService,
+        private readonly PaymentAssessmentService $paymentAssessmentService,
         private readonly AnalyticsService $analyticsService,
     ) {
     }
@@ -437,9 +439,22 @@ class MembershipApplicationController extends Controller
         $assessment = $membershipApplication->paymentAssessments->sortByDesc('id')->first();
         $paymentPreview = null;
 
-        if ($membershipApplication->farmer?->memberType?->code) {
+        if ($assessment) {
+            $paymentPreview = [
+                'membership_fee' => (float) $assessment->membership_fee,
+                'annual_due' => (float) $assessment->annual_due,
+                'mortuary_fee' => (float) $assessment->mortuary_fee,
+                'total' => (float) $assessment->total_amount_due,
+            ];
+        } elseif ($membershipApplication->farmer?->memberType?->code) {
+            // Use the same active fee schedule that will be used when the
+            // assessment is created, rather than the calculator's fallback fees.
+            $feeSchedule = $this->paymentAssessmentService->resolveFeeSchedule(
+                $membershipApplication->farmer->member_type_id,
+            );
             $paymentPreview = $this->feeCalculatorService->calculateApplication([
                 'member_type' => $membershipApplication->farmer->memberType->code,
+                'fee_schedule' => $feeSchedule,
             ]);
         }
         $requiredDocuments = $checklistInitialized
