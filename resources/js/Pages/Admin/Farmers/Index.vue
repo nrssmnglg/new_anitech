@@ -4,7 +4,6 @@ import { computed, reactive, ref } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import RegistryFilters from '../../../Components/Admin/Farmers/RegistryFilters.vue';
 import RegistryHero from '../../../Components/Admin/Farmers/RegistryHero.vue';
-import RegistrySummaryGrid from '../../../Components/Admin/Farmers/RegistrySummaryGrid.vue';
 import RegistryTable from '../../../Components/Admin/Farmers/RegistryTable.vue';
 
 const availableExportColumns = [
@@ -35,13 +34,6 @@ const props = defineProps({
 const page = usePage();
 const flashSuccess = computed(() => page.props.flash?.success || '');
 const flashError = computed(() => page.props.flash?.error || '');
-
-const frozenSummary = {
-    total: props.summary.total,
-    active: props.summary.active,
-    inactive: props.summary.inactive,
-    deceased: props.summary.deceased,
-};
 
 const form = reactive({
     search: props.filters.search || '',
@@ -106,11 +98,6 @@ const assignmentAssociations = computed(() => {
 
     return (props.filterOptions.associations || []).filter((association) => String(association.barangay_id) === String(assignmentForm.barangay_id));
 });
-
-function setStatusFilter(value) {
-    form.status = value || '';
-    applyFilters();
-}
 
 function toggleSelection(id) {
     if (selectedIds.value.includes(id)) {
@@ -262,7 +249,7 @@ function submitBulkArchive() {
     <Head title="Farmer Registry" />
 
     <AdminLayout title="Farmer Registry">
-        <div class="space-y-7">
+        <div class="space-y-4">
             <section v-if="flashSuccess" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
                 {{ flashSuccess }}
             </section>
@@ -270,15 +257,10 @@ function submitBulkArchive() {
                 {{ flashError }}
             </section>
 
-            <RegistryHero
-                :total="frozenSummary.total"
-                :create-url="createApplicationUrl"
-                @export="openExportModal"
-            />
+            <RegistryHero :create-url="createApplicationUrl" @export="openExportModal" />
 
-            <RegistrySummaryGrid :summary="frozenSummary" @filter-status="setStatusFilter" />
-
-            <RegistryFilters
+            <div class="overflow-hidden rounded-[10px] border border-[#cbd4cf] bg-white">
+                <RegistryFilters
                 :form="form"
                 :filter-options="filterOptions"
                 :active-filter-count="activeFilterCount"
@@ -287,9 +269,9 @@ function submitBulkArchive() {
                 @apply="applyFilters"
                 @reset="resetFilters"
                 @open-export="openExportModal"
-            />
+                />
 
-            <RegistryTable
+                <RegistryTable
                 :farmers="farmers"
                 :total-pages="totalPages"
                 :selected-ids="selectedIds"
@@ -303,7 +285,8 @@ function submitBulkArchive() {
                 @open-bulk-modal="openBulkModal"
                 @update-bulk-scope="bulkScope = $event"
                 @clear-selection="selectedIds = []"
-            />
+                />
+            </div>
         </div>
 
         <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-6" @click.self="closeExportModal">

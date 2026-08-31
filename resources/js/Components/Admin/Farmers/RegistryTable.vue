@@ -59,17 +59,17 @@ function visibleQualityIssues(issues) {
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-[28px] border border-[#dbe2de] bg-white shadow-[0_10px_32px_rgba(15,23,42,0.05)]">
-        <div class="flex flex-col gap-2 border-b border-[#e4ebe7] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <section class="overflow-hidden border-t border-[#cbd4cf] bg-white">
+        <div class="flex flex-col gap-2 border-b border-[#e4ebe7] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Registry Table</p>
+                <p class="flex items-center gap-3 text-sm font-medium text-[#263d35]"><span class="text-xl leading-none">⋮</span>Bulk Actions</p>
             </div>
             <p class="text-sm text-[#697772]">
                 Showing {{ farmers.from || 0 }} to {{ farmers.to || 0 }} of {{ farmers.total }} records
             </p>
         </div>
 
-        <div class="border-b border-[#e4ebe7] bg-[#f8faf9] px-6 py-4">
+        <div class="border-b border-[#e4ebe7] bg-[#f8faf9] px-5 py-2.5">
             <div v-if="selectedCount > 0 || bulkScope === 'filtered'" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-[#245342]">
@@ -113,25 +113,25 @@ function visibleQualityIssues(issues) {
             <table class="min-w-full divide-y divide-[#e5ece8] text-sm">
                 <thead class="bg-[#f4f7f5]">
                     <tr class="text-left text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">
-                        <th class="px-6 py-4">
+                        <th class="px-5 py-3">
                             <input :checked="allCurrentPageSelected" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]" @change="$emit('toggle-select-all')">
                         </th>
-                        <th class="px-6 py-4">Farmer</th>
-                        <th class="px-6 py-4">Contact &amp; Location</th>
-                        <th class="px-6 py-4">Type</th>
-                        <th class="px-6 py-4 text-center">Status</th>
-                        <th class="px-6 py-4 text-right">Actions</th>
+                        <th class="px-5 py-3">Farmer</th>
+                        <th class="px-5 py-3">Contact &amp; Location</th>
+                        <th class="px-5 py-3">Type</th>
+                        <th class="px-5 py-3 text-center">Status</th>
+                        <th class="px-5 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-[#edf2ef] bg-white">
                     <tr v-for="farmer in farmers.data" :key="farmer.id" class="transition hover:bg-[#fbfdfc]">
-                        <td class="px-6 py-4 align-top">
+                        <td class="px-5 py-3 align-top">
                             <input :checked="selectedIds.includes(farmer.id)" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]" @change="$emit('toggle-selection', farmer.id)">
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-3">
                             <div class="flex items-center gap-4">
-                                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black" :class="avatarTone(farmer.status.value)">
+                                <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-xs font-black" :class="avatarTone(farmer.status.value)">
                                     {{ initials(farmer.fullName) }}
                                 </div>
                                 <div>
@@ -142,8 +142,8 @@ function visibleQualityIssues(issues) {
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <p class="text-base font-bold text-[#1b2320]">{{ farmer.barangay || 'No barangay' }}</p>
+                        <td class="px-5 py-3">
+                            <p class="text-sm font-bold text-[#1b2320]">{{ farmer.barangay || 'No barangay' }}</p>
                             <p v-if="farmer.association" class="mt-1 text-xs font-medium text-[#61706a]">{{ farmer.association }}</p>
                             <p class="mt-2 text-sm text-[#6c7772]">{{ farmer.contact.mobileNumber || 'No mobile number' }}</p>
                             <div v-if="visibleQualityIssues(farmer.qualityIssues).length" class="mt-3 flex flex-wrap gap-2">
@@ -157,13 +157,13 @@ function visibleQualityIssues(issues) {
                                 </span>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-3">
                             <span v-if="farmer.memberType" class="inline-flex rounded-full bg-[#eef1ef] px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f6d67]">
                                 {{ farmer.memberType.code }}
                             </span>
                             <p class="mt-2 text-xs text-[#61706a]">{{ farmer.memberType?.name || 'Unassigned' }}</p>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-5 py-3 text-center">
                             <span class="inline-flex rounded-full border px-4 py-1.5 text-[0.64rem] font-black uppercase tracking-[0.22em]" :class="statusBadge(farmer.status.value)">
                                 {{ farmer.status.label }}
                             </span>
@@ -171,15 +171,15 @@ function visibleQualityIssues(issues) {
                                 {{ farmer.inactiveReason }}
                             </p>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-3">
                             <div class="flex justify-end gap-2">
-                                <Link :href="farmer.actions.showUrl" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition" :class="actionButtonClass('view')">
+                                <Link :href="farmer.actions.showUrl" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border transition" :class="actionButtonClass('view')">
                                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
                                         <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
                                 </Link>
-                                <Link v-if="farmer.actions.editUrl" :href="farmer.actions.editUrl" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition" :class="actionButtonClass('edit')">
+                                <Link v-if="farmer.actions.editUrl" :href="farmer.actions.editUrl" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border transition" :class="actionButtonClass('edit')">
                                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
@@ -190,7 +190,7 @@ function visibleQualityIssues(issues) {
                                     :href="farmer.actions.renewalUrl"
                                     :aria-label="`Process renewal for ${farmer.fullName}`"
                                     :title="`Process renewal for ${farmer.fullName}`"
-                                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border transition"
                                     :class="actionButtonClass('renewal')"
                                 >
                                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -202,7 +202,7 @@ function visibleQualityIssues(issues) {
                                     v-else
                                     :title="farmer.renewal?.disabledReason || ''"
                                     :aria-label="`Renewal unavailable: ${farmer.renewal?.disabledReason || 'not eligible'}`"
-                                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border"
                                     :class="actionButtonClass('renewal', true)"
                                 >
                                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -226,7 +226,7 @@ function visibleQualityIssues(issues) {
             </table>
         </div>
 
-        <div class="flex flex-col gap-4 border-t border-[#e4ebe7] bg-[#f4f7f5] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3 border-t border-[#e4ebe7] bg-[#f4f7f5] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <span class="text-sm text-[#65736d]">Page {{ farmers.current_page }} of {{ totalPages }}</span>
 
             <div class="flex flex-wrap items-center gap-2">

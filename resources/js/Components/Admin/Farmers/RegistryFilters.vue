@@ -11,40 +11,38 @@ defineEmits(['apply', 'reset', 'open-export']);
 </script>
 
 <template>
-    <section class="rounded-[20px] border border-[#dbe2de] bg-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
-        <div class="flex flex-col gap-3 border-b border-[#e4ebe7] px-1.5 pb-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-                <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Filters</p>
+    <section class="bg-[#fbfcfc] px-4 py-3 sm:px-5">
+        <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <svg viewBox="0 0 24 24" class="h-5 w-5 text-[#263d35]" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                <p class="text-[0.76rem] font-black uppercase tracking-[0.08em] text-[#263d35]">Registry Filters</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 text-[0.92rem]">
-                <span class="inline-flex items-center rounded-full bg-[#f0f4f2] px-3 py-1 font-semibold text-[#5e6d66]">
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="inline-flex items-center rounded-full bg-[#f0f4f2] px-2.5 py-1 font-semibold text-[#5e6d66]">
                     {{ activeFilterCount }} active filter{{ activeFilterCount === 1 ? '' : 's' }}
                 </span>
-                <span class="inline-flex items-center rounded-full bg-[#eef7f2] px-3 py-1 font-semibold text-[#245342]">
-                    {{ totalPages }} page{{ totalPages === 1 ? '' : 's' }}
-                </span>
-                <span class="inline-flex items-center rounded-full bg-[#f6f8f7] px-3 py-1 font-semibold text-[#5e6d66]">
+                <span class="inline-flex items-center rounded-full border border-[#91d6b9] bg-[#f1fff9] px-2.5 py-1 font-semibold text-[#003629]">
                     {{ filteredTargetCount }} result{{ filteredTargetCount === 1 ? '' : 's' }}
                 </span>
             </div>
         </div>
 
-        <form class="space-y-3 px-1.5 pt-3" @submit.prevent="$emit('apply')">
+        <form class="mt-3 space-y-2" @submit.prevent="$emit('apply')">
             <div class="grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr]">
                 <label class="space-y-1.5">
-                    <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Search</span>
+                    <span class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-[#263d35]">Search Records</span>
                     <div class="relative">
                         <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#95a39c]" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="7"></circle>
                             <path d="m20 20-3.5-3.5"></path>
                         </svg>
-                        <input v-model="form.search" type="text" placeholder="Code, name, mobile, address" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] py-2.5 pl-10 pr-4 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white">
+                        <input v-model="form.search" type="text" placeholder="Search by code, name, mobile..." class="w-full rounded-md border border-[#c8d0cc] bg-white py-2 pl-9 pr-3 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                     </div>
                 </label>
 
                 <label class="space-y-1.5">
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Status</span>
-                    <select v-model="form.status" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white" @change="$emit('apply')">
+                    <select v-model="form.status" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]" @change="$emit('apply')">
                         <option value="">All statuses</option>
                         <option v-for="status in filterOptions.statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
                     </select>
@@ -52,7 +50,7 @@ defineEmits(['apply', 'reset', 'open-export']);
 
                 <label class="space-y-1.5">
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Barangay</span>
-                    <select v-model="form.barangay_id" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white">
+                    <select v-model="form.barangay_id" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                         <option value="">All barangays</option>
                         <option v-for="barangay in filterOptions.barangays" :key="barangay.id" :value="String(barangay.id)">{{ barangay.name }}</option>
                     </select>
@@ -60,7 +58,7 @@ defineEmits(['apply', 'reset', 'open-export']);
 
                 <label class="space-y-1.5">
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Member Type</span>
-                    <select v-model="form.member_type_id" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white">
+                    <select v-model="form.member_type_id" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                         <option value="">All member types</option>
                         <option v-for="memberType in filterOptions.memberTypes" :key="memberType.id" :value="String(memberType.id)">
                             {{ memberType.code }} - {{ memberType.name }}
@@ -69,33 +67,14 @@ defineEmits(['apply', 'reset', 'open-export']);
                 </label>
             </div>
 
-            <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-                <label class="space-y-1.5">
-                    <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Data Quality</span>
-                    <select v-model="form.quality" class="w-full rounded-[1.05rem] border border-[#d7e0db] bg-[#f8faf9] px-4 py-2.5 text-[0.95rem] text-[#1a2420] outline-none transition focus:border-[#376757] focus:bg-white">
-                        <option value="">All records</option>
-                        <option value="duplicate">Possible duplicates</option>
-                        <option value="incomplete_profile">Incomplete profiles</option>
-                        <option value="invalid_mobile">Invalid mobile numbers</option>
-                        <option value="barangay_association_mismatch">Barangay and association mismatches</option>
-                        <option value="inactive_review">Inactive records needing review</option>
-                    </select>
-                </label>
-
-                <div class="flex flex-wrap items-end justify-start gap-2 xl:justify-end">
-                    <button type="button" class="inline-flex h-[42px] items-center justify-center rounded-[1.05rem] border border-[#d6dfda] px-4 text-[0.95rem] font-bold text-[#5c6b65] transition hover:bg-[#f3f6f4]" @click="$emit('open-export', 'pdf')">
-                        Export PDF
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                    <button type="button" class="inline-flex h-8 items-center justify-center px-2 text-xs font-bold text-[#263d35] transition hover:text-[#003629]" @click="$emit('reset')">
+                        Clear All
                     </button>
-                    <button type="button" class="inline-flex h-[42px] items-center justify-center rounded-[1.05rem] border border-[#d6dfda] px-4 text-[0.95rem] font-bold text-[#5c6b65] transition hover:bg-[#f3f6f4]" @click="$emit('open-export', 'xlsx')">
-                        Export Excel
-                    </button>
-                    <button type="button" class="inline-flex h-[42px] items-center justify-center rounded-[1.05rem] border border-[#d6dfda] px-4 text-[0.95rem] font-bold text-[#5c6b65] transition hover:bg-[#f3f6f4]" @click="$emit('reset')">
-                        Reset
-                    </button>
-                    <button type="submit" class="inline-flex h-[42px] items-center justify-center rounded-[1.05rem] bg-[#003629] px-5 text-[0.95rem] font-extrabold text-white transition hover:bg-[#0d4637]">
+                    <button type="submit" class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-[#003629] px-4 text-xs font-extrabold text-white transition hover:bg-[#0d4637]">
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>
                         Apply Filters
                     </button>
-                </div>
             </div>
         </form>
     </section>
