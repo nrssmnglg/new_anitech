@@ -74,11 +74,16 @@ class Payment extends Model
 
                 return match ($normalized) {
                     PaymentStatus::PENDING->value => 'Pending',
-                    PaymentStatus::PARTIALLY_PAID->value => 'Partially Paid',
-                    PaymentStatus::PAID->value,
+                    // The persisted payment workflow intentionally records
+                    // only pending, verified, rejected, paid, and cancelled.
+                    // Partial, overpaid, and waived calculations remain
+                    // assessment-level details and resolve to a compatible
+                    // payment record status.
+                    PaymentStatus::PARTIALLY_PAID->value => 'Pending',
+                    PaymentStatus::PAID->value => 'Paid',
                     PaymentStatus::VERIFIED->value => 'Verified',
-                    PaymentStatus::OVERPAID->value => 'Overpaid',
-                    PaymentStatus::WAIVED->value => 'Waived',
+                    PaymentStatus::OVERPAID->value,
+                    PaymentStatus::WAIVED->value => 'Paid',
                     PaymentStatus::CANCELLED->value => 'Cancelled',
                     PaymentStatus::REJECTED->value => 'Rejected',
                     default => 'Pending',

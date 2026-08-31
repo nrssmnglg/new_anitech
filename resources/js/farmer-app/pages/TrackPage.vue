@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import AppState from '../components/ui/AppState.vue';
 import { useLocale } from '../composables/useLocale';
@@ -401,8 +401,13 @@ async function loadApplication() {
                 : 'Showing saved status from this device.';
         } else {
             application.value = null;
-            error.value = extractApiMessage(err, t('track.lookup_failed'));
-            validationErrors.value = extractValidationErrors(err);
+            const errors = extractValidationErrors(err);
+            validationErrors.value = errors;
+            // Validation messages already appear below their inputs. Keep the
+            // page-level state for errors that are not tied to a field.
+            error.value = Object.keys(errors).length
+                ? ''
+                : extractApiMessage(err, t('track.lookup_failed'));
         }
     } finally {
         loading.value = false;
@@ -444,6 +449,15 @@ restoreLookup();
 if (pageMode.value === 'status' && hasLookup.value) {
     loadApplication();
 }
+
+watch(
+    () => route.name,
+    () => {
+        if (pageMode.value === 'status' && hasLookup.value) {
+            loadApplication();
+        }
+    },
+);
 </script>
 
 <template>

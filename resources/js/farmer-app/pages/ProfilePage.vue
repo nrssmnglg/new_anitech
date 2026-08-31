@@ -146,8 +146,13 @@ const submit = async () => {
         editing.value = false;
         hydrateForm();
     } catch (err) {
-        formError.value = err?.response?.data?.message ?? 'Unable to update profile.';
-        validationErrors.value = err?.response?.data?.errors ?? {};
+        const errors = err?.response?.data?.errors ?? {};
+        validationErrors.value = errors;
+        // Field-level errors are rendered beside their inputs. Avoid repeating
+        // the same validation problem again in the form-level AppState.
+        formError.value = Object.keys(errors).length
+            ? ''
+            : (err?.response?.data?.message ?? 'Unable to update profile.');
     } finally {
         saving.value = false;
     }
