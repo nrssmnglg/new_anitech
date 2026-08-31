@@ -338,6 +338,7 @@ class RenewalController extends Controller
             ->with([
                 'profile',
                 'memberType:id,code,name',
+                'association:id,name',
             ])
             ->findOrFail($farmerId);
 
@@ -346,6 +347,10 @@ class RenewalController extends Controller
                 'renewal' => 'Annual due is already recorded for ' . $year . '. Renewal cannot be created again.',
             ]);
         }
+
+        $paymentPreview = $this->feeCalculatorService->calculateRenewal([
+            'member_type' => $farmer->memberType?->code,
+        ]);
 
         return Inertia::render('Admin/Renewals/Create', [
             'farmer' => [
@@ -356,8 +361,15 @@ class RenewalController extends Controller
                     'code' => $farmer->memberType->code,
                     'name' => $farmer->memberType->name,
                 ] : null,
+                'association' => $farmer->association?->name,
             ],
             'defaultYear' => $year,
+            'amountDue' => (float) ($paymentPreview['total'] ?? 0),
+            'paymentBreakdown' => [
+                'annualDue' => (float) ($paymentPreview['annual_due'] ?? 0),
+                'mortuaryFee' => (float) ($paymentPreview['mortuary_fee'] ?? 0),
+                'total' => (float) ($paymentPreview['total'] ?? 0),
+            ],
             'storeUrl' => route('admin.renewals.store'),
             'indexUrl' => route('admin.farmers.index'),
             'showFarmerUrl' => route('admin.farmers.show', $farmer),
@@ -376,13 +388,36 @@ class RenewalController extends Controller
             ]);
         }
 
-        try {
-            $renewal = $this->renewalRequestService->create([
-                'farmer_id' => $farmer->id,
-                'year' => $year,
-                'source' => 'walk_in',
-                'remarks' => $request->validated('remarks'),
+        $paymentPreview = $this->feeCalculatorService->calculateRenewal([
+            'member_type' => $farmer->memberType?->code,
+        ]);
+        $amountDue = (float) ($paymentPreview['total'] ?? 0);
+
+        if ((float) $request->validated('amount_paid') < $amountDue) {
+            throw ValidationException::withMessages([
+                'amount_paid' => 'Full payment of PHP ' . number_format($amountDue, 2) . ' is required to complete the renewal.',
             ]);
+        }
+
+        try {
+            $renewal = DB::transaction(function () use ($request, $farmer, $year): RenewalRequest {
+                $createdRenewal = $this->renewalRequestService->create([
+                    'farmer_id' => $farmer->id,
+                    'year' => $year,
+                    'source' => 'walk_in',
+                    'remarks' => $request->validated('remarks'),
+                ]);
+
+                $this->renewalRequestService->recordPayment($createdRenewal, [
+                    'payment_method' => $request->validated('payment_method'),
+                    'reference_no' => $request->validated('reference_no'),
+                    'amount_paid' => $request->validated('amount_paid'),
+                    'paid_at' => $request->validated('paid_at'),
+                    'receipt_no' => null,
+                ], Auth::id());
+
+                return $createdRenewal;
+            });
         } catch (DomainException $exception) {
             throw ValidationException::withMessages([
                 'renewal' => $exception->getMessage(),
@@ -399,8 +434,8 @@ class RenewalController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.renewals.show', $renewal)
-            ->with('success', 'Walk-in renewal created. Continue with payment processing.');
+            ->route('admin.farmers.show', $farmer)
+            ->with('success', 'Renewal created, payment recorded, and membership updated.');
     }
 
     public function show(Request $request, RenewalRequest $renewal): InertiaResponse
@@ -1487,11 +1522,12 @@ class RenewalController extends Controller
             ->with('actor:id,name')
             ->where('subject_type', $renewal->getMorphClass())
             ->where('subject_id', $renewal->getKey())
+            ->whereNotNull('actor_user_id')
             ->latest('created_at')
             ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $reviewerName ?? 'System',
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $reviewerName,
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $renewal->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => $reviewerName,
             'reviewedBy' => $reviewerName,

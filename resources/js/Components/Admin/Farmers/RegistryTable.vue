@@ -61,24 +61,22 @@ function visibleQualityIssues(issues) {
 <template>
     <section class="overflow-hidden border-t border-[#cbd4cf] bg-white">
         <div class="flex flex-col gap-2 border-b border-[#e4ebe7] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <p class="flex items-center gap-3 text-sm font-medium text-[#263d35]"><span class="text-xl leading-none">⋮</span>Bulk Actions</p>
-            </div>
+            <div></div>
             <p class="text-sm text-[#697772]">
                 Showing {{ farmers.from || 0 }} to {{ farmers.to || 0 }} of {{ farmers.total }} records
             </p>
         </div>
 
-        <div class="border-b border-[#e4ebe7] bg-[#f8faf9] px-5 py-2.5">
+        <div v-if="selectedCount > 0 || bulkScope === 'filtered'" class="border-b border-[#e4ebe7] bg-[#f8faf9] px-5 py-2">
             <div v-if="selectedCount > 0 || bulkScope === 'filtered'" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-[#245342]">
+                    <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-normal text-[#245342]">
                         {{ bulkScope === 'selected' ? `${selectedCount} selected` : `${filteredTargetCount} filtered` }}
                     </span>
                     <button
                         v-if="selectedCount > 0"
                         type="button"
-                        class="inline-flex items-center rounded-full border border-[#d6dfda] bg-white px-3 py-1.5 text-sm font-semibold text-[#5c6b65] transition hover:bg-[#f3f6f4]"
+                        class="inline-flex items-center rounded-full border border-[#d6dfda] bg-white px-2.5 py-1 text-xs font-normal text-[#5c6b65] transition hover:bg-[#f3f6f4]"
                         @click="$emit('clear-selection')"
                     >
                         Clear
@@ -86,11 +84,11 @@ function visibleQualityIssues(issues) {
                 </div>
 
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
-                    <label class="flex items-center gap-3 rounded-2xl border border-[#dbe2de] bg-white px-4 py-2.5 text-sm font-semibold text-[#41514a]">
+                    <label class="flex items-center gap-2 rounded-lg border border-[#dbe2de] bg-white px-3 py-1.5 text-xs font-normal text-[#41514a]">
                         <span>Apply actions to</span>
                         <select
                             :value="bulkScope"
-                            class="rounded-xl border border-[#d7e0db] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none"
+                            class="rounded-md border border-[#d7e0db] bg-white px-2.5 py-1.5 text-xs font-normal text-[#1a2420] outline-none"
                             @change="$emit('update-bulk-scope', $event.target.value)"
                         >
                             <option value="selected">Selected records</option>
@@ -99,11 +97,11 @@ function visibleQualityIssues(issues) {
                     </label>
 
                     <div class="flex flex-wrap gap-2">
-                        <button v-if="bulkPermissions.canNotify" type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#c8d8cf] bg-white px-4 py-2.5 text-sm font-bold text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'notify')">Notify</button>
-                        <button v-if="bulkPermissions.canAssign" type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#c8d8cf] bg-white px-4 py-2.5 text-sm font-bold text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'assign')">Assign</button>
-                        <button v-if="bulkPermissions.canFollowUp" type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#c8d8cf] bg-white px-4 py-2.5 text-sm font-bold text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'follow_up')">Follow-up</button>
-                        <button v-if="bulkPermissions.canStatusReview" type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#c8d8cf] bg-white px-4 py-2.5 text-sm font-bold text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'status')">Review</button>
-                        <button v-if="bulkPermissions.canArchive" type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#c8d8cf] bg-white px-4 py-2.5 text-sm font-bold text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'archive')">Archive</button>
+                        <button v-if="bulkPermissions.canNotify" type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c8d8cf] bg-white px-3 py-1.5 text-xs font-normal text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'notify')">Notify</button>
+                        <button v-if="bulkPermissions.canAssign" type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c8d8cf] bg-white px-3 py-1.5 text-xs font-normal text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'assign')">Assign</button>
+                        <button v-if="bulkPermissions.canFollowUp" type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c8d8cf] bg-white px-3 py-1.5 text-xs font-normal text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'follow_up')">Follow-up</button>
+                        <button v-if="bulkPermissions.canStatusReview" type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c8d8cf] bg-white px-3 py-1.5 text-xs font-normal text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'status')">Review</button>
+                        <button v-if="bulkPermissions.canArchive" type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c8d8cf] bg-white px-3 py-1.5 text-xs font-normal text-[#003629] transition hover:bg-[#f6fbf8]" @click="$emit('open-bulk-modal', 'archive')">Archive</button>
                     </div>
                 </div>
             </div>
@@ -138,7 +136,7 @@ function visibleQualityIssues(issues) {
                                     <p class="text-sm font-bold text-[#1b2320]">{{ farmer.fullName }}</p>
                                     <p class="mt-1 text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#8b9791]">{{ farmer.farmerCode }}</p>
                                     <p class="mt-1 text-[0.72rem] italic text-[#7b8782]">Registered {{ farmer.registeredAt || '-' }}</p>
-                                    <p class="mt-1 text-[0.72rem] text-[#6c7772]"><span class="font-semibold">Last updated by:</span> {{ farmer.accountability?.lastUpdatedBy || 'System' }}</p>
+                                    <p class="mt-1 text-[0.72rem] text-[#6c7772]"><span class="font-semibold">Last record edited by:</span> {{ farmer.accountability?.lastUpdatedBy || 'No staff edit recorded' }}</p>
                                 </div>
                             </div>
                         </td>
@@ -218,7 +216,6 @@ function visibleQualityIssues(issues) {
                         <td colspan="6" class="px-6 py-16 text-center">
                             <div class="mx-auto max-w-md rounded-[24px] border border-dashed border-[#dbe2de] bg-[#f8faf9] px-6 py-8">
                                 <p class="text-base font-semibold text-[#1a2420]">No farmer records found.</p>
-                                <p class="mt-2 text-sm text-[#6a7872]">Records will appear here once they exist in the farmers registry.</p>
                             </div>
                         </td>
                     </tr>

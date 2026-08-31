@@ -233,10 +233,10 @@ onBeforeUnmount(() => {
 
         <div class="min-h-screen lg:pl-[292px]">
             <header class="sticky top-0 z-30 border-b border-[#dde6e1] bg-white/95 backdrop-blur">
-                <div class="flex min-h-[78px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex min-h-[60px] items-center justify-between gap-3 px-4 py-2 sm:px-5 lg:px-6">
                     <div class="min-w-0 flex-1 pl-14 lg:pl-0">
-                        <form class="flex max-w-[540px] items-center gap-3 rounded-lg bg-[#eef1ef] px-5 py-3 text-stone-500" @submit.prevent="submitSearch">
-                            <svg viewBox="0 0 24 24" class="h-5 w-5 flex-none" fill="none" stroke="currentColor" stroke-width="2">
+                        <form class="flex max-w-[460px] items-center gap-2.5 rounded-md border border-[#e3e8e5] bg-[#f3f5f4] px-3.5 py-2 text-stone-500" @submit.prevent="submitSearch">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-none" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="7" />
                                 <path d="m20 20-3.5-3.5" />
                             </svg>
@@ -244,47 +244,52 @@ onBeforeUnmount(() => {
                                 v-model="search"
                                 type="search"
                                 :placeholder="shell?.searchPlaceholder || 'Search...'"
-                                class="w-full border-0 bg-transparent p-0 text-[0.95rem] text-stone-700 outline-none ring-0 placeholder:text-stone-400 focus:ring-0"
+                                class="w-full border-0 bg-transparent p-0 text-sm text-stone-700 outline-none ring-0 placeholder:text-stone-400 focus:ring-0"
                             >
                         </form>
                     </div>
 
-                    <div v-if="shell && user" class="flex items-center gap-3 sm:gap-5">
-                        <button type="button" class="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-stone-700 transition hover:bg-stone-100" @click="openNotifications">
+                    <div v-if="shell && user" class="flex items-center gap-1.5 sm:gap-2.5">
+                        <button type="button" class="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-stone-600 transition hover:bg-stone-100" @click="openNotifications">
                             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
                                 <path d="M10 21a2 2 0 0 0 4 0" />
                             </svg>
-                            <span v-if="unreadCount > 0" class="absolute right-1.5 top-1.5 min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[0.65rem] font-bold leading-5 text-white">
+                            <span v-if="unreadCount > 0" class="absolute -right-0.5 top-0 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-red-600 px-1 text-center text-[0.52rem] font-semibold leading-none text-white">
                                 {{ unreadCount > 99 ? '99+' : unreadCount }}
                             </span>
                         </button>
 
-                        <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-md text-stone-700 transition hover:bg-stone-100" @click="openQueries">
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-stone-600 transition hover:bg-stone-100" @click="openQueries">
                             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 5h16v14H4z" />
                                 <path d="m4 7 8 6 8-6" />
                             </svg>
                         </button>
 
-                        <div class="hidden h-9 w-px bg-[#d9dfdc] sm:block"></div>
+                        <div class="hidden h-7 w-px bg-[#d9dfdc] sm:block"></div>
 
                         <div class="hidden items-center gap-3 sm:flex">
-                            <div class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f3f39_0%,#35675a_100%)] text-base font-black text-white">
+                            <div class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f3f39_0%,#35675a_100%)] text-sm font-semibold text-white">
                                 {{ initials }}
                             </div>
                             <div class="min-w-0">
-                                <p class="truncate text-[0.95rem] font-bold text-stone-900">{{ firstName }}</p>
-                                <p class="truncate text-sm text-stone-500">{{ shell.topbar.roleLabel }}</p>
+                                <p class="truncate text-sm font-semibold text-stone-900">{{ firstName }}</p>
+                                <p class="truncate text-xs text-stone-500">{{ shell.topbar.roleLabel }}</p>
                             </div>
                         </div>
 
                         <button
                             type="button"
-                            class="inline-flex h-11 items-center justify-center rounded-md px-3 text-sm font-bold text-[#177136] transition hover:bg-[#f3f7f4] hover:text-[#0f5a2b]"
+                            class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-[#177136] transition hover:bg-[#f3f7f4] hover:text-[#0f5a2b]"
                             @click="showLogoutConfirm = true"
                         >
-                            Logout
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M10 5H5v14h5" />
+                                <path d="M14 8l4 4-4 4" />
+                                <path d="M8 12h10" />
+                            </svg>
+                            <span class="hidden sm:inline">Logout</span>
                         </button>
                     </div>
                 </div>

@@ -20,15 +20,15 @@ function initials(name) {
 </script>
 
 <template>
-    <section class="rounded-[20px] border border-[#dfe7e2] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+    <section class="rounded-[12px] border border-[#cbd4cf] bg-white p-4">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex items-center gap-3">
-                <div class="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[#eef3f0] text-xl font-black text-[#0f4a3d]">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef3f0] text-base font-black text-[#0f4a3d]">
                     {{ initials(farmer.fullName) }}
                 </div>
                 <div>
                     <div class="mb-1.5 flex flex-wrap items-center gap-2">
-                        <h1 class="text-2xl font-black tracking-[-0.03em] text-[#173e34] sm:text-3xl">{{ farmer.fullName }}</h1>
+                        <h1 class="text-xl font-black tracking-[-0.03em] text-[#173e34] sm:text-2xl">{{ farmer.fullName }}</h1>
                         <span class="inline-flex rounded-full px-3 py-1 text-[0.62rem] font-black uppercase tracking-[0.18em]" :class="statusBadge(farmer.status.value)">
                             {{ farmer.status.label }}
                         </span>
@@ -45,13 +45,13 @@ function initials(name) {
             </div>
 
             <div class="grid gap-2.5 sm:grid-cols-2 lg:min-w-[280px]">
-                <div class="rounded-[18px] border border-[#e5ece8] bg-[#f8faf9] px-4 py-3">
+                <div class="rounded-md border border-[#e5ece8] bg-[#f8faf9] px-3 py-2">
                     <p class="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Membership</p>
-                    <p class="mt-1.5 text-base font-black text-[#173e34]">{{ farmer.membershipStatusLabel || 'Not set' }}</p>
+                    <p class="mt-1 text-sm font-black text-[#173e34]">{{ farmer.membershipStatusLabel || 'Not set' }}</p>
                 </div>
-                <div class="rounded-[18px] border border-[#e5ece8] bg-[#f8faf9] px-4 py-3">
+                <div class="rounded-md border border-[#e5ece8] bg-[#f8faf9] px-3 py-2">
                     <p class="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Member Type</p>
-                    <p class="mt-1.5 text-base font-black text-[#173e34]">{{ farmer.memberType?.code || 'N/A' }}</p>
+                    <p class="mt-1 text-sm font-black text-[#173e34]">{{ farmer.memberType?.code || 'N/A' }}</p>
                 </div>
             </div>
         </div>

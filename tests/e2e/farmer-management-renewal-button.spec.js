@@ -37,6 +37,6 @@ test.describe('Farmer Management — renewal button', () => {
         await expect(page.getByRole('heading', { name: 'Renewal Setup' })).toBeVisible();
         await expect(page.getByText(farmerName, { exact: true })).toBeVisible();
         await expect(page.getByText(farmerCode, { exact: true })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Create Renewal Record' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Create & Complete Renewal' })).toBeVisible();
     });
 });

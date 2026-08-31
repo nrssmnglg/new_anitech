@@ -17,26 +17,26 @@ function initials(name) {
 </script>
 
 <template>
-    <section class="rounded-[24px] border border-[#dfe7e2] bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <section class="rounded-[12px] border border-[#cbd4cf] bg-white p-4">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex items-center gap-4">
-                <div class="flex h-20 w-20 items-center justify-center rounded-[20px] bg-[#eef3f0] text-2xl font-black text-[#0f4a3d]">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef3f0] text-base font-black text-[#0f4a3d]">
                     {{ initials(farmer.fullName) }}
                 </div>
                 <div>
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.28em] text-[#7a8781]">Record Editing</p>
-                    <h1 class="mt-2 text-3xl font-black tracking-[-0.03em] text-[#173e34] sm:text-4xl">{{ farmer.fullName }}</h1>
+                    <p class="text-[0.68rem] font-black uppercase tracking-[0.1em] text-[#7a8781]">Record Editing</p>
+                    <h1 class="mt-1 text-xl font-black tracking-[-0.03em] text-[#173e34] sm:text-2xl">{{ farmer.fullName }}</h1>
                 </div>
             </div>
 
             <div class="flex flex-col gap-3 sm:flex-row lg:min-w-[320px]">
-                <div class="rounded-2xl border border-[#e5ece8] bg-[#f8faf9] px-4 py-4">
+                <div class="rounded-md border border-[#e5ece8] bg-[#f8faf9] px-3 py-2">
                     <p class="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Farmer Code</p>
-                    <p class="mt-2 text-lg font-black text-[#173e34]">{{ farmer.farmerCode }}</p>
+                    <p class="mt-1 text-sm font-semibold text-[#173e34]">{{ farmer.farmerCode }}</p>
                 </div>
                 <Link
                     :href="showUrl"
-                    class="inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border border-[#d7e0db] bg-white text-[#173e34] transition hover:bg-[#f4f7f5]"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#d7e0db] bg-white text-[#173e34] transition hover:bg-[#f4f7f5]"
                     title="View Record"
                 >
                     <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">

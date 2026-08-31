@@ -155,7 +155,7 @@ function densityToggleLabel() {
                             <p class="font-bold text-[#191c1c]">{{ record.farmer.fullName }}</p>
                             <p class="mt-1 text-[0.78rem] text-[#7b8882]">{{ record.farmer.farmerCode || 'No code assigned' }}</p>
                             <div class="mt-2 space-y-1 text-[0.72rem] text-[#6c7772]">
-                                <p><span class="font-semibold">Last updated by:</span> {{ record.accountability?.lastUpdatedBy || 'System' }}</p>
+                                <p><span class="font-semibold">Last updated by:</span> {{ record.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
                                 <p><span class="font-semibold">Reviewed by:</span> {{ record.accountability?.reviewedBy || 'Not reviewed yet' }}</p>
                             </div>
                         </td>

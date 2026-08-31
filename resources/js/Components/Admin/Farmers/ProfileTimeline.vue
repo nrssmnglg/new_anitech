@@ -28,6 +28,8 @@ const filteredTimeline = computed(() => {
     return props.timeline.filter((item) => item.type === activeFilter.value);
 });
 
+const visibleFilters = computed(() => filters.filter((filter) => filter.value === 'all' || filterCount(filter.value) > 0));
+
 function filterCount(value) {
     if (value === 'all') {
         return props.timeline.length;
@@ -59,29 +61,29 @@ function typeLabel(type) {
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-[20px] border border-[#dbe2de] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-        <div class="flex items-center justify-between border-b border-[#e4ebe7] bg-[#f4f7f5] px-4 py-3">
+    <section class="overflow-hidden rounded-[12px] border border-[#cbd4cf] bg-white">
+        <div class="flex items-center justify-between border-b border-[#e4ebe7] px-4 py-2.5">
             <div>
                 <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Farmer History</p>
             </div>
-            <span class="inline-flex rounded-full bg-[#003629]/10 px-3 py-1 text-xs font-black text-[#003629]">
+            <span class="inline-flex rounded-full bg-[#003629]/10 px-2.5 py-0.5 text-[0.68rem] font-semibold text-[#003629]">
                 {{ filteredTimeline.length }} entries
             </span>
         </div>
 
-        <div v-if="timeline.length" class="px-4 py-4">
-            <div class="mb-4 flex flex-wrap gap-2">
+        <div v-if="timeline.length" class="px-4 py-3">
+            <div class="mb-3 flex flex-wrap gap-1.5">
                 <button
-                    v-for="filter in filters"
+                    v-for="filter in visibleFilters"
                     :key="filter.value"
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition"
+                    class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.7rem] font-normal transition"
                     :class="activeFilter === filter.value ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#d7e0db] bg-white text-[#5f6c67] hover:bg-[#f6f9f7]'"
                     @click="activeFilter = filter.value"
                 >
                     <span>{{ filter.label }}</span>
                     <span
-                        class="inline-flex min-w-6 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.7rem] font-black"
+                        class="inline-flex min-w-5 items-center justify-center rounded-full px-1 py-0.5 text-[0.62rem] font-semibold"
                         :class="activeFilter === filter.value ? 'bg-white/20 text-white' : 'bg-[#eef1ef] text-[#31443b]'"
                     >
                         {{ filterCount(filter.value) }}
@@ -89,39 +91,35 @@ function typeLabel(type) {
                 </button>
             </div>
 
-            <div class="space-y-3">
-                <article v-for="item in filteredTimeline" :key="item.key" class="relative rounded-[18px] border border-[#e3eae6] bg-[#f8faf9] p-4">
-                    <div class="absolute bottom-0 left-8 top-0 hidden w-px bg-[#dbe3df] sm:block"></div>
-                    <div class="relative flex gap-3">
-                        <div class="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[0.6rem] font-black uppercase tracking-[0.08em] text-[#003629] shadow-[inset_0_0_0_1px_rgba(219,226,222,0.95)]">
-                            {{ typeLabel(item.type).slice(0, 2) }}
-                        </div>
+            <div class="space-y-2">
+                <article v-for="item in filteredTimeline" :key="item.key" class="rounded-md border border-[#d8e0dc] bg-white px-3 py-2.5">
+                    <div>
                         <div class="min-w-0 flex-1">
-                            <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="flex flex-col gap-1.5 lg:flex-row lg:items-start lg:justify-between">
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span :class="['inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em]', typeBadge(item.type)]">
+                                        <span :class="['inline-flex rounded px-2 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]', typeBadge(item.type)]">
                                             {{ typeLabel(item.type) }}
                                         </span>
-                                        <span v-if="item.status" class="inline-flex rounded-full border border-[#d7e0db] bg-white px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#63706b]">
+                                        <span v-if="item.status" class="inline-flex rounded border border-[#d7e0db] bg-white px-2 py-0.5 text-[0.58rem] font-normal uppercase tracking-[0.08em] text-[#63706b]">
                                             {{ item.status }}
                                         </span>
                                     </div>
-                                    <h3 class="mt-2 text-base font-bold text-[#1a2420]">{{ item.title }}</h3>
-                                    <p class="mt-1 text-xs text-[#57646e]">{{ item.subtitle }}</p>
+                                    <h3 class="mt-1.5 text-sm font-semibold text-[#1a2420]">{{ item.title }}</h3>
+                                    <p class="mt-0.5 text-[0.7rem] text-[#57646e]">{{ item.subtitle }}</p>
                                 </div>
                                 <div class="flex items-center gap-2.5">
-                                    <p class="text-xs font-semibold text-[#52626b]">{{ item.occurredAt }}</p>
-                                    <Link v-if="item.href" :href="item.href" class="rounded-lg border border-[#d7e0db] bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#5f6c67] transition hover:bg-[#ffffff]">
+                                    <p class="text-[0.68rem] font-normal text-[#52626b]">{{ item.occurredAt }}</p>
+                                    <Link v-if="item.href" :href="item.href" class="rounded border border-[#d7e0db] bg-white px-2 py-1 text-[0.65rem] font-normal text-[#5f6c67] transition hover:bg-[#f7f9f8]">
                                         Open
                                     </Link>
                                 </div>
                             </div>
 
-                            <div v-if="item.meta && Object.keys(item.meta).length" class="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                                <div v-for="(value, label) in item.meta" :key="label" class="rounded-[14px] bg-white px-3 py-2.5 shadow-[inset_0_0_0_1px_rgba(228,235,231,0.95)]">
-                                    <p class="text-[0.65rem] font-black uppercase tracking-[0.14em] text-[#7a8781]">{{ label }}</p>
-                                    <p class="mt-1 text-xs font-semibold text-[#1a2420]">{{ value || '-' }}</p>
+                            <div v-if="item.meta && Object.keys(item.meta).length" class="mt-2 flex flex-wrap gap-x-5 gap-y-1 border-t border-[#edf1ef] pt-2">
+                                <div v-for="(value, label) in item.meta" :key="label" class="flex items-baseline gap-1.5 text-[0.68rem]">
+                                    <span class="font-semibold uppercase tracking-[0.06em] text-[#7a8781]">{{ label }}:</span>
+                                    <span class="text-[#1a2420]">{{ value || '-' }}</span>
                                 </div>
                             </div>
                         </div>

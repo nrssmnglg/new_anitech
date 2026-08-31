@@ -1207,12 +1207,13 @@ class FarmerController extends Controller
             ->with('actor:id,name')
             ->where('subject_type', $farmer->getMorphClass())
             ->where('subject_id', $farmer->getKey())
+            ->whereNotNull('actor_user_id')
             ->latest('created_at')
             ->first(['actor_user_id', 'actor_name', 'created_at']);
 
         return [
-            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? 'System',
-            'lastUpdatedAt' => optional($latestActivity?->created_at ?? $farmer->updated_at)->format('M d, Y h:i A'),
+            'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name,
+            'lastUpdatedAt' => optional($latestActivity?->created_at)->format('M d, Y h:i A'),
             'assignedStaff' => null,
             'reviewedBy' => null,
         ];
