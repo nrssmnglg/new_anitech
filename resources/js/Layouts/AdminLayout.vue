@@ -530,6 +530,48 @@ onBeforeUnmount(() => {
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05) !important;
 }
 
+.dashboard-compact [class*="rounded-[2"],
+.dashboard-compact [class*="rounded-[1"] {
+    border-radius: 0.75rem !important;
+}
+
+.dashboard-compact [class*="p-7"],
+.dashboard-compact [class*="p-6"],
+.dashboard-compact [class*="p-5"] {
+    padding: 1rem !important;
+}
+
+.dashboard-compact [class*="px-5"] {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+}
+
+.dashboard-compact [class*="py-5"] {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+.dashboard-compact [class*="mt-7"],
+.dashboard-compact [class*="mt-6"],
+.dashboard-compact [class*="mt-5"] {
+    margin-top: 0.875rem !important;
+}
+
+.dashboard-compact [class*="gap-6"],
+.dashboard-compact [class*="gap-5"],
+.dashboard-compact [class*="gap-4"] {
+    gap: 0.75rem !important;
+}
+
+.dashboard-compact [class*="h-52"] {
+    height: 10rem !important;
+}
+
+.dashboard-compact [class*="h-44"][class*="w-44"] {
+    height: 8rem !important;
+    width: 8rem !important;
+}
+
 @media (max-width: 640px) {
     .admin-notification-panel {
         max-width: 100%;

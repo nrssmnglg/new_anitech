@@ -122,38 +122,38 @@ const renewalDonutStyle = computed(() => ({
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-[1536px] space-y-5 pb-8 lg:space-y-6 lg:pb-10">
-        <section class="relative overflow-hidden rounded-[1.8rem] bg-[linear-gradient(135deg,#003e32,#0f5b46_58%,#b7e29a)] px-5 py-5 text-white shadow-[0_14px_42px_rgba(0,54,41,0.16)] sm:px-6 lg:px-8">
+    <div class="dashboard-compact mx-auto w-full max-w-[1536px] space-y-4 pb-6">
+        <section class="relative overflow-hidden rounded-[14px] bg-[linear-gradient(135deg,#003e32,#0f5b46_58%,#b7e29a)] px-5 py-4 text-white sm:px-6">
             <div class="absolute inset-0 opacity-15" style="background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-            <div class="relative z-10 flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div class="relative z-10 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div class="flex flex-wrap items-center gap-3">
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-[#e6f5da]">
+                    <div class="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-[#e6f5da]">
                         Staff Workspace
                     </div>
-                    <button type="button" class="inline-flex items-center justify-center rounded-[1.1rem] border border-white/25 bg-white/10 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-white/15" @click="openExportModal">
+                    <button type="button" class="inline-flex h-8 items-center justify-center rounded-md border border-white/25 bg-white/10 px-3 text-xs font-medium text-white transition hover:bg-white/15" @click="openExportModal">
                         Generate Report
                     </button>
                 </div>
 
-                <form class="grid w-full max-w-[470px] gap-3 rounded-[1.5rem] border border-white/20 bg-white/12 p-4 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
+                <form class="grid w-full max-w-[440px] gap-2 rounded-lg border border-white/20 bg-white/10 p-3 md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
                     <label class="space-y-1.5">
                         <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
-                        <select v-model="state.year" class="w-full rounded-xl border-0 bg-white/14 px-4 py-2.5 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.year" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
                     <label class="space-y-1.5">
                         <span class="ml-1 block text-sm font-bold text-white/70">Barangay</span>
-                        <select v-model="state.barangayId" class="w-full rounded-xl border-0 bg-white/14 px-4 py-2.5 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.barangayId" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All Barangays</option>
                             <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-stone-900">
                                 {{ barangay.name }}
                             </option>
                         </select>
                     </label>
-                    <button type="submit" class="flex h-12 w-12 items-center justify-center self-end rounded-xl bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
+                    <button type="submit" class="flex h-9 w-9 items-center justify-center self-end rounded-md bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
                         <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16" />
                             <path d="M7 12h10" />
@@ -165,14 +165,14 @@ const renewalDonutStyle = computed(() => ({
         </section>
 
         <div class="flex flex-wrap items-center gap-3">
-            <span class="text-[1.05rem] font-bold uppercase tracking-wide text-[#344654]">Active Filters:</span>
-            <span class="inline-flex items-center rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-lg font-semibold text-[#102533]">
+            <span class="text-xs font-semibold uppercase tracking-wide text-[#344654]">Active Filters:</span>
+            <span class="inline-flex items-center rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
                 {{ selectedYearLabel }}
             </span>
-            <span class="inline-flex items-center rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-lg font-semibold text-[#102533]">
+            <span class="inline-flex items-center rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
                 {{ selectedBarangayName }}
             </span>
-            <button type="button" class="ml-auto text-base font-bold text-[#6c8900] hover:underline" @click="resetFilters">
+            <button type="button" class="ml-auto text-xs font-medium text-[#6c8900] hover:underline" @click="resetFilters">
                 Clear All Filters
             </button>
         </div>

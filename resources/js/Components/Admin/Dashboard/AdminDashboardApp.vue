@@ -466,46 +466,46 @@ const linePoints = computed(() => {
 </script>
 
 <template>
-    <div class="mx-auto w-full max-w-[1536px] space-y-6 pb-8 lg:space-y-8 lg:pb-10">
-        <section class="relative overflow-hidden rounded-[2.2rem] bg-[#004438] px-6 py-7 text-white shadow-[0_18px_60px_rgba(0,54,41,0.18)] sm:px-8 sm:py-8 lg:px-10 lg:py-9">
+    <div class="dashboard-compact mx-auto w-full max-w-[1536px] space-y-4 pb-6">
+        <section class="relative overflow-hidden rounded-[14px] bg-[#004438] px-5 py-4 text-white sm:px-6">
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(166,214,123,0.18),_transparent_26%),linear-gradient(180deg,rgba(8,77,63,0.36),rgba(0,68,56,0.92))]"></div>
             <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 32px 32px;"></div>
 
-            <div class="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+            <div class="relative z-10 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div class="max-w-3xl">
-                    <div class="inline-flex items-center gap-2 rounded-full border border-[#b8e08a]/30 bg-[#6b9a2f]/20 px-4 py-2 text-sm font-bold text-[#d5efb3]">
+                    <div class="inline-flex items-center gap-2 rounded-md border border-[#b8e08a]/30 bg-[#6b9a2f]/20 px-3 py-1.5 text-xs font-medium text-[#d5efb3]">
                         <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3Z" />
                             <path d="m9.5 11.5 1.8 1.8 3.7-4.1" />
                         </svg>
                         Live System Overview
                     </div>
-                    <h2 class="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-[2.25rem]">Registry Overview for {{ selectedYearLabel }}</h2>
-                    <div class="mt-4 flex flex-wrap gap-3">
-                        <button type="button" class="inline-flex items-center justify-center rounded-[1.2rem] bg-white px-5 py-3 text-sm font-extrabold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
+                    <h2 class="mt-2 text-xl font-semibold tracking-tight text-white">Registry Overview for {{ selectedYearLabel }}</h2>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        <button type="button" class="inline-flex h-8 items-center justify-center rounded-md bg-white px-3 text-xs font-semibold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
                             Generate Report
                         </button>
                     </div>
                 </div>
 
-                <form class="grid w-full max-w-[470px] gap-3 rounded-[2rem] border border-white/20 bg-white/12 p-5 backdrop-blur-xl md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
+                <form class="grid w-full max-w-[440px] gap-2 rounded-lg border border-white/20 bg-white/10 p-3 md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
                     <label class="space-y-2">
                         <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
-                        <select v-model="state.year" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.year" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
                     <label class="space-y-2">
                         <span class="ml-1 block text-sm font-bold text-white/70">Barangay</span>
-                        <select v-model="state.barangayId" class="w-full rounded-2xl border-0 bg-white/14 px-4 py-3 text-base font-semibold text-white outline-none ring-1 ring-white/10">
+                        <select v-model="state.barangayId" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
                             <option value="" class="text-stone-900">All Barangays</option>
                             <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-stone-900">
                                 {{ barangay.name }}
                             </option>
                         </select>
                     </label>
-                    <button type="submit" class="flex h-[54px] w-[54px] items-center justify-center self-end rounded-[1.4rem] bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
+                    <button type="submit" class="flex h-9 w-9 items-center justify-center self-end rounded-md bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
                         <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16" />
                             <path d="M7 12h10" />
@@ -517,46 +517,46 @@ const linePoints = computed(() => {
         </section>
 
         <div class="flex flex-wrap items-center gap-3">
-            <span class="text-[1.05rem] font-bold uppercase tracking-wide text-[#344654]">Active Filters:</span>
-            <span class="inline-flex items-center gap-2 rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-xl font-semibold text-[#102533]">
+            <span class="text-xs font-semibold uppercase tracking-wide text-[#344654]">Active Filters:</span>
+            <span class="inline-flex items-center gap-1.5 rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f5b46]" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="5" width="18" height="16" rx="2" />
                     <path d="M16 3v4M8 3v4M3 11h18" />
                 </svg>
                 {{ selectedYearLabel }}
             </span>
-            <span class="inline-flex items-center gap-2 rounded-full border border-[#d9dfdc] bg-[#eef1ef] px-4 py-2 text-xl font-semibold text-[#102533]">
+            <span class="inline-flex items-center gap-1.5 rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f5b46]" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" />
                     <circle cx="12" cy="10" r="2.5" />
                 </svg>
                 {{ selectedBarangayName }}
             </span>
-            <button type="button" class="ml-auto text-base font-bold text-[#6c8900] hover:underline" @click="resetFilters">
+            <button type="button" class="ml-auto text-xs font-medium text-[#6c8900] hover:underline" @click="resetFilters">
                 Clear All Filters
             </button>
         </div>
 
-        <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section class="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
             <component
                 :is="card.href ? Link : 'article'"
                 v-for="card in summaryCards"
                 :key="card.key"
                 :href="card.href || undefined"
-                class="rounded-[1.75rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_30px_rgba(0,54,41,0.05)] transition"
+                class="rounded-lg border border-[#e4e9e6] bg-white p-3 transition"
                 :class="card.href ? 'group block hover:-translate-y-0.5 hover:border-[#cdd8d3] hover:shadow-[0_18px_48px_rgba(0,54,41,0.1)] focus:outline-none focus:ring-2 focus:ring-[#b8d9cf]' : ''"
             >
                 <div class="flex items-start justify-between gap-3">
-                    <div :class="['flex h-14 w-14 items-center justify-center rounded-[1.15rem]', card.iconBg]">
-                        <svg viewBox="0 0 24 24" :class="['h-6 w-6', card.iconColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <div :class="['flex h-8 w-8 items-center justify-center rounded-md', card.iconBg]">
+                        <svg viewBox="0 0 24 24" :class="['h-4 w-4', card.iconColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path v-for="path in iconPath(card.icon)" :key="path" :d="path" />
                         </svg>
                     </div>
                 </div>
-                <p class="mt-4 text-[0.95rem] font-medium text-[#44515d]">{{ card.label }}</p>
-                <p class="mt-1 text-[1.7rem] font-medium tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
-                <div class="mt-4 h-1.5 rounded-full bg-[#e8ece9]">
-                    <div :class="['h-1.5 rounded-full', card.progress]" :style="{ width: card.value > 0 ? '100%' : '12%' }"></div>
+                <p class="mt-2 min-h-8 text-[0.68rem] font-normal leading-4 text-[#44515d]">{{ card.label }}</p>
+                <p class="mt-0.5 text-lg font-medium tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
+                <div class="mt-2 h-1 rounded-full bg-[#e8ece9]">
+                    <div :class="['h-1 rounded-full', card.progress]" :style="{ width: card.value > 0 ? '100%' : '12%' }"></div>
                 </div>
             </component>
         </section>
