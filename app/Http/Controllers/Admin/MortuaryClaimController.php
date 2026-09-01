@@ -463,8 +463,8 @@ class MortuaryClaimController extends Controller
             ->whereNull('inactive_at')
             ->whereHas('membershipLedgers', function (Builder $query): void {
                 $query
-                    ->where('mortuary_eligible', true)
-                    ->whereIn('payment_status', [
+                    ->where('membership_ledgers.mortuary_eligible', true)
+                    ->whereIn('membership_ledgers.payment_status', [
                         $this->ledgerPaymentStatusValue(PaymentStatus::PAID),
                         $this->ledgerPaymentStatusValue(PaymentStatus::OVERPAID),
                         $this->ledgerPaymentStatusValue(PaymentStatus::WAIVED),
@@ -488,9 +488,9 @@ class MortuaryClaimController extends Controller
             ->when($filters['year'] ?? null, function (Builder $query, string $year): void {
                 $query->whereHas('membershipLedgers', function (Builder $ledgerQuery) use ($year): void {
                     $ledgerQuery
-                        ->where('year', (int) $year)
-                        ->where('mortuary_eligible', true)
-                        ->whereIn('payment_status', [
+                        ->where('membership_ledgers.year', (int) $year)
+                        ->where('membership_ledgers.mortuary_eligible', true)
+                        ->whereIn('membership_ledgers.payment_status', [
                             $this->ledgerPaymentStatusValue(PaymentStatus::PAID),
                             $this->ledgerPaymentStatusValue(PaymentStatus::OVERPAID),
                             $this->ledgerPaymentStatusValue(PaymentStatus::WAIVED),

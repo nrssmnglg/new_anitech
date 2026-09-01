@@ -204,17 +204,6 @@ const summaryCards = computed(() => {
                 meta: 'Active admin and staff accounts',
                 href: props.dashboard.summaryCardLinks?.activeOfficeUsers ?? null,
             },
-            {
-                key: 'activeFeeSchedules',
-                label: 'Active Fee Schedules',
-                value: props.dashboard.summary.activeFeeSchedules,
-                icon: 'fee',
-                iconBg: 'bg-[#c7f4ff]',
-                iconColor: 'text-[#00749b]',
-                progress: 'bg-[#c2f1fd]',
-                meta: props.dashboard.filters.selectedYear ? `Fee schedules enabled for ${selectedYearLabel.value}` : 'Fee schedules across all recorded years',
-                href: props.dashboard.summaryCardLinks?.activeFeeSchedules ?? null,
-            },
         );
     }
 
@@ -292,7 +281,6 @@ const maximumYearlyRenewals = computed(() => Math.max(
     ...renewalYearlyTrend.value.map((row) => Number(row.renewed || 0)),
     1,
 ));
-const renewalComplianceWidth = computed(() => `${Math.min(Math.max(Number(renewalStatistics.value.complianceRate || 0), 0), 100)}%`);
 const renewalDecisionMessage = computed(() => {
     const unrenewed = Number(renewalStatistics.value.unrenewedFarmers || 0);
     const pending = Number(renewalStatistics.value.pendingRequests || 0);
@@ -366,79 +354,6 @@ function operationTone(tone) {
     return tones[tone] ?? tones.emerald;
 }
 
-const healthDistribution = computed(() => {
-    const total = Number(props.dashboard.summary.totalFarmers || 0);
-    const inactive = Number(props.dashboard.summary.inactiveFarmers || 0);
-    const rows = [
-        {
-            label: 'Active',
-            count: Number(props.dashboard.summary.activeFarmers || 0),
-            color: '#497c17',
-        },
-        {
-            label: 'Pending Application',
-            count: Number(
-                props.dashboard.breakdowns.membershipStatus.find((row) => row.value === 'pending_application')?.total || 0,
-            ),
-            color: '#0f5b46',
-        },
-        {
-            label: 'Pending Documents',
-            count: Number(
-                props.dashboard.breakdowns.membershipStatus.find((row) => row.value === 'pending_documents')?.total || 0,
-            ),
-            color: '#1b7f6a',
-        },
-        {
-            label: 'Pending Verification',
-            count: Number(
-                props.dashboard.breakdowns.membershipStatus.find((row) => row.value === 'pending_verification')?.total || 0,
-            ),
-            color: '#55a38d',
-        },
-        {
-            label: 'Pending Payment',
-            count: Number(
-                props.dashboard.breakdowns.membershipStatus.find((row) => row.value === 'pending_payment')?.total || 0,
-            ),
-            color: '#9dd2c3',
-        },
-        {
-            label: 'Inactive',
-            count: inactive,
-            color: '#f2c6cb',
-        },
-    ];
-
-    const segments = rows
-        .filter((row) => row.count > 0)
-        .map((row) => ({
-            ...row,
-            percent: total ? Math.round((row.count / total) * 100) : 0,
-        }));
-
-    let cumulative = 0;
-    const gradientStops = (segments.length ? segments : rows.slice(0, 1))
-        .map((row) => {
-            const start = cumulative;
-            cumulative += total ? (row.count / total) * 100 : 100;
-
-            return `${row.color} ${start}% ${cumulative}%`;
-        })
-        .join(', ');
-
-    const active = segments.find((row) => row.label === 'Active');
-
-    return {
-        centerLabel: active?.label ?? 'Active',
-        centerPercent: active?.percent ?? 0,
-        rows: segments,
-        donutStyle: {
-            background: `conic-gradient(${gradientStops || '#e9ece9 0% 100%'})`,
-        },
-    };
-});
-
 const registrationTrend = computed(() => props.dashboard.breakdowns.registrationTrend ?? {
     series: [],
     currentYearTotal: 0,
@@ -467,46 +382,36 @@ const linePoints = computed(() => {
 
 <template>
     <div class="dashboard-compact mx-auto w-full max-w-[1536px] space-y-4 pb-6">
-        <section class="relative overflow-hidden rounded-[14px] bg-[#004438] px-5 py-4 text-white sm:px-6">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(166,214,123,0.18),_transparent_26%),linear-gradient(180deg,rgba(8,77,63,0.36),rgba(0,68,56,0.92))]"></div>
-            <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 32px 32px;"></div>
-
-            <div class="relative z-10 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div class="max-w-3xl">
-                    <div class="inline-flex items-center gap-2 rounded-md border border-[#b8e08a]/30 bg-[#6b9a2f]/20 px-3 py-1.5 text-xs font-medium text-[#d5efb3]">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3Z" />
-                            <path d="m9.5 11.5 1.8 1.8 3.7-4.1" />
-                        </svg>
-                        Live System Overview
-                    </div>
-                    <h2 class="mt-2 text-xl font-semibold tracking-tight text-white">Registry Overview for {{ selectedYearLabel }}</h2>
-                    <div class="mt-2 flex flex-wrap gap-2">
-                        <button type="button" class="inline-flex h-8 items-center justify-center rounded-md bg-white px-3 text-xs font-semibold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
+        <section class="overflow-hidden rounded-[10px] bg-[#00513f] px-5 py-4 text-white sm:px-7">
+            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex max-w-3xl flex-wrap items-center gap-4">
+                    <h2 class="text-[1.65rem] font-semibold tracking-tight text-white">Registry Overview for {{ selectedYearLabel }}</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-white px-4 text-xs font-semibold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
                             Generate Report
                         </button>
                     </div>
                 </div>
 
-                <form class="grid w-full max-w-[440px] gap-2 rounded-lg border border-white/20 bg-white/10 p-3 md:grid-cols-[1fr_1fr_auto]" @submit.prevent="apply">
-                    <label class="space-y-2">
-                        <span class="ml-1 block text-sm font-bold text-white/70">Select Year</span>
-                        <select v-model="state.year" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
+                <form class="grid w-full max-w-[480px] gap-2 rounded-lg border border-white/15 bg-[#004534] p-2.5 md:grid-cols-[1fr_1.2fr_auto]" @submit.prevent="apply">
+                    <label class="space-y-1">
+                        <span class="ml-1 block text-xs font-semibold text-white">Select Year</span>
+                        <select v-model="state.year" class="w-full rounded-md border-0 bg-white/10 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/15">
                             <option value="" class="text-stone-900">All years</option>
                             <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
                         </select>
                     </label>
-                    <label class="space-y-2">
-                        <span class="ml-1 block text-sm font-bold text-white/70">Barangay</span>
-                        <select v-model="state.barangayId" class="w-full rounded-md border-0 bg-white/14 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/10">
+                    <label class="space-y-1">
+                        <span class="ml-1 block text-xs font-semibold text-white">Barangay</span>
+                        <select v-model="state.barangayId" class="w-full rounded-md border-0 bg-white/10 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/15">
                             <option value="" class="text-stone-900">All Barangays</option>
                             <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-stone-900">
                                 {{ barangay.name }}
                             </option>
                         </select>
                     </label>
-                    <button type="submit" class="flex h-9 w-9 items-center justify-center self-end rounded-md bg-[#6a8f12] text-white transition hover:bg-[#5f820f]">
-                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2">
+                    <button type="submit" class="flex h-9 w-10 items-center justify-center self-end rounded-md bg-[#718700] text-white transition hover:bg-[#829900]">
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 6h16" />
                             <path d="M7 12h10" />
                             <path d="M10 18h4" />
@@ -537,7 +442,7 @@ const linePoints = computed(() => {
             </button>
         </div>
 
-        <section class="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
+        <section class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
             <component
                 :is="card.href ? Link : 'article'"
                 v-for="card in summaryCards"
@@ -561,76 +466,59 @@ const linePoints = computed(() => {
             </component>
         </section>
 
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <article class="rounded-[2rem] border border-[#dce7e2] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.06)]">
+        <section class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.2fr_0.8fr]">
+            <article class="rounded-lg border border-[#dce7e2] bg-white p-3.5">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#5e756b]">Renewal Decision Support</p>
-                        <h3 class="mt-2 text-[1.45rem] font-semibold text-[#142c24]">Renewal performance for CY {{ renewalStatistics.year }}</h3>
-                        <p class="mt-2 max-w-2xl text-sm leading-6 text-[#62716a]">{{ renewalDecisionMessage }}</p>
+                        <h3 class="text-sm font-semibold text-[#142c24]">Renewal performance for CY {{ renewalStatistics.year }}</h3>
+                        <p class="mt-1 max-w-2xl text-xs leading-5 text-[#62716a]">{{ renewalDecisionMessage }}</p>
                     </div>
-                    <Link :href="renewalStatistics.links.records || dashboard.actions.viewRenewalsUrl" class="inline-flex shrink-0 items-center justify-center rounded-2xl bg-[#064f40] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#003e32]">
+                    <Link :href="renewalStatistics.links.records || dashboard.actions.viewRenewalsUrl" class="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-[#064f40] px-3 text-xs font-medium text-white transition hover:bg-[#003e32]">
                         View Renewal Records
                     </Link>
                 </div>
 
-                <div class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-[1.4rem] bg-[#edf8f2] px-5 py-5">
+                <div class="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div class="rounded-md bg-[#edf8f2] px-3 py-2.5">
                         <p class="text-xs font-black uppercase tracking-[0.12em] text-[#547067]">Compliance</p>
-                        <p class="mt-3 text-[2rem] font-semibold text-[#075a46]">{{ renewalStatistics.complianceRate }}%</p>
+                        <p class="mt-1.5 text-xl font-semibold text-[#075a46]">{{ renewalStatistics.complianceRate }}%</p>
                         <p class="mt-1 text-xs text-[#64736c]">{{ renewalStatistics.yearOverYearChange >= 0 ? '+' : '' }}{{ renewalStatistics.yearOverYearChange }} points vs previous year</p>
                     </div>
-                    <div class="rounded-[1.4rem] bg-[#f4f7f5] px-5 py-5">
+                    <div class="rounded-md bg-[#f4f7f5] px-3 py-2.5">
                         <p class="text-xs font-black uppercase tracking-[0.12em] text-[#68756f]">Renewed</p>
-                        <p class="mt-3 text-[2rem] font-semibold text-[#172b24]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</p>
+                        <p class="mt-1.5 text-xl font-semibold text-[#172b24]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</p>
                         <p class="mt-1 text-xs text-[#64736c]">of {{ formatNumber(renewalStatistics.eligibleFarmers) }} eligible farmers</p>
                     </div>
-                    <Link :href="renewalStatistics.links.queue" class="rounded-[1.4rem] bg-[#fff5df] px-5 py-5 transition hover:bg-[#ffefd0]">
+                    <Link :href="renewalStatistics.links.queue" class="rounded-md bg-[#fff5df] px-3 py-2.5 transition hover:bg-[#ffefd0]">
                         <p class="text-xs font-black uppercase tracking-[0.12em] text-[#8a681d]">Still Unrenewed</p>
-                        <p class="mt-3 text-[2rem] font-semibold text-[#9b5f00]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</p>
+                        <p class="mt-1.5 text-xl font-semibold text-[#9b5f00]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</p>
                         <p class="mt-1 text-xs text-[#7c6b45]">Farmers requiring follow-up</p>
                     </Link>
-                    <div class="rounded-[1.4rem] bg-[#edf3fb] px-5 py-5">
-                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#587084]">Collections</p>
-                        <p class="mt-3 text-[1.45rem] font-semibold text-[#1d4f73]">{{ currencyFormatter.format(Number(renewalStatistics.collectionAmount || 0)) }}</p>
-                        <p class="mt-1 text-xs text-[#64736c]">{{ formatNumber(renewalStatistics.paymentCount) }} renewal payments</p>
-                    </div>
                 </div>
 
-                <div class="mt-7 rounded-[1.5rem] border border-[#e2e9e5] bg-[#fafcfb] p-5">
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-sm font-bold text-[#263a32]">Annual renewal completion</span>
-                        <span class="text-sm font-black text-[#075a46]">{{ renewalStatistics.complianceRate }}%</span>
-                    </div>
-                    <div class="mt-3 h-3 overflow-hidden rounded-full bg-[#e4ebe7]">
-                        <div class="h-full rounded-full bg-gradient-to-r from-[#0a7358] to-[#78a725]" :style="{ width: renewalComplianceWidth }"></div>
-                    </div>
-                    <div class="mt-5 grid gap-3 sm:grid-cols-3">
-                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
                             <span class="text-[#65736d]">Pending review</span>
                             <strong class="text-[#a66a00]">{{ formatNumber(renewalStatistics.pendingRequests) }}</strong>
                         </div>
-                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
                             <span class="text-[#65736d]">Late renewals</span>
                             <strong class="text-[#9b5f00]">{{ formatNumber(renewalStatistics.lateRenewals) }}</strong>
                         </div>
-                        <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm">
+                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
                             <span class="text-[#65736d]">Rejected</span>
                             <strong class="text-[#b53d50]">{{ formatNumber(renewalStatistics.rejectedRequests) }}</strong>
                         </div>
-                    </div>
                 </div>
             </article>
 
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.06)]">
+            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
                 <div>
-                    <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#75694d]">Outreach Priority</p>
-                    <h3 class="mt-2 text-[1.3rem] font-semibold text-[#142c24]">Barangays needing follow-up</h3>
-                    <p class="mt-2 text-sm leading-6 text-[#68756f]">Lowest renewal compliance appears first.</p>
+                    <h3 class="text-sm font-semibold text-[#142c24]">Barangays needing follow-up</h3>
                 </div>
 
-                <div v-if="renewalPriorityBarangays.length" class="mt-7 space-y-5">
-                    <Link v-for="row in renewalPriorityBarangays" :key="row.id" :href="row.href" class="block rounded-[1.4rem] border border-[#e5eae7] px-5 py-4 transition hover:border-[#cbd9d2] hover:bg-[#f8fbf9]">
+                <div v-if="renewalPriorityBarangays.length" class="mt-3 space-y-2">
+                    <Link v-for="row in renewalPriorityBarangays" :key="row.id" :href="row.href" class="block rounded-md border border-[#e5eae7] px-3 py-2.5 transition hover:border-[#cbd9d2] hover:bg-[#f8fbf9]">
                         <div class="flex items-start justify-between gap-4">
                             <div class="min-w-0">
                                 <p class="truncate text-[1rem] font-semibold text-[#172b24]">{{ row.barangay }}</p>
@@ -652,37 +540,35 @@ const linePoints = computed(() => {
             </article>
         </section>
 
-        <section class="rounded-[2rem] border border-[#e1e8e4] bg-white p-7 shadow-[0_12px_40px_rgba(0,54,41,0.05)]">
+        <section class="rounded-lg border border-[#e1e8e4] bg-white p-3.5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="text-[0.75rem] font-black uppercase tracking-[0.15em] text-[#5e756b]">Annual Comparison</p>
-                    <h3 class="mt-2 text-[1.35rem] font-semibold text-[#142c24]">Renewal increase or decrease by year</h3>
-                    <p class="mt-2 text-sm text-[#68756f]">Compares completed renewals with the immediately preceding year for {{ selectedBarangayName }}.</p>
+                    <h3 class="text-sm font-semibold text-[#142c24]">Renewal increase or decrease by year</h3>
                 </div>
-                <span class="inline-flex w-fit rounded-xl bg-[#edf4f0] px-4 py-2 text-sm font-bold text-[#315448]">
+                <span class="inline-flex w-fit rounded-md bg-[#edf4f0] px-2.5 py-1 text-xs font-medium text-[#315448]">
                     Through CY {{ renewalStatistics.year }}
                 </span>
             </div>
 
-            <div v-if="renewalYearlyTrend.length" class="mt-7 overflow-x-auto">
+            <div v-if="renewalYearlyTrend.length" class="mt-3 overflow-x-auto">
                 <table class="min-w-[820px] w-full text-left">
                     <thead class="border-b border-[#dfe7e2] text-xs font-black uppercase tracking-[0.1em] text-[#66756e]">
                         <tr>
-                            <th class="px-4 py-4">Year</th>
-                            <th class="px-4 py-4">Renewal Volume</th>
-                            <th class="px-4 py-4 text-center">Eligible</th>
-                            <th class="px-4 py-4 text-center">Renewed</th>
-                            <th class="px-4 py-4 text-center">Unrenewed</th>
-                            <th class="px-4 py-4 text-center">Compliance</th>
-                            <th class="px-4 py-4 text-right">Yearly Change</th>
+                            <th class="px-3 py-2">Year</th>
+                            <th class="px-3 py-2">Renewal Volume</th>
+                            <th class="px-3 py-2 text-center">Eligible</th>
+                            <th class="px-3 py-2 text-center">Renewed</th>
+                            <th class="px-3 py-2 text-center">Unrenewed</th>
+                            <th class="px-3 py-2 text-center">Compliance</th>
+                            <th class="px-3 py-2 text-right">Yearly Change</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#edf1ee]">
                         <tr v-for="row in renewalYearlyTrend" :key="row.year" class="transition hover:bg-[#f9fbfa]">
-                            <td class="px-4 py-5">
+                            <td class="px-3 py-2.5">
                                 <span class="text-[1.05rem] font-black text-[#18342b]">{{ row.year }}</span>
                             </td>
-                            <td class="px-4 py-5">
+                            <td class="px-3 py-2.5">
                                 <div class="flex items-center gap-3">
                                     <div class="h-2.5 min-w-[130px] flex-1 overflow-hidden rounded-full bg-[#e9eeeb]">
                                         <div
@@ -694,16 +580,16 @@ const linePoints = computed(() => {
                                     <span class="w-10 text-right text-sm font-bold text-[#31443d]">{{ formatNumber(row.renewed) }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-5 text-center font-semibold text-[#3f4e48]">{{ formatNumber(row.eligible) }}</td>
-                            <td class="px-4 py-5 text-center font-bold text-[#0b684f]">{{ formatNumber(row.renewed) }}</td>
-                            <td class="px-4 py-5 text-center font-bold text-[#a36420]">{{ formatNumber(row.unrenewed) }}</td>
-                            <td class="px-4 py-5 text-center">
+                            <td class="px-3 py-2.5 text-center font-semibold text-[#3f4e48]">{{ formatNumber(row.eligible) }}</td>
+                            <td class="px-3 py-2.5 text-center font-bold text-[#0b684f]">{{ formatNumber(row.renewed) }}</td>
+                            <td class="px-3 py-2.5 text-center font-bold text-[#a36420]">{{ formatNumber(row.unrenewed) }}</td>
+                            <td class="px-3 py-2.5 text-center">
                                 <span class="font-black text-[#244b3f]">{{ row.complianceRate }}%</span>
                                 <span v-if="row.complianceChange !== null" class="ml-1 text-xs" :class="row.complianceChange >= 0 ? 'text-[#16805e]' : 'text-[#bd4658]'">
                                     ({{ row.complianceChange >= 0 ? '+' : '' }}{{ row.complianceChange }} pts)
                                 </span>
                             </td>
-                            <td class="px-4 py-5 text-right">
+                            <td class="px-3 py-2.5 text-right">
                                 <span :class="['inline-flex rounded-full px-3 py-1.5 text-xs font-black', renewalChangeTone(row.direction)]">
                                     {{ renewalChangeLabel(row) }}
                                 </span>
@@ -717,45 +603,39 @@ const linePoints = computed(() => {
             </div>
         </section>
 
-        <section v-if="isAdmin" class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <p class="text-[0.78rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Admin Command Center</p>
-                    </div>
-                </div>
-
-                <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <section v-if="isAdmin" class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3">
+                <div class="grid grid-cols-2 gap-2 xl:grid-cols-4">
                     <Link
                         v-for="item in adminQueueCards"
                         :key="item.key"
                         :href="item.href"
-                        :class="['rounded-[1.7rem] border bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(0,54,41,0.09)]', operationTone(item.tone).border]"
+                        :class="['rounded-md border bg-white p-2.5 transition hover:bg-[#fafcfb]', operationTone(item.tone).border]"
                     >
-                        <span :class="['inline-flex rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.08em]', operationTone(item.tone).badge]">
+                        <span :class="['inline-flex rounded px-2 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.05em]', operationTone(item.tone).badge]">
                             {{ item.label }}
                         </span>
-                        <p :class="['mt-4 text-[2.2rem] font-medium leading-none', operationTone(item.tone).value]">
+                        <p :class="['mt-2 text-lg font-medium leading-none', operationTone(item.tone).value]">
                             {{ formatNumber(item.value) }}
                         </p>
                     </Link>
                 </div>
             </article>
 
-            <div class="space-y-6">
-                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+            <div class="space-y-3">
+                <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <p class="text-[0.78rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Collections Today</p>
-                            <h3 class="mt-2 text-[1.35rem] font-medium text-[#14202c]">{{ currencyFormatter.format(Number(todayCollectionTotal || 0)) }}</h3>
+                            <h3 class="mt-1 text-lg font-medium text-[#14202c]">{{ currencyFormatter.format(Number(todayCollectionTotal || 0)) }}</h3>
                         </div>
-                        <Link :href="adminOperations.recentPayments?.href" class="text-sm font-bold text-[#003e32] transition hover:text-[#0f5b46]">
+                        <Link :href="adminOperations.recentPayments?.href" class="text-xs font-medium text-[#003e32] transition hover:underline">
                             View Analytics
                         </Link>
                     </div>
 
-                    <div v-if="recentPayments.length" class="mt-6 space-y-4">
-                        <div v-for="payment in recentPayments" :key="payment.id" class="rounded-[1.5rem] bg-[#f4f7f5] px-4 py-4">
+                    <div v-if="recentPayments.length" class="mt-3 space-y-2">
+                        <div v-for="payment in recentPayments" :key="payment.id" class="rounded-md bg-[#f4f7f5] px-3 py-2.5">
                             <div class="flex items-start justify-between gap-4">
                                 <div class="min-w-0">
                                     <p class="truncate text-[1rem] font-semibold text-[#14202c]">{{ payment.farmerName }}</p>
@@ -766,7 +646,7 @@ const linePoints = computed(() => {
                             </div>
                         </div>
                     </div>
-                    <div v-else class="mt-6 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    <div v-else class="mt-3 rounded-md border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-4 py-5 text-center text-xs text-[#6c757d]">
                         No payments collected yet today.
                     </div>
                 </article>
@@ -774,30 +654,30 @@ const linePoints = computed(() => {
             </div>
         </section>
 
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+        <section class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Filtered Collections</p>
                         <h3 class="mt-2 text-[1.2rem] font-medium text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.overall || 0)) }}</h3>
                     </div>
-                    <Link :href="collections.links.analytics" class="text-sm font-bold text-[#003e32] transition hover:text-[#0f5b46]">
+                    <Link :href="collections.links.analytics" class="text-xs font-medium text-[#003e32] transition hover:underline">
                         View Analytics
                     </Link>
                 </div>
 
-                <div class="mt-5 grid gap-4 md:grid-cols-3">
-                    <Link :href="collections.links.applications" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                <div class="mt-3 grid gap-2 md:grid-cols-3">
+                    <Link :href="collections.links.applications" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Applications</p>
                         <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.applications || 0)) }}</p>
                         <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.applicationPayments) }} payment records</p>
                     </Link>
-                    <Link :href="collections.links.renewals" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                    <Link :href="collections.links.renewals" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Renewals</p>
                         <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.renewals || 0)) }}</p>
                         <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.renewalPayments) }} payment records</p>
                     </Link>
-                    <Link :href="collections.links.mortuary" class="rounded-[1.35rem] border border-[#dce5df] bg-[#f7faf8] px-4 py-4 transition hover:bg-[#f1f7f3]">
+                    <Link :href="collections.links.mortuary" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Mortuary</p>
                         <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.mortuary || 0)) }}</p>
                         <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.mortuaryClaims) }} claim records</p>
@@ -805,19 +685,19 @@ const linePoints = computed(() => {
                 </div>
             </article>
 
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-6 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
                 <h3 class="text-[1.1rem] font-medium text-[#14202c]">Payment Breakdown</h3>
 
-                <div class="mt-5 space-y-4">
-                    <div class="flex items-center justify-between rounded-[1.2rem] bg-[#f4f7f5] px-4 py-3">
+                <div class="mt-3 space-y-2">
+                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
                         <span class="text-sm font-semibold text-[#33424d]">Membership Fees</span>
                         <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.membershipFee || 0)) }}</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-[1.2rem] bg-[#f4f7f5] px-4 py-3">
+                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
                         <span class="text-sm font-semibold text-[#33424d]">Annual Due</span>
                         <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.annualDue || 0)) }}</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-[1.2rem] bg-[#f4f7f5] px-4 py-3">
+                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
                         <span class="text-sm font-semibold text-[#33424d]">Mortuary Contribution</span>
                         <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.mortuaryContribution || 0)) }}</span>
                     </div>
@@ -825,12 +705,12 @@ const linePoints = computed(() => {
             </article>
         </section>
 
-        <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
+        <section>
+            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
                 <div class="flex items-center justify-between gap-4">
-                    <h3 class="flex items-center gap-4 text-[1.1rem] font-medium text-[#14202c]">
-                        <span class="h-8 w-2 rounded-full bg-[#003e32]"></span>
-                        Registration Growth Trend
+                    <h3 class="flex items-center gap-2 text-sm font-medium text-[#14202c]">
+                        <span class="h-5 w-1.5 rounded-full bg-[#003e32]"></span>
+                        Farmer Registration Activity
                     </h3>
                     <div class="flex items-center gap-2 text-sm font-medium text-[#4d5963]">
                         <span>Monthly ({{ selectedYearLabel }})</span>
@@ -840,7 +720,7 @@ const linePoints = computed(() => {
                     </div>
                 </div>
 
-                <div class="relative mt-8 h-64">
+                <div class="relative mt-3 h-36">
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="h-full w-full">
                         <defs>
                             <linearGradient id="dashboard-trend-fill" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -858,63 +738,28 @@ const linePoints = computed(() => {
                     </div>
                 </div>
 
-                <div class="mt-7 flex items-center gap-4">
-                    <div class="flex items-center gap-2 text-base font-semibold text-[#14202c]">
-                        <span class="h-4 w-4 rounded-full bg-[#003e32]"></span>
+                <div class="mt-3 flex items-center gap-3">
+                    <div class="flex items-center gap-2 text-xs font-medium text-[#14202c]">
+                        <span class="h-2.5 w-2.5 rounded-full bg-[#003e32]"></span>
                         New Registrations
                     </div>
-                    <span class="ml-auto text-base font-bold" :class="registrationTrend.yearOverYearPercent >= 0 ? 'text-[#678b1b]' : 'text-[#b44f4f]'">
+                    <span class="ml-auto text-xs font-semibold" :class="registrationTrend.yearOverYearPercent >= 0 ? 'text-[#678b1b]' : 'text-[#b44f4f]'">
                         {{ registrationTrend.yearOverYearPercent >= 0 ? '+' : '' }}{{ registrationTrend.yearOverYearPercent }}% vs LY
                     </span>
                 </div>
             </article>
 
-            <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-7 shadow-[0_10px_36px_rgba(0,54,41,0.05)]">
-                <div class="flex items-center justify-between gap-4">
-                    <h3 class="flex items-center gap-4 text-[1.1rem] font-medium text-[#14202c]">
-                        <span class="h-8 w-2 rounded-full bg-[#5f8418]"></span>
-                        Registry Health Distribution
-                    </h3>
-                    <svg viewBox="0 0 24 24" class="h-6 w-6 text-[#4b5762]" fill="none" stroke="currentColor" stroke-width="1.9">
-                        <path d="M12 3a9 9 0 1 0 9 9h-9Z" />
-                        <path d="M12 3v9h9" />
-                    </svg>
-                </div>
-
-                <div class="mt-10 flex flex-col gap-8 lg:flex-row lg:items-center">
-                    <div class="relative h-44 w-44 rounded-full bg-[#e9ece9] p-5" :style="healthDistribution.donutStyle">
-                        <div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
-                            <span class="text-[2rem] font-semibold text-[#202733]">{{ healthDistribution.centerPercent }}%</span>
-                            <span class="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#a1a8a4]">{{ healthDistribution.centerLabel }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex-1 space-y-4">
-                        <div
-                            v-for="row in healthDistribution.rows"
-                            :key="row.label"
-                            class="flex items-center justify-between gap-4 text-[1.05rem]"
-                        >
-                            <div class="flex items-center gap-3 text-[#12202b]">
-                                <span class="h-4 w-4 rounded-full" :style="{ backgroundColor: row.color }"></span>
-                                {{ row.label }}
-                            </div>
-                            <span class="font-bold">{{ row.percent }}%</span>
-                        </div>
-                    </div>
-                </div>
-            </article>
         </section>
 
-        <section class="grid grid-cols-1 items-start gap-5 lg:gap-6 xl:grid-cols-12">
-            <div class="space-y-5 lg:space-y-6 xl:col-span-8">
-                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
+        <section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
+            <div class="space-y-4 xl:col-span-8">
+                <article class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
                     <div class="flex items-center justify-between gap-4">
-                        <h3 class="flex items-center gap-4 text-[1.1rem] font-medium text-[#14202c]">
-                            <span class="h-8 w-2 rounded-full bg-[#5f8418]"></span>
+                        <h3 class="flex items-center gap-2.5 text-sm font-semibold text-[#14202c]">
+                            <span class="h-5 w-1.5 rounded-full bg-[#5f8418]"></span>
                             Farmers by Member Type
                         </h3>
-                        <svg viewBox="0 0 24 24" class="h-5 w-5 text-[#495560]" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#65716c]" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 19h16" />
                             <path d="M7 15v-5" />
                             <path d="M12 15V8" />
@@ -922,18 +767,18 @@ const linePoints = computed(() => {
                         </svg>
                     </div>
 
-                    <div v-if="memberTypeRows.length" class="mt-7 grid gap-4 sm:grid-cols-2 lg:mt-8">
-                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-4 rounded-[1.4rem] bg-[#f7f9f8] p-4">
-                            <div :class="['flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl', row.bgColor]">
-                                <svg viewBox="0 0 24 24" :class="['h-6 w-6', row.textColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <div v-if="memberTypeRows.length" class="mt-3 grid gap-2.5 sm:grid-cols-2">
+                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-2.5 rounded-md bg-[#f7f9f8] px-3 py-2.5">
+                            <div :class="['flex h-8 w-8 shrink-0 items-center justify-center rounded-md', row.bgColor]">
+                                <svg viewBox="0 0 24 24" :class="['h-4 w-4', row.textColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path v-for="path in iconPath(row.icon)" :key="path" :d="path" />
                                 </svg>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="truncate text-[1.05rem] font-semibold text-[#14202c]">{{ row.label }}</p>
-                                <p class="text-sm text-[#596671]">{{ formatNumber(row.total) }} registered</p>
+                                <p class="truncate text-xs font-semibold text-[#14202c]">{{ row.label }}</p>
+                                <p class="text-[0.68rem] text-[#596671]">{{ formatNumber(row.total) }} registered</p>
                             </div>
-                            <span class="rounded-xl bg-[#eef0ee] px-3 py-1 text-sm font-bold tracking-wide text-[#222a34]">{{ row.badge }}</span>
+                            <span class="rounded-md bg-[#eef0ee] px-2 py-1 text-[0.62rem] font-semibold text-[#39433f]">{{ row.badge }}</span>
                         </div>
                     </div>
                     <div v-else class="mt-10 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
@@ -941,38 +786,38 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
-                    <div class="flex items-center justify-between gap-4">
-                        <h3 class="text-[1.15rem] font-medium text-[#14202c]">Recent Farmer Registry Entries</h3>
-                        <Link :href="dashboard.actions.viewFarmersUrl" class="text-[1.1rem] font-bold text-[#003e32] transition hover:text-[#0f5b46]">
+                <article class="overflow-hidden rounded-lg border border-[#dfe6e2] bg-white p-3.5">
+                    <div class="flex items-center justify-between gap-3 border-b border-[#e5ebe8] pb-2.5">
+                        <h3 class="text-sm font-semibold text-[#14202c]">Recent Farmer Registry Entries</h3>
+                        <Link :href="dashboard.actions.viewFarmersUrl" class="text-xs font-medium text-[#003e32] transition hover:underline">
                             View All Entries
                         </Link>
                     </div>
 
-                    <div v-if="recentFarmers.length" class="mt-8 overflow-x-auto">
-                        <table class="min-w-full text-left">
-                            <thead class="border-b border-[#e2e7e4] text-[0.82rem] font-bold uppercase tracking-[0.08em] text-[#344654]">
+                    <div v-if="recentFarmers.length" class="mt-2 overflow-x-auto">
+                        <table class="min-w-[680px] w-full table-fixed text-left">
+                            <thead class="border-b border-[#e2e7e4] text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-[#65736d]">
                                 <tr>
-                                    <th class="px-5 py-4">Farmer Name</th>
-                                    <th class="px-5 py-4">Barangay</th>
-                                    <th class="px-5 py-4">Status</th>
-                                    <th class="px-5 py-4 text-right">Date Applied</th>
+                                    <th class="w-[46%] px-3 py-2">Farmer Name</th>
+                                    <th class="w-[18%] px-3 py-2">Barangay</th>
+                                    <th class="w-[20%] px-3 py-2">Status</th>
+                                    <th class="w-[16%] px-3 py-2 text-right">Date Applied</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#edf1ee]">
                                 <tr v-for="farmer in recentFarmers" :key="farmer.id" class="transition hover:bg-[#f9fbfa]">
-                                    <td class="px-5 py-5">
-                                        <div class="flex items-center gap-4">
-                                            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8ebea] text-sm font-bold text-[#003e32]">
+                                    <td class="px-3 py-2.5">
+                                        <div class="flex min-w-0 items-center gap-2.5">
+                                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#e8ebea] text-[0.68rem] font-semibold text-[#003e32]">
                                                 {{ initials(farmer.fullName) }}
                                             </span>
-                                            <span class="text-[1.05rem] font-semibold text-[#12202b]">{{ farmer.fullName }}</span>
+                                            <span class="truncate text-xs font-medium text-[#12202b]" :title="farmer.fullName">{{ farmer.fullName }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-5 py-5 text-[1.05rem] text-[#364754]">{{ farmer.barangay || '-' }}</td>
-                                    <td class="px-5 py-5">
+                                    <td class="px-3 py-2.5 text-xs text-[#52615b]">{{ farmer.barangay || '-' }}</td>
+                                    <td class="px-3 py-2.5">
                                         <span
-                                            class="inline-flex rounded-full px-4 py-1.5 text-sm font-semibold"
+                                            class="inline-flex whitespace-nowrap rounded-md px-2 py-1 text-[0.65rem] font-medium"
                                             :class="{
                                                 'bg-[#c9f6dd] text-[#006c57]': farmer.farmerStatus === 'active',
                                                 'bg-[#ffeaa8] text-[#c56d00]': farmer.membershipStatus === 'pending_application' || farmer.membershipStatus === 'pending_documents',
@@ -983,7 +828,7 @@ const linePoints = computed(() => {
                                             {{ farmer.membershipStatusLabel || 'Not set' }}
                                         </span>
                                     </td>
-                                    <td class="px-5 py-5 text-right text-[1.05rem] text-[#364754]">{{ farmer.shortDate }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2.5 text-right text-xs text-[#52615b]">{{ farmer.shortDate }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -995,18 +840,18 @@ const linePoints = computed(() => {
 
             </div>
 
-            <div class="space-y-5 lg:space-y-6 xl:col-span-4">
-                <article v-if="isAdmin" class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
-                    <h3 class="text-[1.15rem] font-medium text-[#14202c]">Top Barangays</h3>
-                    <div v-if="topBarangays.length" class="mt-9 space-y-8">
+            <div class="space-y-4 xl:col-span-4">
+                <article v-if="isAdmin" class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
+                    <h3 class="text-sm font-semibold text-[#14202c]">Top Barangays</h3>
+                    <div v-if="topBarangays.length" class="mt-3 space-y-3">
                         <div v-for="row in topBarangays" :key="row.label">
-                            <div class="mb-3 flex items-end justify-between">
-                                <span class="text-[1.05rem] font-semibold text-[#14202c]">{{ row.label }}</span>
-                                <span class="text-[1.02rem] font-bold text-[#003e32]">{{ formatNumber(row.total) }}</span>
+                            <div class="mb-1.5 flex items-center justify-between">
+                                <span class="text-xs font-medium text-[#14202c]">{{ row.label }}</span>
+                                <span class="text-xs font-semibold text-[#003e32]">{{ formatNumber(row.total) }}</span>
                             </div>
-                            <div class="relative h-10 overflow-hidden rounded-2xl bg-[#edf0ee]">
+                            <div class="relative h-6 overflow-hidden rounded-md bg-[#edf0ee]">
                                 <div class="h-full bg-[#becbc6]" :style="{ width: row.width }"></div>
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold tracking-wide text-[#798582]">RANK #{{ row.rank }}</span>
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.6rem] font-semibold uppercase tracking-wide text-[#66736e]">Rank #{{ row.rank }}</span>
                             </div>
                         </div>
                     </div>
@@ -1015,27 +860,27 @@ const linePoints = computed(() => {
                     </div>
                 </article>
 
-                <article v-if="isAdmin" class="rounded-[2rem] border border-[#e4e9e6] bg-white p-5 shadow-[0_10px_36px_rgba(0,54,41,0.05)] sm:p-6 lg:p-7">
+                <article v-if="isAdmin" class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
                     <div class="flex items-center justify-between gap-4">
-                        <h3 class="text-[1.15rem] font-medium text-[#14202c]">Fee Schedules</h3>
-                        <span class="rounded-xl bg-[#1d5f4f] px-4 py-1.5 text-sm font-bold text-[#bfe5d2]">{{ selectedYearLabel }}</span>
+                        <h3 class="text-sm font-semibold text-[#14202c]">Fee Schedules</h3>
+                        <span class="rounded-md bg-[#1d5f4f] px-2.5 py-1 text-[0.68rem] font-semibold text-white">{{ selectedYearLabel }}</span>
                     </div>
 
-                    <div v-if="feeScheduleRows.length" class="mt-8 space-y-5">
-                        <div v-for="row in feeScheduleRows" :key="row.name" class="rounded-[1.6rem] bg-[#f0f2f1] px-5 py-5">
-                            <div class="flex items-start justify-between gap-4">
+                    <div v-if="feeScheduleRows.length" class="mt-3 space-y-2">
+                        <div v-for="row in feeScheduleRows" :key="row.name" class="rounded-md bg-[#f3f5f4] px-3 py-2.5">
+                            <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="truncate text-[1.05rem] font-semibold text-[#14202c]">{{ row.name }}</p>
-                                    <p class="mt-0.5 text-sm text-[#55616b]">{{ row.description }}</p>
-                                    <p class="mt-1 text-xs font-medium text-[#79847d]">Mortuary {{ row.secondaryAmount }}</p>
+                                    <p class="truncate text-xs font-semibold text-[#14202c]">{{ row.name }}</p>
+                                    <p class="mt-0.5 text-[0.68rem] leading-4 text-[#55616b]">{{ row.description }}</p>
+                                    <p class="text-[0.65rem] text-[#79847d]">Mortuary {{ row.secondaryAmount }}</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-[1.15rem] font-medium text-[#507d1f]">{{ row.amount }}</p>
-                                    <p class="mt-1 text-xs font-bold uppercase tracking-wide text-[#24313c]">{{ row.frequency }}</p>
+                                <div class="shrink-0 text-right">
+                                    <p class="text-xs font-semibold text-[#507d1f]">{{ row.amount }}</p>
+                                    <p class="mt-0.5 text-[0.58rem] font-semibold uppercase tracking-wide text-[#59645f]">{{ row.frequency }}</p>
                                 </div>
                             </div>
                         </div>
-                        <Link :href="dashboard.actions.manageFeeSchedulesUrl" class="mt-4 block w-full rounded-[1.65rem] bg-[#d9dcda] px-5 py-5 text-center text-[1.05rem] font-bold text-[#003e32] transition hover:bg-[#cfd3d1]">
+                        <Link :href="dashboard.actions.manageFeeSchedulesUrl" class="mt-2 block w-full rounded-md bg-[#e4e8e6] px-3 py-2 text-center text-xs font-semibold text-[#003e32] transition hover:bg-[#d7ddda]">
                             Manage Schedules
                         </Link>
                     </div>
@@ -1049,9 +894,9 @@ const linePoints = computed(() => {
 
         <Link
             :href="dashboard.actions.createMembershipApplicationUrl"
-            class="fixed bottom-8 right-8 z-50 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#003e32] text-white shadow-[0_18px_40px_rgba(0,62,50,0.28)] transition hover:scale-105 hover:bg-[#0b5645] focus:outline-none focus:ring-4 focus:ring-[#b8d9cf]"
+            class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#003e32] text-white shadow-[0_12px_28px_rgba(0,62,50,0.24)] transition hover:scale-105 hover:bg-[#0b5645] focus:outline-none focus:ring-4 focus:ring-[#b8d9cf]"
         >
-            <svg viewBox="0 0 24 24" class="h-9 w-9" fill="none" stroke="currentColor" stroke-width="2">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
             </svg>

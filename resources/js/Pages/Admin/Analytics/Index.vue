@@ -136,19 +136,18 @@ function exportAnalytics(format) {
     <Head title="Analytics" />
 
     <AdminLayout title="Analytics">
-        <div class="space-y-7">
-            <section class="rounded-[2rem] bg-[#0d4438] px-6 py-7 text-white shadow-[0_18px_60px_rgba(0,54,41,0.18)]">
+        <div class="analytics-compact space-y-4">
+            <section class="rounded-[12px] bg-[#0d4438] px-5 py-4 text-white">
                 <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#c7ead6]">System Analytics</p>
-                        <h1 class="mt-3 text-3xl font-black tracking-[-0.04em]">Usage and operations overview</h1>
+                        <h1 class="text-xl font-semibold tracking-[-0.02em]">Operations Analytics</h1>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button
                             v-for="days in analytics.filters.options"
                             :key="days"
                             type="button"
-                            class="rounded-full px-4 py-2 text-sm font-bold transition"
+                            class="rounded-md px-3 py-1.5 text-xs font-medium transition"
                             :class="analytics.filters.days === days ? 'bg-white text-[#0d4438]' : 'bg-white/10 text-white hover:bg-white/20'"
                             @click="applyDays(days)"
                         >
@@ -156,25 +155,25 @@ function exportAnalytics(format) {
                         </button>
                     </div>
                 </div>
-                <form class="mt-5 flex flex-col gap-3 lg:flex-row lg:items-end" @submit.prevent="applyDateRange">
+                <form class="mt-3 flex flex-col gap-2 lg:flex-row lg:items-end" @submit.prevent="applyDateRange">
                     <label class="space-y-2">
                         <span class="block text-xs font-black uppercase tracking-[0.18em] text-[#c7ead6]">From</span>
-                        <input v-model="filters.date_from" type="date" class="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none">
+                        <input v-model="filters.date_from" type="date" class="rounded-md border border-white/20 bg-white/10 px-3 py-2 text-xs text-white outline-none">
                     </label>
                     <label class="space-y-2">
                         <span class="block text-xs font-black uppercase tracking-[0.18em] text-[#c7ead6]">To</span>
-                        <input v-model="filters.date_to" type="date" class="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none">
+                        <input v-model="filters.date_to" type="date" class="rounded-md border border-white/20 bg-white/10 px-3 py-2 text-xs text-white outline-none">
                     </label>
                     <div class="flex gap-2">
-                        <button type="submit" class="rounded-xl bg-white px-4 py-2.5 text-sm font-black text-[#0d4438]">Apply Range</button>
-                        <button type="button" class="rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-black text-white transition hover:bg-white/20" @click="openExportModal">
+                        <button type="submit" class="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[#0d4438]">Apply Range</button>
+                        <button type="button" class="rounded-md border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20" @click="openExportModal">
                             Export Report
                         </button>
                     </div>
                 </form>
             </section>
 
-            <section class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <section v-if="false" class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Page Views</p>
                     <p class="mt-3 text-4xl font-black tracking-[-0.04em] text-[#143c32]">{{ analytics.summary.pageViews }}</p>
@@ -197,54 +196,49 @@ function exportAnalytics(format) {
                     </div>
                 </div>
 
-                <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    <article class="rounded-[1.4rem] bg-[#eef7f2] p-5">
+                <div class="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+                    <article class="rounded-md bg-[#eef7f2] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#6f7e78]">Total Mobile Users</p>
                         <p class="mt-3 text-3xl font-black text-[#143c32]">{{ analytics.mobileMonitoring.summary.total_mobile_users }}</p>
                     </article>
-                    <article class="rounded-[1.4rem] bg-[#f6f8f7] p-5">
+                    <article class="rounded-md bg-[#f6f8f7] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#6f7e78]">Active In Range</p>
                         <p class="mt-3 text-3xl font-black text-[#143c32]">{{ analytics.mobileMonitoring.summary.active_users_in_range }}</p>
                     </article>
-                    <article class="rounded-[1.4rem] bg-[#fff4f1] p-5">
+                    <article class="rounded-md bg-[#fff4f1] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#a44d3f]">Failed Login Issues</p>
                         <p class="mt-3 text-3xl font-black text-[#a44d3f]">{{ analytics.mobileMonitoring.summary.failed_login_issues }}</p>
                     </article>
-                    <article class="rounded-[1.4rem] bg-[#fff7eb] p-5">
+                    <article class="rounded-md bg-[#fff7eb] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#a06a00]">Failed OTP Issues</p>
                         <p class="mt-3 text-3xl font-black text-[#a06a00]">{{ analytics.mobileMonitoring.summary.failed_otp_issues }}</p>
                     </article>
-                    <article class="rounded-[1.4rem] bg-[#f4f5ff] p-5">
+                    <article class="rounded-md bg-[#f4f5ff] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#4655a4]">Farmer Inquiries</p>
                         <p class="mt-3 text-3xl font-black text-[#4655a4]">{{ analytics.mobileMonitoring.summary.submitted_inquiries_via_mobile }}</p>
                     </article>
-                    <article class="rounded-[1.4rem] bg-[#fbf5f8] p-5">
+                    <article class="rounded-md bg-[#fbf5f8] p-3">
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#8d4663]">Mobile Renewal Requests</p>
                         <p class="mt-3 text-3xl font-black text-[#8d4663]">{{ analytics.mobileMonitoring.summary.mobile_renewal_requests }}</p>
                     </article>
                 </div>
 
-                <div class="mt-6 grid gap-5 xl:grid-cols-2">
-                    <article class="rounded-[1.4rem] bg-[#f6f8f7] p-5">
+                <div class="mt-3">
+                    <article class="rounded-md bg-[#f6f8f7] p-3">
                         <h3 class="text-lg font-bold text-[#143c32]">Notification Engagement</h3>
-                        <div class="mt-4 grid gap-4 md:grid-cols-2">
+                        <div class="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
                             <div class="rounded-[1rem] bg-white px-4 py-3"><span class="text-sm text-[#5f6f67]">Sent</span><p class="mt-2 text-2xl font-black text-[#143c32]">{{ analytics.mobileMonitoring.notificationEngagement.sent }}</p></div>
                             <div class="rounded-[1rem] bg-white px-4 py-3"><span class="text-sm text-[#5f6f67]">Delivered</span><p class="mt-2 text-2xl font-black text-[#143c32]">{{ analytics.mobileMonitoring.notificationEngagement.delivered }}</p></div>
                             <div class="rounded-[1rem] bg-white px-4 py-3"><span class="text-sm text-[#5f6f67]">Read</span><p class="mt-2 text-2xl font-black text-[#143c32]">{{ analytics.mobileMonitoring.notificationEngagement.read }}</p></div>
                             <div class="rounded-[1rem] bg-white px-4 py-3"><span class="text-sm text-[#5f6f67]">Failed</span><p class="mt-2 text-2xl font-black text-[#a44d3f]">{{ analytics.mobileMonitoring.notificationEngagement.failed }}</p></div>
+                            <div class="col-span-2 rounded-[1rem] bg-[#eef7f2] px-4 py-3 md:col-span-1"><span class="text-sm text-[#5f6f67]">Read Rate</span><p class="mt-2 text-2xl font-black text-[#0f5b46]">{{ analytics.mobileMonitoring.notificationEngagement.read_rate }}%</p></div>
                         </div>
-                    </article>
-
-                    <article class="rounded-[1.4rem] bg-[#eef7f2] p-5">
-                        <h3 class="text-lg font-bold text-[#143c32]">Read Rate</h3>
-                        <p class="mt-4 text-5xl font-black tracking-[-0.04em] text-[#0f5b46]">{{ analytics.mobileMonitoring.notificationEngagement.read_rate }}%</p>
-                        <p class="mt-3 text-sm text-[#5f6f67]">Share of farmer-targeted notifications that were opened or marked read.</p>
                     </article>
                 </div>
             </section>
 
-            <section class="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <section v-if="false" class="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+                <article v-if="false" class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <h2 class="text-xl font-bold text-[#143c32]">Daily trend</h2>
@@ -378,7 +372,7 @@ function exportAnalytics(format) {
             </section>
 
             <section class="grid gap-6 xl:grid-cols-2">
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+                <article v-if="false" class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <h2 class="text-xl font-bold text-[#143c32]">Application approval and rejection trend</h2>
                     <p class="mt-1 text-sm text-[#5f6f67]">Yearly decision volume for membership applications.</p>
                     <div class="mt-6 grid grid-cols-[repeat(auto-fit,minmax(52px,1fr))] items-end gap-3">
@@ -432,7 +426,7 @@ function exportAnalytics(format) {
                     </div>
                 </article>
 
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+                <article v-if="false" class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <h2 class="text-xl font-bold text-[#143c32]">Advisory publishing by month</h2>
                     <p class="mt-1 text-sm text-[#5f6f67]">Published advisory volume aggregated by month.</p>
                     <div class="mt-6 grid grid-cols-[repeat(auto-fit,minmax(52px,1fr))] items-end gap-3">
@@ -495,7 +489,7 @@ function exportAnalytics(format) {
                 </article>
             </section>
 
-            <section class="grid gap-6 xl:grid-cols-2">
+            <section v-if="false" class="grid gap-6 xl:grid-cols-2">
                 <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <h2 class="text-xl font-bold text-[#143c32]">Application funnel</h2>
                     <p class="mt-1 text-sm text-[#5f6f67]">Submission to completion flow for membership applications.</p>
@@ -549,7 +543,7 @@ function exportAnalytics(format) {
                     </div>
                 </article>
 
-                <article class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+                <article v-if="false" class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                     <h2 class="text-xl font-bold text-[#143c32]">Payment collection summary</h2>
                     <p class="mt-1 text-sm text-[#5f6f67]">Payment volume, average ticket size, latest collection, and payment methods.</p>
                     <div class="mt-6 grid gap-4 md:grid-cols-2">
@@ -648,7 +642,7 @@ function exportAnalytics(format) {
                 </article>
             </section>
 
-            <section class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <section v-if="false" class="rounded-[1.8rem] border border-[#dfe6e2] bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                 <h2 class="text-xl font-bold text-[#143c32]">Recent tracked activity</h2>
                 <p class="mt-1 text-sm text-[#5f6f67]">Latest recorded usage and workflow events.</p>
                 <div class="mt-6 overflow-x-auto">
