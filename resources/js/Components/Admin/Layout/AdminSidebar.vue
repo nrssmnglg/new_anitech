@@ -73,7 +73,7 @@ const iconPaths = {
     <div class="lg:hidden">
         <button
             type="button"
-            class="fixed left-4 top-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#173e34] text-white shadow-lg"
+            class="fixed left-3 top-3 z-50 inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#173e34] text-white shadow-md"
             @click="isMobileOpen = true"
         >
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
@@ -87,22 +87,22 @@ const iconPaths = {
     </div>
 
     <aside
-        class="fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col overflow-hidden border-r border-[#edf2ef] bg-[#ffffff] text-[#15372f] shadow-[10px_0_30px_rgba(15,23,42,0.06)] transition-transform duration-300 lg:translate-x-0"
+        class="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden border-r border-[#e3e9e6] bg-white text-[#15372f] shadow-[6px_0_20px_rgba(15,23,42,0.04)] transition-transform duration-300 lg:translate-x-0"
         :class="isMobileOpen ? 'translate-x-0' : '-translate-x-full'"
     >
-        <div class="border-b border-[#edf2ef] px-5 py-5">
+        <div class="border-b border-[#e8edea] px-4 py-3.5">
             <div class="flex items-start justify-between gap-4">
                 <Link :href="brand.homeUrl || '/admin'" class="min-w-0 no-underline">
-                    <div class="flex items-center gap-3">
-                        <img :src="brand.logoUrl" alt="AniTech" class="h-10 w-10 object-contain">
+                    <div class="flex items-center gap-2.5">
+                        <img :src="brand.logoUrl" alt="AniTech" class="h-8 w-8 object-contain">
                         <div class="min-w-0">
-                            <div class="truncate text-[2rem] font-black tracking-[-0.05em] text-[#143c32]">{{ brand.name }}</div>
-                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#6f7e78]">{{ brand.subtitle }}</div>
+                            <div class="truncate text-lg font-semibold tracking-[-0.02em] text-[#143c32]">{{ brand.name }}</div>
+                            <div class="truncate text-[0.58rem] font-medium uppercase tracking-[0.1em] text-[#6f7e78]">{{ brand.subtitle }}</div>
                         </div>
                     </div>
                 </Link>
 
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#e7ece9] bg-white text-[#406359] lg:hidden" @click="isMobileOpen = false">
+                <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#e7ece9] bg-white text-[#406359] lg:hidden" @click="isMobileOpen = false">
                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="m6 6 12 12" />
                         <path d="m18 6-12 12" />
@@ -111,21 +111,21 @@ const iconPaths = {
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-3 py-5">
-            <div v-for="group in navigation" :key="group.label" class="mb-8">
-                <p class="mb-3 px-3 text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[#7b8681]">{{ group.label }}</p>
+        <div class="flex-1 overflow-y-auto px-2.5 py-3.5">
+            <div v-for="group in navigation" :key="group.label" class="mb-4 last:mb-0">
+                <p class="mb-1.5 px-2.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#7b8681]">{{ group.label }}</p>
 
-                <div class="space-y-1.5">
+                <div class="space-y-0.5">
                     <div v-for="item in group.items" :key="item.label">
                         <Link
                             v-if="item.href && !item.children"
                             :href="item.href"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-[0.95rem] font-semibold transition"
-                            :class="sectionActive(item) ? 'border border-[#e1f2d2] bg-[linear-gradient(180deg,#f5ffed_0%,#edf9e0_100%)] text-[#0f4a3d] shadow-[0_8px_18px_rgba(173,213,119,0.12)]' : 'border border-transparent text-[#1e3c35] hover:bg-[#f6f8f7]'"
+                            class="flex min-h-9 items-center gap-2.5 rounded-md border-l-[3px] px-2.5 py-2 text-xs font-medium transition"
+                            :class="sectionActive(item) ? 'border-l-[#5f8418] bg-[#eef5e9] text-[#0f4a3d]' : 'border-l-transparent text-[#344a43] hover:bg-[#f4f7f5] hover:text-[#173e34]'"
                             @click="isMobileOpen = false"
                         >
-                            <span class="inline-flex h-6 w-6 items-center justify-center text-[#173e34]">
-                                <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2">
+                            <span class="inline-flex h-5 w-5 items-center justify-center text-[#31584e]">
+                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                                     <path v-for="path in iconPaths[item.icon] || []" :key="path" :d="path" />
                                 </svg>
                             </span>
@@ -135,28 +135,28 @@ const iconPaths = {
                         <div v-else>
                             <button
                                 type="button"
-                                class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-[0.95rem] font-semibold transition"
-                                :class="sectionActive(item) ? 'border border-[#e1f2d2] bg-[linear-gradient(180deg,#f5ffed_0%,#edf9e0_100%)] text-[#0f4a3d] shadow-[0_8px_18px_rgba(173,213,119,0.12)]' : 'border border-transparent text-[#1e3c35] hover:bg-[#f6f8f7]'"
+                                class="flex min-h-9 w-full items-center gap-2.5 rounded-md border-l-[3px] px-2.5 py-2 text-left text-xs font-medium transition"
+                                :class="sectionActive(item) ? 'border-l-[#5f8418] bg-[#eef5e9] text-[#0f4a3d]' : 'border-l-transparent text-[#344a43] hover:bg-[#f4f7f5] hover:text-[#173e34]'"
                                 @click="toggleGroup(item.label)"
                             >
-                                <span class="inline-flex h-6 w-6 items-center justify-center text-[#173e34]">
-                                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2">
+                                <span class="inline-flex h-5 w-5 items-center justify-center text-[#31584e]">
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                                         <path v-for="path in iconPaths[item.icon] || []" :key="path" :d="path" />
                                     </svg>
                                 </span>
                                 <span class="flex-1">{{ item.label }}</span>
-                                <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#6f7e78] transition-transform" :class="isGroupOpen(item) ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-[#7b8782] transition-transform" :class="isGroupOpen(item) ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="m6 9 6 6 6-6" />
                                 </svg>
                             </button>
 
-                            <div v-if="isGroupOpen(item)" class="mt-1 space-y-1 pl-10">
+                            <div v-if="isGroupOpen(item)" class="mt-0.5 space-y-0.5 pl-8">
                                 <Link
                                     v-for="child in item.children"
                                     :key="child.label"
                                     :href="child.href"
-                                    class="block rounded-xl px-4 py-2.5 text-sm transition"
-                                    :class="matchesRoute(child.activePatterns || []) ? 'bg-[#f2f7f4] font-semibold text-[#0f4a3d]' : 'text-[#51635c] hover:bg-[#f6f8f7] hover:text-[#173e34]'"
+                                    class="block rounded-md px-3 py-1.5 text-[0.7rem] transition"
+                                    :class="matchesRoute(child.activePatterns || []) ? 'bg-[#edf4f0] font-semibold text-[#0f4a3d]' : 'text-[#60706a] hover:bg-[#f6f8f7] hover:text-[#173e34]'"
                                     @click="isMobileOpen = false"
                                 >
                                     {{ child.label }}

@@ -12,15 +12,17 @@ const steps = [
 </script>
 
 <template>
-    <section class="grid gap-4 xl:grid-cols-4">
-        <article
-            v-for="(step, index) in steps"
-            :key="step.number"
-            class="rounded-[24px] border border-[#dbe2de] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
-            :class="index + 1 < flow.step ? 'bg-[#eef7e3]' : (index + 1 === flow.step ? 'ring-2 ring-[#1b4d3e]/20' : 'opacity-85')"
-        >
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">{{ step.number }}</p>
-            <p class="mt-3 text-2xl font-black text-[#191c1c]">{{ step.label }}</p>
-        </article>
+    <section class="rounded-lg border border-[#dbe2de] bg-white px-4 py-3">
+        <div class="relative mx-auto flex max-w-3xl justify-between">
+            <div class="absolute left-0 right-0 top-3.5 h-0.5 rounded-full bg-[#dfe6e1]"></div>
+            <div class="absolute left-0 top-3.5 h-0.5 rounded-full bg-[#003629]" :style="{ width: `${Math.max(0, (flow.step - 1) / 3 * 100)}%` }"></div>
+            <div v-for="(step, index) in steps" :key="step.number" class="relative z-10 flex flex-col items-center gap-1.5">
+                <div
+                    class="flex h-7 w-7 items-center justify-center rounded-full text-[0.65rem] font-semibold ring-2 ring-white"
+                    :class="index + 1 <= flow.step ? 'bg-[#003629] text-white' : 'bg-[#eef1ef] text-[#6b7873]'"
+                >{{ index + 1 }}</div>
+                <span class="text-[0.68rem]" :class="index + 1 === flow.step ? 'font-semibold text-[#003629]' : 'font-medium text-[#6b7873]'">{{ step.label }}</span>
+            </div>
+        </div>
     </section>
 </template>

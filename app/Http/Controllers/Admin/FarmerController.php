@@ -161,17 +161,43 @@ class FarmerController extends Controller
         if ($format === 'xlsx') {
             $fileName = 'farmer-registry-' . now()->format('Y-m-d') . '.xlsx';
 
-            return Excel::download(new FarmerRegistryExport($farmers, $selectedColumns), $fileName);
+            return Excel::download(new FarmerRegistryExport(
+                $farmers,
+                $selectedColumns,
+                $filterLabels,
+                now()->format('F d, Y h:i A'),
+                (string) ($request->user()?->name ?? 'Authorized User'),
+            ), $fileName);
         }
 
         $fileName = 'farmer-registry-' . now()->format('Y-m-d') . '.pdf';
+        $memberTypeCounts = $farmers->countBy(fn (Farmer $farmer): string => (string) ($farmer->memberType?->code ?? 'UNASSIGNED'));
+        $memberTypeBreakdown = MemberType::query()
+            ->orderBy('code')
+            ->get(['code', 'name'])
+            ->map(fn (MemberType $memberType): array => [
+                'code' => $memberType->code,
+                'name' => $memberType->name,
+                'total' => (int) $memberTypeCounts->get($memberType->code, 0),
+            ]);
+
+        if ($memberTypeCounts->has('UNASSIGNED')) {
+            $memberTypeBreakdown->push([
+                'code' => 'UNASSIGNED',
+                'name' => 'Unassigned',
+                'total' => (int) $memberTypeCounts->get('UNASSIGNED', 0),
+            ]);
+        }
+
         $pdf = Pdf::loadView('admin.farmers.export-pdf', [
             'farmers' => $farmers,
             'generatedAt' => now()->format('F d, Y h:i A'),
+            'generatedBy' => (string) ($request->user()?->name ?? 'Authorized User'),
             'filterLabels' => $filterLabels,
             'selectedColumns' => collect($selectedColumns)
                 ->mapWithKeys(fn (string $column): array => [$column => FarmerRegistryExport::availableColumns()[$column]])
                 ->all(),
+            'memberTypeBreakdown' => $memberTypeBreakdown,
         ])->setPaper('a4', 'landscape');
 
         return response()->streamDownload(

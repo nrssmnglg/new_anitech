@@ -5,7 +5,6 @@ import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import InternalNotesPanel from '../../../Components/Admin/InternalNotesPanel.vue';
 import RecordWarningsPanel from '../../../Components/Admin/RecordWarningsPanel.vue';
 import ReviewDocumentsPanel from '../../../Components/Admin/MembershipApplications/ReviewDocumentsPanel.vue';
-import ReviewHero from '../../../Components/Admin/MembershipApplications/ReviewHero.vue';
 import ReviewOverviewGrid from '../../../Components/Admin/MembershipApplications/ReviewOverviewGrid.vue';
 import ReviewProfilePanel from '../../../Components/Admin/MembershipApplications/ReviewProfilePanel.vue';
 import ReviewSidebar from '../../../Components/Admin/MembershipApplications/ReviewSidebar.vue';
@@ -103,16 +102,14 @@ function submitRejection() {
     <Head :title="`Membership ${application.applicationNo}`" />
 
     <AdminLayout title="Membership Review">
-        <div class="space-y-7 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
-            <ReviewHero :application="application" :flow="flow" />
-
+        <div class="membership-review-compact mx-auto w-full max-w-[1536px] space-y-4">
             <ReviewSteps :flow="flow" />
 
-            <section v-if="flashSuccess" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
+            <section v-if="flashSuccess" class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
                 {{ flashSuccess }}
             </section>
 
-            <section v-if="pageErrors.application || pageErrors.payment || pageErrors.document" class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+            <section v-if="pageErrors.application || pageErrors.payment || pageErrors.document" class="rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-700">
                 {{ pageErrors.application || pageErrors.payment || pageErrors.document }}
             </section>
 
@@ -124,22 +121,22 @@ function submitRejection() {
                 :payment-status-label="paymentStatusLabel"
             />
 
-            <RecordWarningsPanel :warnings="recordWarnings" :section-targets="warningSectionTargets" />
+            <RecordWarningsPanel title="" description="" :warnings="recordWarnings" :section-targets="warningSectionTargets" />
 
-            <section class="grid gap-4 md:grid-cols-2">
-                <article class="rounded-[22px] border border-[#dbe2de] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Last Updated By</p>
-                    <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
-                    <p class="mt-1 text-sm text-[#6c7772]">{{ application.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
+            <section class="grid gap-2 md:grid-cols-2">
+                <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
+                    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#7b8782]">Last Updated By</p>
+                    <p class="mt-1 text-xs font-semibold text-[#14202c]">{{ application.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
+                    <p class="mt-0.5 text-[0.68rem] text-[#6c7772]">{{ application.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
                 </article>
-                <article class="rounded-[22px] border border-[#dbe2de] bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[#7b8782]">Assigned Staff</p>
-                    <p class="mt-2 text-lg font-bold text-[#14202c]">{{ application.accountability?.assignedStaff || 'Unassigned' }}</p>
+                <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
+                    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#7b8782]">Assigned Staff</p>
+                    <p class="mt-1 text-xs font-semibold text-[#14202c]">{{ application.accountability?.assignedStaff || 'Unassigned' }}</p>
                 </article>
             </section>
 
-            <section class="space-y-6">
-                <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+            <section class="space-y-4">
+                <div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                     <div id="application-profile-section">
                         <ReviewProfilePanel :application="application" :farmer="farmer" />
                     </div>
@@ -174,8 +171,70 @@ function submitRejection() {
                     />
                 </div>
 
-                <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Application Internal Notes" />
+                <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Application Internal Notes" compact />
             </section>
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.membership-review-compact :deep(section),
+.membership-review-compact :deep(article) {
+    box-shadow: none !important;
+}
+.membership-review-compact :deep([class*='rounded-[24px]']),
+.membership-review-compact :deep([class*='rounded-[22px]']),
+.membership-review-compact :deep([class*='rounded-[20px]']),
+.membership-review-compact :deep([class*='rounded-[18px]']) {
+    border-radius: 0.5rem !important;
+}
+.membership-review-compact :deep(section > [class*='border-b']) {
+    padding: 0.625rem 1rem !important;
+}
+.membership-review-compact :deep(section > [class*='px-5'][class*='py-5']) {
+    padding: 0.75rem 1rem !important;
+}
+.membership-review-compact :deep([class~='p-4']),
+.membership-review-compact :deep([class~='px-4'][class~='py-4']) {
+    padding: 0.75rem !important;
+}
+.membership-review-compact :deep([class~='p-5']) {
+    padding: 0.875rem !important;
+}
+.membership-review-compact :deep([class~='space-y-6']) {
+    row-gap: 1rem !important;
+}
+.membership-review-compact :deep([class~='space-y-4']) {
+    row-gap: 0.75rem !important;
+}
+.membership-review-compact :deep([class~='text-[2rem]']),
+.membership-review-compact :deep([class~='text-[1.8rem]']) {
+    font-size: 1.125rem !important;
+    line-height: 1.35rem !important;
+}
+.membership-review-compact :deep([class~='text-lg']),
+.membership-review-compact :deep([class~='text-base']) {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
+.membership-review-compact :deep([class~='tracking-[0.22em]']),
+.membership-review-compact :deep([class~='tracking-[0.2em]']) {
+    letter-spacing: 0.08em !important;
+}
+.membership-review-compact :deep(input:not([type='checkbox'])),
+.membership-review-compact :deep(select) {
+    min-height: 2.25rem !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+}
+.membership-review-compact :deep(textarea) {
+    border-radius: 0.375rem !important;
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.75rem !important;
+}
+.membership-review-compact :deep(button),
+.membership-review-compact :deep(a) {
+    border-radius: 0.375rem !important;
+}
+</style>

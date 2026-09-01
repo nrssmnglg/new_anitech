@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
             :navigation="shell.navigation"
         />
 
-        <div class="min-h-screen lg:pl-[292px]">
+        <div class="min-h-screen lg:pl-[256px]">
             <header class="sticky top-0 z-30 border-b border-[#dde6e1] bg-white/95 backdrop-blur">
                 <div class="flex min-h-[60px] items-center justify-between gap-3 px-4 py-2 sm:px-5 lg:px-6">
                     <div class="min-w-0 flex-1 pl-14 lg:pl-0">

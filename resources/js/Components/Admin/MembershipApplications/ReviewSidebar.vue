@@ -100,13 +100,7 @@ defineEmits(['submit-payment', 'submit-rejection']);
             v-if="permissions.canRejectDecision && !flow.paymentSettled && application.status.value !== 'rejected'"
             class="rounded-[24px] border border-[#f1c9c9] bg-[#fff8f8] shadow-[0_14px_32px_rgba(127,29,29,0.05)]"
         >
-            <div class="border-b border-[#f1dada] px-5 py-4">
-                <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#a34d4d]">Review decision</p>
-                <h2 class="mt-1 text-base font-bold text-[#7f1d1d]">Reject application</h2>
-                <p class="mt-2 text-sm leading-6 text-[#7f5555]">Use this only when the application cannot proceed. The applicant may submit a replacement application afterward.</p>
-            </div>
-
-            <form class="space-y-4 px-5 py-5" @submit.prevent="$emit('submit-rejection')">
+            <form class="space-y-4 p-4" @submit.prevent="$emit('submit-rejection')">
                 <label class="space-y-2">
                     <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7f5555]">Rejection Reason</span>
                     <select v-model="rejectionForm.rejection_reason" required class="w-full rounded-2xl border border-[#e7bebe] bg-white px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#b42318]">

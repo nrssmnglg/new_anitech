@@ -39,23 +39,24 @@ function iconPath(key) {
 </script>
 
 <template>
-    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section class="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <article
             v-for="card in cards"
             :key="card.key"
-            class="rounded-[18px] border border-[#dbe2de] bg-white/80 px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm"
+            class="rounded-lg border border-[#dbe2de] bg-white p-3"
         >
-            <div class="mb-2.5 flex items-start justify-between gap-3">
-                <div class="rounded-[0.9rem] p-2" :class="card.iconWrap">
-                    <svg viewBox="0 0 24 24" class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.8">
+            <div class="flex items-center gap-2.5">
+                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" :class="card.iconWrap">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
                         <circle v-if="card.key !== 'total'" cx="12" cy="12" r="9" />
                         <path :d="iconPath(card.key)" />
                     </svg>
                 </div>
+                <div class="min-w-0">
+                    <p class="truncate text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-[#6c7873]">{{ card.label }}</p>
+                    <p class="mt-0.5 text-lg font-semibold leading-none" :class="card.valueClass">{{ summary[card.key] }}</p>
+                </div>
             </div>
-
-            <p class="text-[0.64rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">{{ card.label }}</p>
-            <p class="mt-1 text-[1.95rem] font-black leading-none tracking-[-0.04em]" :class="card.valueClass">{{ summary[card.key] }}</p>
         </article>
     </section>
 </template>

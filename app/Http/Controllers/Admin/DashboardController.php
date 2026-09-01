@@ -199,7 +199,7 @@ class DashboardController extends Controller
             'year' => ['nullable', 'integer'],
             'barangay_id' => ['nullable', 'integer'],
             'sections' => ['nullable', 'array'],
-            'sections.*' => ['string', 'in:summary,collections,payment_breakdown,membership_status,member_types,top_barangays,top_associations,recent_farmers,application_records,renewal_records,mortuary_records'],
+            'sections.*' => ['string', 'in:summary,collections,payment_breakdown,member_types,barangay_totals,recent_farmers,application_records,renewal_records,mortuary_records'],
         ]);
 
         $year = isset($validated['year']) ? (int) $validated['year'] : null;
@@ -208,10 +208,8 @@ class DashboardController extends Controller
             'summary',
             'collections',
             'payment_breakdown',
-            'membership_status',
             'member_types',
-            'top_barangays',
-            'top_associations',
+            'barangay_totals',
             'recent_farmers',
             'application_records',
             'renewal_records',
@@ -220,10 +218,10 @@ class DashboardController extends Controller
 
         $summary = $this->summary($year, $barangayId, true);
         $collections = $this->collectionsSummary($year, $barangayId);
-        $membershipStatus = $this->membershipStatusBreakdown($year, $barangayId);
         $memberTypes = $this->memberTypeBreakdown($year, $barangayId);
-        $topBarangays = $this->topBarangays($year, $barangayId);
-        $topAssociations = $this->topAssociations($year, $barangayId);
+        $barangayTotals = in_array('barangay_totals', $sections, true)
+            ? $this->barangayFarmerTotals($year, $barangayId)
+            : [];
         $recentFarmers = $this->recentFarmers($year, $barangayId);
         $applicationRecords = in_array('application_records', $sections, true)
             ? $this->applicationExportRows($year, $barangayId)
@@ -243,10 +241,8 @@ class DashboardController extends Controller
             $sections,
             $summary,
             $collections,
-            $membershipStatus,
             $memberTypes,
-            $topBarangays,
-            $topAssociations,
+            $barangayTotals,
             $recentFarmers,
             $applicationRecords,
             $renewalRecords,
@@ -255,15 +251,20 @@ class DashboardController extends Controller
             $barangayName,
         ): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Report', 'Metric', 'Value', 'Year', 'Barangay']);
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['CITY AGRICULTURE OFFICE']);
+            fputcsv($handle, ['Dashboard Export Report']);
+            fputcsv($handle, ['Generated', now()->format('F d, Y h:i A')]);
+            fputcsv($handle, ['Year', $year ?? 'All Years']);
+            fputcsv($handle, ['Barangay', $barangayName]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['Section', 'Metric', 'Value']);
 
-            $push = static function (string $report, string $metric, mixed $value) use ($handle, $year, $barangayName): void {
+            $push = static function (string $report, string $metric, mixed $value) use ($handle): void {
                 fputcsv($handle, [
                     $report,
                     $metric,
                     is_scalar($value) || $value === null ? $value : json_encode($value),
-                    $year ?? 'All Years',
-                    $barangayName,
                 ]);
             };
 
@@ -277,7 +278,6 @@ class DashboardController extends Controller
                     'Active Barangays' => $summary['activeBarangays'] ?? 0,
                     'Active Associations' => $summary['activeAssociations'] ?? 0,
                     'Active Office Users' => $summary['activeOfficeUsers'] ?? 0,
-                    'Active Fee Schedules' => $summary['activeFeeSchedules'] ?? 0,
                 ] as $metric => $value) {
                     $push('Summary', $metric, $value);
                 }
@@ -307,27 +307,24 @@ class DashboardController extends Controller
                 }
             }
 
-            if (in_array('membership_status', $sections, true)) {
-                foreach ($membershipStatus as $row) {
-                    $push('Membership Status', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
-                }
-            }
-
             if (in_array('member_types', $sections, true)) {
                 foreach ($memberTypes as $row) {
                     $push('Member Types', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
                 }
             }
 
-            if (in_array('top_barangays', $sections, true)) {
-                foreach ($topBarangays as $row) {
-                    $push('Top Barangays', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
-                }
-            }
+            if (in_array('barangay_totals', $sections, true)) {
+                fputcsv($handle, []);
+                fputcsv($handle, ['Barangay Farmer Totals']);
+                fputcsv($handle, ['Barangay', 'Active', 'Inactive', 'Total']);
 
-            if (in_array('top_associations', $sections, true)) {
-                foreach ($topAssociations as $row) {
-                    $push('Top Associations', (string) ($row['label'] ?? 'Unknown'), $row['total'] ?? 0);
+                foreach ($barangayTotals as $row) {
+                    fputcsv($handle, [
+                        (string) ($row['label'] ?? 'Unknown'),
+                        $row['active'] ?? 0,
+                        $row['inactive'] ?? 0,
+                        $row['total'] ?? 0,
+                    ]);
                 }
             }
 
@@ -337,13 +334,13 @@ class DashboardController extends Controller
                 }
             }
 
-            $writeDetailedSection = static function (string $title, array $rows) use ($handle, $year, $barangayName): void {
+            $writeDetailedSection = static function (string $title, array $rows) use ($handle): void {
                 fputcsv($handle, []);
-                fputcsv($handle, [$title, 'Metric', 'Value', 'Year', 'Barangay']);
-                fputcsv($handle, [$title, 'Total Records', count($rows), $year ?? 'All Years', $barangayName]);
+                fputcsv($handle, [$title]);
+                fputcsv($handle, ['Total Records', count($rows)]);
 
                 if ($rows === []) {
-                    fputcsv($handle, [$title, 'No records found', '', $year ?? 'All Years', $barangayName]);
+                    fputcsv($handle, ['No records found']);
 
                     return;
                 }
@@ -1241,6 +1238,32 @@ class DashboardController extends Controller
             ->map(fn (Barangay $barangay): array => [
                 'label' => $barangay->name,
                 'total' => (int) $barangay->filtered_farmers_count,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function barangayFarmerTotals(?int $year, ?int $barangayId): array
+    {
+        return Barangay::query()
+            ->when($barangayId !== null, fn (Builder $query) => $query->whereKey($barangayId))
+            ->withCount([
+                'farmers as filtered_active_count' => function (Builder $query) use ($year): void {
+                    $this->applyFarmerYearFilter($query, $year);
+                    $query->where('status', FarmerStatus::ACTIVE->value);
+                },
+                'farmers as filtered_inactive_count' => function (Builder $query) use ($year): void {
+                    $this->applyFarmerYearFilter($query, $year);
+                    $query->where('status', FarmerStatus::INACTIVE->value);
+                },
+            ])
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Barangay $barangay): array => [
+                'label' => $barangay->name,
+                'active' => (int) $barangay->filtered_active_count,
+                'inactive' => (int) $barangay->filtered_inactive_count,
+                'total' => (int) $barangay->filtered_active_count + (int) $barangay->filtered_inactive_count,
             ])
             ->values()
             ->all();

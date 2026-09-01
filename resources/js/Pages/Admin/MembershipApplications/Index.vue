@@ -52,7 +52,7 @@ function resetFilters() {
     <Head :title="pageTitle" />
 
     <AdminLayout :title="pageTitle">
-        <div class="space-y-7 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
+        <div class="mx-auto w-full max-w-[1536px] space-y-4">
             <QueueHero
                 :page-title="pageTitle"
                 :create-url="createUrl"

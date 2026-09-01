@@ -44,37 +44,37 @@ function jumpToWarning(key) {
 
 <template>
     <section
-        class="rounded-[24px] border shadow-[0_14px_32px_rgba(15,23,42,0.05)]"
+        class="rounded-lg border"
         :class="warnings.length ? 'border-[#f1d3b6] bg-white' : 'border-[#dbe2de] bg-white'"
     >
-        <div class="border-b px-5 py-4" :class="warnings.length ? 'border-[#f3e3d4]' : 'border-[#e4ebe7]'">
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Approval Blockers</p>
-            <h2 class="mt-1 text-lg font-bold text-[#1a2420]">{{ title }}</h2>
-            <p class="mt-2 text-sm text-[#6c7772]">{{ description }}</p>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2.5" :class="warnings.length ? 'border-[#f3e3d4]' : 'border-[#e4ebe7]'">
+            <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#7a8781]">Approval Blockers</p>
+            <h2 v-if="title" class="text-xs font-semibold text-[#1a2420]">{{ title }}</h2>
+            <p v-if="description" class="text-[0.68rem] text-[#6c7772]">{{ description }}</p>
         </div>
 
-        <div class="space-y-3 px-5 py-5">
+        <div class="space-y-2 p-3">
             <button
                 v-for="warning in warnings"
                 :key="warning.key"
                 type="button"
-                class="w-full rounded-[20px] border px-4 py-4 text-left transition"
+                class="w-full rounded-md border px-3 py-2.5 text-left transition"
                 :class="[toneClasses(warning.type), warningTarget(warning.key) ? 'cursor-pointer hover:brightness-[0.98] focus:outline-none focus:ring-2 focus:ring-[#003629]/20' : 'cursor-default']"
                 :disabled="!warningTarget(warning.key)"
                 @click="jumpToWarning(warning.key)"
             >
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <p class="text-xs font-black uppercase tracking-[0.18em]">{{ warning.label }}</p>
-                        <p class="mt-2 text-sm leading-6">{{ warning.message }}</p>
+                        <p class="text-[0.62rem] font-semibold uppercase tracking-[0.06em]">{{ warning.label }}</p>
+                        <p class="mt-1 text-xs leading-5">{{ warning.message }}</p>
                     </div>
-                    <span class="rounded-full bg-white/80 px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em]">
+                    <span class="rounded-md bg-white/80 px-2 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.05em]">
                         {{ warningTarget(warning.key) ? 'Open' : (warning.type === 'danger' ? 'Blocker' : 'Review') }}
                     </span>
                 </div>
             </button>
 
-            <div v-if="warnings.length === 0" class="rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-5 text-sm text-emerald-800">
+            <div v-if="warnings.length === 0" class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800">
                 No immediate blockers detected for approval.
             </div>
         </div>

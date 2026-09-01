@@ -57,8 +57,6 @@ const submitLabel = computed(() => {
 
     return isOldRecordMode.value ? 'Save Old Record' : 'Save Membership Application';
 });
-const applicationDetailsTitle = computed(() => (isOldRecordMode.value ? 'Legacy farmer record information' : 'Base record information'));
-const profileTitle = computed(() => (isOldRecordMode.value ? 'Legacy farmer profile' : 'Applicant profile'));
 
 const filteredAssociations = computed(() => {
     if (!form.barangay_id) {
@@ -141,22 +139,22 @@ syncMemberType();
     <Head :title="pageHeading" />
 
     <AdminLayout :title="pageHeading">
-        <div class="space-y-7 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
+        <div class="membership-create-compact mx-auto w-full max-w-[1536px] space-y-4">
             <CreateSteps />
 
             <CreateReapplyBanner v-if="reapplyApplication" :reapply-application="reapplyApplication" />
 
-            <section v-if="flashSuccess" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
+            <section v-if="flashSuccess" class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
                 {{ flashSuccess }}
             </section>
 
-            <section v-if="form.errors.duplicate_check" class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+            <section v-if="form.errors.duplicate_check" class="rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-700">
                 {{ form.errors.duplicate_check }}
             </section>
 
-            <form class="space-y-6" @submit.prevent="submit">
-                <CreateSectionCard eyebrow="Application Details" :title="applicationDetailsTitle">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <form class="space-y-4" @submit.prevent="submit">
+                <CreateSectionCard eyebrow="Application Details" title="">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Farmer Code</span>
                             <input :value="displayFarmerCode" type="text" readonly class="w-full rounded-2xl border border-[#d7e0db] bg-[#f1f5f2] px-4 py-3 text-sm font-bold text-[#5f6c67]">
@@ -194,8 +192,8 @@ syncMemberType();
                     </div>
                 </CreateSectionCard>
 
-                <CreateSectionCard eyebrow="Personal Information" :title="profileTitle">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <CreateSectionCard eyebrow="Personal Information" title="">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">First Name</span>
                             <input v-model="form.first_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
@@ -250,8 +248,8 @@ syncMemberType();
                     </div>
                 </CreateSectionCard>
 
-                <CreateSectionCard eyebrow="Contact And Location" title="Reachability and assignment">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <CreateSectionCard eyebrow="Contact And Location" title="">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Mobile Number</span>
                             <input v-model="form.mobile_number" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
@@ -284,20 +282,20 @@ syncMemberType();
                     </div>
                 </CreateSectionCard>
 
-                <section class="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-                    <CreateSectionCard eyebrow="Farmer Notes" title="Internal record remarks">
+                <section class="grid items-start gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+                    <CreateSectionCard eyebrow="Farmer Notes" title="">
                         <div>
-                            <textarea v-model="form.remarks" rows="6" class="w-full rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></textarea>
+                            <textarea v-model="form.remarks" rows="4" class="w-full rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></textarea>
                             <p v-if="form.errors.remarks" class="mt-2 text-xs font-medium text-rose-600">{{ form.errors.remarks }}</p>
                         </div>
                     </CreateSectionCard>
 
-                    <CreateSectionCard eyebrow="Checklist Preview" title="Required documents">
-                        <div class="space-y-3">
+                    <CreateSectionCard eyebrow="" title="Required documents">
+                        <div class="space-y-2">
                             <label
                                 v-for="document in requiredDocuments"
                                 :key="document.value"
-                                class="flex items-start gap-3 rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] px-4 py-3"
+                                class="flex items-start gap-2.5 rounded-md border border-[#e3eae6] bg-[#f7faf8] px-3 py-2.5"
                             >
                                 <input
                                     v-model="form.documents[document.value].is_received"
@@ -305,19 +303,19 @@ syncMemberType();
                                     class="mt-1 h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]"
                                 >
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-[#191c1c]">{{ document.label }}</p>
-                                    <p class="mt-1 text-xs text-[#78857f]">Mark if the office already received this requirement during intake.</p>
+                                    <p class="text-xs font-semibold text-[#191c1c]">{{ document.label }}</p>
+                                    <p class="mt-0.5 text-[0.68rem] text-[#78857f]">Mark if already received during intake.</p>
                                 </div>
                             </label>
                         </div>
                     </CreateSectionCard>
                 </section>
 
-                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <Link :href="indexUrl" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-5 py-3 text-sm font-bold text-[#697772] transition hover:bg-[#f4f7f5]">
+                <div class="flex justify-end gap-2 border-t border-[#e3e9e6] pt-3">
+                    <Link :href="indexUrl" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-4 text-xs font-semibold text-[#697772] transition hover:bg-[#f4f7f5]">
                         Cancel
                     </Link>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-6 py-3 text-sm font-extrabold text-white shadow-[0_16px_30px_rgba(0,54,41,0.16)] transition hover:bg-[#0d4637]" :disabled="form.processing">
+                    <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" :disabled="form.processing">
                         {{ form.processing ? 'Saving...' : submitLabel }}
                     </button>
                 </div>
@@ -325,3 +323,11 @@ syncMemberType();
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.membership-create-compact :deep(label) { gap: 0.25rem; }
+.membership-create-compact :deep(label > span) { font-size: 0.6rem !important; font-weight: 600 !important; letter-spacing: 0.07em !important; }
+.membership-create-compact :deep(input:not([type='checkbox'])),
+.membership-create-compact :deep(select) { height: 2.25rem !important; border-radius: 0.375rem !important; padding: 0 0.75rem !important; font-size: 0.75rem !important; }
+.membership-create-compact :deep(textarea) { border-radius: 0.375rem !important; padding: 0.625rem 0.75rem !important; font-size: 0.75rem !important; line-height: 1.25rem !important; }
+</style>

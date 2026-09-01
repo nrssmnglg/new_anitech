@@ -26,10 +26,8 @@ const exportSections = reactive({
     summary: true,
     collections: true,
     payment_breakdown: true,
-    membership_status: true,
     member_types: false,
-    top_barangays: false,
-    top_associations: false,
+    barangay_totals: false,
     recent_farmers: false,
     application_records: false,
     renewal_records: false,
@@ -902,31 +900,28 @@ const linePoints = computed(() => {
             </svg>
         </Link>
 
-        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-6" @click.self="closeExportModal">
-            <section class="w-full max-w-3xl rounded-[28px] border border-[#dbe2de] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)]">
-                <div class="flex items-start justify-between gap-4 border-b border-[#e4ebe7] pb-4">
+        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-5" @click.self="closeExportModal">
+            <section class="w-full max-w-2xl rounded-lg border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
+                <div class="flex items-start justify-between gap-3 border-b border-[#e4ebe7] pb-3">
                     <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Dashboard Export</p>
-                        <h2 class="mt-1 text-xl font-bold text-[#1a2420]">Generate filtered report</h2>
-                        <p class="mt-2 text-sm text-[#697772]">Choose which dashboard sections to export for {{ selectedYearLabel }} and {{ selectedBarangayName }}.</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#40534b]">Dashboard Export</p>
+                        <p class="mt-1 text-xs text-[#697772]">Select sections for {{ selectedYearLabel }} and {{ selectedBarangayName }}.</p>
                     </div>
-                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" @click="closeExportModal">
-                        <span class="text-lg leading-none">&times;</span>
+                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" aria-label="Close export dialog" @click="closeExportModal">
+                        <span class="text-base leading-none">&times;</span>
                     </button>
                 </div>
 
-                <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                    <label v-for="(enabled, key) in exportSections" :key="key" class="flex items-center gap-3 rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#1a2420]">
-                        <input v-model="exportSections[key]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
-                        <span class="font-medium">
+                <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                    <label v-for="(enabled, key) in exportSections" :key="key" class="flex min-h-10 items-center gap-2.5 rounded-md border border-[#d7e0db] bg-[#f8faf9] px-3 py-2 text-xs text-[#1a2420] transition hover:bg-[#f3f7f5]">
+                        <input v-model="exportSections[key]" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
+                        <span class="font-medium leading-4">
                             {{
                                 key === 'summary' ? 'Summary cards'
                                     : key === 'collections' ? 'Collections totals'
                                     : key === 'payment_breakdown' ? 'Payment breakdown'
-                                    : key === 'membership_status' ? 'Membership status'
                                     : key === 'member_types' ? 'Member types'
-                                    : key === 'top_barangays' ? 'Top barangays'
-                                    : key === 'top_associations' ? 'Top associations'
+                                    : key === 'barangay_totals' ? 'All barangay farmer totals'
                                     : key === 'recent_farmers' ? 'Recent farmers'
                                     : key === 'application_records' ? 'Application records list'
                                     : key === 'renewal_records' ? 'Renewal records list'
@@ -936,11 +931,11 @@ const linePoints = computed(() => {
                     </label>
                 </div>
 
-                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-5 py-3 text-sm font-bold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
+                <div class="mt-4 flex justify-end gap-2 border-t border-[#e8edea] pt-3">
+                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-4 text-xs font-semibold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
                         Cancel
                     </button>
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]" @click="exportDashboardReport">
+                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" @click="exportDashboardReport">
                         Export CSV
                     </button>
                 </div>
