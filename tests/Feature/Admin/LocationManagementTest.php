@@ -83,7 +83,7 @@ class LocationManagementTest extends TestCase
         $this->assertSame('Poblacion', $barangay->name);
     }
 
-    public function test_store_creates_barangay_record_without_code(): void
+    public function test_store_auto_generates_barangay_code(): void
     {
         $response = $this->post(route('admin.barangays.store'), [
             'name' => 'Bagong Silang',
@@ -95,7 +95,7 @@ class LocationManagementTest extends TestCase
 
         $this->assertNotNull($barangay);
         $response->assertRedirect(route('admin.barangays.show', $barangay));
-        $this->assertNull($barangay->code);
+        $this->assertSame('BRGY01', $barangay->code);
     }
 
     public function test_store_creates_single_association_for_barangay(): void
@@ -120,7 +120,7 @@ class LocationManagementTest extends TestCase
         $this->assertSame($barangay->id, $association->barangay_id);
     }
 
-    public function test_store_creates_association_without_code(): void
+    public function test_store_auto_generates_association_code(): void
     {
         $barangay = Barangay::query()->create([
             'name' => 'San Jose',
@@ -139,7 +139,7 @@ class LocationManagementTest extends TestCase
 
         $this->assertNotNull($association);
         $response->assertRedirect(route('admin.associations.show', $association));
-        $this->assertNull($association->code);
+        $this->assertSame('ASSOC01', $association->code);
     }
 
     public function test_association_index_supports_search_and_filters(): void

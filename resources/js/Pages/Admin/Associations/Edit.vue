@@ -39,35 +39,35 @@ const submit = () => {
     <AdminLayout>
         <Head :title="`Edit ${association.name}`" />
 
-        <div class="space-y-6">
-            <section class="rounded-[28px] border border-[#dde4de] bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
-                <div class="space-y-3">
-                    <Link :href="urls.show" class="inline-flex items-center text-sm font-semibold text-[#5f6f65] transition hover:text-[#014d3c]">
-                        Back to Association
-                    </Link>
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <div class="flex items-center justify-between gap-3">
                     <div>
-                        <h1 class="text-3xl font-semibold tracking-[-0.03em] text-[#12372a]">Edit Association</h1>
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Location management</p>
+                        <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Edit {{ association.name }}</h1>
                     </div>
+                    <Link :href="urls.show" class="inline-flex h-8 items-center rounded-md bg-white px-3 text-[0.68rem] font-semibold text-[#003629] hover:bg-[#f1f7f3]">View</Link>
                 </div>
             </section>
 
             <form
-                class="rounded-[28px] border border-[#dde4de] bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]"
+                class="rounded-lg border border-[#dde4de] bg-white p-4"
                 @submit.prevent="submit"
             >
+                <div class="mb-3 border-b border-[#edf2ee] pb-2.5"><h2 class="text-sm font-semibold text-[#0f172a]">Association information</h2></div>
                 <AssociationFormFields :form="form" :barangays="barangays" :status-options="statusOptions" />
 
-                <div class="mt-8 flex flex-wrap gap-3">
+                <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-[#edf2ee] pt-3">
                     <button
                         type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#01392d]"
+                        class="inline-flex h-9 items-center justify-center rounded-md bg-[#014d3c] px-4 text-xs font-semibold text-white transition hover:bg-[#01392d]"
                         :disabled="form.processing"
                     >
                         Save Changes
                     </button>
                     <Link
                         :href="urls.show"
-                        class="inline-flex items-center justify-center rounded-xl border border-[#dbe3dd] px-5 py-3 text-sm font-semibold text-[#5f6f65] transition hover:border-[#b9c5bc] hover:text-[#12372a]"
+                        class="inline-flex h-9 items-center justify-center rounded-md border border-[#dbe3dd] px-3 text-xs font-semibold text-[#5f6f65] transition hover:bg-[#f4f7f5]"
                     >
                         Cancel
                     </Link>

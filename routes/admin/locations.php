@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::patch('barangays/{barangay}/status', [BarangayController::class, 'toggleStatus'])
     ->name('barangays.status');
-Route::resource('barangays', BarangayController::class)->except(['destroy']);
+Route::resource('barangays', BarangayController::class);
 
 Route::patch('associations/{association}/status', [AssociationController::class, 'toggleStatus'])
     ->name('associations.status');

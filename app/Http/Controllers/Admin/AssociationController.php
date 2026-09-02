@@ -10,6 +10,7 @@ use App\Models\Barangay;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -110,7 +111,21 @@ class AssociationController extends Controller
 
     public function store(StoreAssociationRequest $request): RedirectResponse
     {
-        $association = Association::query()->create($request->validated());
+        $association = DB::transaction(function () use ($request): Association {
+            $codes = Association::query()
+                ->whereRaw("code REGEXP '^ASSOC[0-9]+$'")
+                ->lockForUpdate()
+                ->pluck('code');
+            $nextNumber = $codes
+                ->map(fn (?string $code): int => preg_match('/^ASSOC(\d+)$/', (string) $code, $matches) ? (int) $matches[1] : 0)
+                ->max() + 1;
+            $code = 'ASSOC' . str_pad((string) $nextNumber, 2, '0', STR_PAD_LEFT);
+
+            return Association::query()->create([
+                ...$request->validated(),
+                'code' => $code,
+            ]);
+        }, 3);
 
         return redirect()
             ->route('admin.associations.show', $association)

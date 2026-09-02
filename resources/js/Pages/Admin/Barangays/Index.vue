@@ -32,10 +32,12 @@ function resetFilters() {
     applyFilters();
 }
 
-function toggleStatus(barangay) {
-    router.patch(barangay.actions.toggleStatusUrl, {
-        status: barangay.status.value === 'active' ? 'inactive' : 'active',
-    }, {
+function deleteBarangay(barangay) {
+    if (!window.confirm(`Delete ${barangay.name}? This action cannot be undone.`)) {
+        return;
+    }
+
+    router.delete(barangay.actions.deleteUrl, {
         preserveScroll: true,
     });
 }
@@ -135,7 +137,7 @@ function toggleStatus(barangay) {
                                     <div class="flex items-center justify-end gap-1.5">
                                         <Link :href="barangay.actions.showUrl" aria-label="View barangay" title="View" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d6dfda] text-[#014d3c] hover:bg-[#f3f8f5]"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></svg></Link>
                                         <Link :href="barangay.actions.editUrl" aria-label="Edit barangay" title="Edit" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d6dfda] text-[#334155] hover:bg-[#f3f8f5]"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></Link>
-                                        <button type="button" :aria-label="barangay.status.value === 'active' ? 'Deactivate barangay' : 'Activate barangay'" :title="barangay.status.value === 'active' ? 'Deactivate' : 'Activate'" class="inline-flex h-8 w-8 items-center justify-center rounded-md border transition" :class="barangay.status.value === 'active' ? 'border-[#f2d4c8] bg-[#fff7f3] text-[#c05c3c] hover:bg-[#ffede6]' : 'border-[#d5e5c4] bg-[#f5faef] text-[#50761b] hover:bg-[#ebf5df]'" @click="toggleStatus(barangay)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></button>
+                                        <button type="button" aria-label="Delete barangay" title="Delete" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#f2d4c8] bg-[#fff7f3] text-[#c2413b] transition hover:bg-[#ffede6]" @click="deleteBarangay(barangay)"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 10v6M14 10v6"/></svg></button>
                                     </div>
                                 </td>
                             </tr>

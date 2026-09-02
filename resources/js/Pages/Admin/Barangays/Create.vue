@@ -27,39 +27,35 @@ function submit() {
     <Head title="Add Barangay" />
 
     <AdminLayout title="Add Barangay">
-        <div class="space-y-6">
-            <section class="overflow-hidden rounded-[1.35rem] border border-[#dde4de] bg-white shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                <div class="border-b border-[#edf2ee] bg-[#fbfcfb] px-6 py-5">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div class="max-w-3xl">
-                            <h1 class="text-2xl font-black tracking-[-0.03em] text-[#0f172a]">Add Barangay</h1>
-                            <p class="mt-2 text-sm text-[#64748b]">Create a barangay record before assigning it to farmers and associations.</p>
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Location management</p>
+                            <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Add Barangay</h1>
                         </div>
-                        <Link :href="urls.index" class="inline-flex items-center justify-center rounded-xl border border-[#dbe3dd] bg-white px-4 py-2.5 text-sm font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]">
-                            Back to Barangays
+                        <Link :href="urls.index" class="inline-flex h-8 items-center justify-center rounded-md border border-white/25 px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/10">
+                            Barangays
                         </Link>
                     </div>
-                </div>
+            </section>
 
-                <form class="space-y-6 p-6" @submit.prevent="submit">
-                    <div class="rounded-[1.2rem] border border-[#e9efeb] bg-[#fbfcfb] p-6">
-                        <div class="mb-6">
-                            <h2 class="text-lg font-black text-[#0f172a]">Barangay Information</h2>
-                            <p class="mt-2 text-sm text-[#64748b]">Create a location record that can be assigned to farmers and linked to one association.</p>
+            <section class="rounded-lg border border-[#dde4de] bg-white p-4">
+                <form class="space-y-4" @submit.prevent="submit">
+                    <div>
+                        <div class="mb-3 border-b border-[#edf2ee] pb-2.5">
+                            <h2 class="text-sm font-semibold text-[#0f172a]">Barangay information</h2>
                         </div>
                         <FormFields :form="form" :status-options="statusOptions" />
                     </div>
 
-                    <div class="flex flex-col gap-3 rounded-2xl border border-[#edf2ee] bg-[#fbfcfb] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="text-sm text-[#64748b]">This record will be available immediately across farmer and association modules.</p>
-                        <div class="flex gap-3">
-                            <Link :href="urls.index" class="inline-flex items-center justify-center rounded-xl border border-[#dbe3dd] bg-white px-5 py-3 text-sm font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]">
+                    <div class="flex gap-2 border-t border-[#edf2ee] pt-3 sm:justify-end">
+                            <Link :href="urls.index" class="inline-flex h-9 items-center justify-center rounded-md border border-[#dbe3dd] bg-white px-3 text-xs font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]">
                                 Cancel
                             </Link>
-                            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#01362a] disabled:cursor-not-allowed disabled:opacity-60" :disabled="form.processing">
+                            <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#014d3c] px-4 text-xs font-semibold text-white transition hover:bg-[#01362a] disabled:cursor-not-allowed disabled:opacity-60" :disabled="form.processing">
                                 {{ form.processing ? 'Saving...' : 'Save Barangay' }}
                             </button>
-                        </div>
                     </div>
                 </form>
             </section>

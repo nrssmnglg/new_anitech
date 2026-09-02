@@ -17,7 +17,6 @@ class UpdateBarangayRequest extends FormRequest
     {
         $this->merge([
             'name' => trim((string) $this->input('name')),
-            'code' => filled($this->input('code')) ? trim((string) $this->input('code')) : null,
         ]);
     }
 
@@ -28,7 +27,6 @@ class UpdateBarangayRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('barangays', 'name')->ignore($barangay)],
-            'code' => ['nullable', 'string', 'max:50', Rule::unique('barangays', 'code')->ignore($barangay)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

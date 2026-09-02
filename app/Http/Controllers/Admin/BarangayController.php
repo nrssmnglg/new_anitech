@@ -9,7 +9,9 @@ use App\Models\Barangay;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -93,7 +95,21 @@ class BarangayController extends Controller
 
     public function store(StoreBarangayRequest $request): RedirectResponse
     {
-        $barangay = Barangay::query()->create($request->validated());
+        $barangay = DB::transaction(function () use ($request): Barangay {
+            $codes = Barangay::query()
+                ->whereRaw("code REGEXP '^BRGY[0-9]+$'")
+                ->lockForUpdate()
+                ->pluck('code');
+            $nextNumber = $codes
+                ->map(fn (?string $code): int => preg_match('/^BRGY(\d+)$/', (string) $code, $matches) ? (int) $matches[1] : 0)
+                ->max() + 1;
+            $code = 'BRGY' . str_pad((string) $nextNumber, 2, '0', STR_PAD_LEFT);
+
+            return Barangay::query()->create([
+                ...$request->validated(),
+                'code' => $code,
+            ]);
+        }, 3);
 
         return redirect()
             ->route('admin.barangays.show', $barangay)
@@ -145,6 +161,35 @@ class BarangayController extends Controller
         return redirect()
             ->route('admin.barangays.show', $barangay)
             ->with('success', 'Barangay record updated.');
+    }
+
+    public function destroy(Barangay $barangay): RedirectResponse
+    {
+        $farmerCount = $barangay->farmers()->count();
+        $associationCount = $barangay->associations()->count();
+
+        if ($farmerCount > 0 || $associationCount > 0) {
+            $dependencies = collect([
+                $farmerCount > 0 ? "{$farmerCount} farmer record(s)" : null,
+                $associationCount > 0 ? "{$associationCount} association record(s)" : null,
+            ])->filter()->implode(' and ');
+
+            return back()->with('error', "Barangay cannot be deleted because it is linked to {$dependencies}.");
+        }
+
+        $name = $barangay->name;
+
+        try {
+            $barangay->delete();
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return back()->with('error', 'Barangay cannot be deleted because another record is still using it.');
+        }
+
+        return redirect()
+            ->route('admin.barangays.index')
+            ->with('success', "Barangay {$name} deleted.");
     }
 
     public function toggleStatus(Request $request, Barangay $barangay): RedirectResponse
@@ -213,7 +258,7 @@ class BarangayController extends Controller
             'actions' => [
                 'showUrl' => route('admin.barangays.show', $barangay),
                 'editUrl' => route('admin.barangays.edit', $barangay),
-                'toggleStatusUrl' => route('admin.barangays.status', $barangay),
+                'deleteUrl' => route('admin.barangays.destroy', $barangay),
             ],
         ];
     }

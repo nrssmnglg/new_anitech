@@ -16,7 +16,6 @@ class StoreBarangayRequest extends FormRequest
     {
         $this->merge([
             'name' => trim((string) $this->input('name')),
-            'code' => filled($this->input('code')) ? trim((string) $this->input('code')) : null,
         ]);
     }
 
@@ -24,7 +23,6 @@ class StoreBarangayRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:barangays,name'],
-            'code' => ['nullable', 'string', 'max:50', 'unique:barangays,code'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }
