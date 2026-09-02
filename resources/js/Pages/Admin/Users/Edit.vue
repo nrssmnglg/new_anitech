@@ -51,17 +51,14 @@ function archiveUser() {
     <Head title="Edit User" />
 
     <AdminLayout title="Edit User">
-        <div class="space-y-6">
-            <section class="overflow-hidden rounded-[28px] border border-primary/15 bg-[linear-gradient(135deg,rgba(0,54,41,0.96),rgba(15,91,70,0.94)_55%,rgba(144,196,126,0.84))] px-6 py-7 text-white shadow-[0_24px_60px_rgba(0,54,41,0.22)]">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                    <div class="max-w-3xl">
-                        <div class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                            <span class="h-2.5 w-2.5 rounded-full bg-[#d7f7a8] shadow-[0_0_18px_rgba(215,247,168,0.85)]"></span>
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.28em] text-white/85">User Management</span>
-                        </div>
-                        <h1 class="mt-5 text-4xl font-black tracking-[-0.045em] sm:text-5xl">Edit User Account</h1>
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">User management</p>
+                        <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Edit User</h1>
                     </div>
-                    <a :href="urls.show" class="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-extrabold text-white backdrop-blur transition hover:bg-white/15">
+                    <a :href="urls.show" class="inline-flex h-8 items-center justify-center rounded-md border border-white/25 px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/10">
                         View User
                     </a>
                 </div>
@@ -80,12 +77,13 @@ function archiveUser() {
                 @submit="submit"
             />
 
-            <section v-if="canArchive" class="rounded-3xl border border-[#a83d2a]/12 bg-white shadow-[0_18px_40px_rgba(100,31,18,0.08)]">
-                <div class="border-b border-[#a83d2a]/10 bg-[#fff5f3] px-6 py-5">
-                    <h2 class="text-xl font-black text-[#8f2f22]">Archive Account</h2>
+            <section v-if="canArchive" class="flex flex-col gap-2 rounded-lg border border-[#efcbc5] bg-[#fff8f6] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-xs font-semibold text-[#8f2f22]">Archive account</h2>
+                    <p class="mt-0.5 text-[0.65rem] text-[#8f5a52]">Remove this account from active user access.</p>
                 </div>
-                <div class="p-6">
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#a83d2a]/15 bg-white px-5 py-3 text-sm font-semibold text-[#a83d2a] transition hover:bg-[#fff1ee]" @click="archiveUser">
+                <div>
+                    <button type="button" class="inline-flex h-8 items-center justify-center rounded-md border border-[#a83d2a]/20 bg-white px-3 text-[0.68rem] font-semibold text-[#a83d2a] transition hover:bg-[#fff1ee]" @click="archiveUser">
                         Archive User
                     </button>
                 </div>

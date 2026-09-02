@@ -27,103 +27,91 @@ function archiveUser() {
     <Head title="User Account" />
 
     <AdminLayout title="User Account">
-        <div class="space-y-6">
-            <section class="overflow-hidden rounded-[28px] border border-[#0f5b46]/15 bg-[linear-gradient(135deg,rgba(0,54,41,0.96),rgba(15,91,70,0.94)_55%,rgba(144,196,126,0.84))] px-6 py-7 text-white shadow-[0_24px_60px_rgba(0,54,41,0.22)]">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="max-w-3xl">
-                        <div class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                            <span class="h-2.5 w-2.5 rounded-full bg-[#d7f7a8] shadow-[0_0_18px_rgba(215,247,168,0.85)]"></span>
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.28em] text-white/85">User Management</span>
-                        </div>
-                        <h1 class="mt-5 text-4xl font-black tracking-[-0.045em] sm:text-5xl">{{ user.name }}</h1>
-                        <p class="mt-3 max-w-2xl text-[1rem] leading-8 text-white/78">Review account details, linked records, and office profile information for this user.</p>
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">User account</p>
+                        <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">{{ user.name }}</h1>
                     </div>
-                    <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-                        <Link
-                            v-if="urls.edit"
-                            :href="urls.edit"
-                            class="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-extrabold text-[#0f5b46] shadow-[0_16px_30px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 hover:bg-[#f3fbf6]"
-                        >
-                            Edit User
-                        </Link>
-                        <Link
-                            :href="urls.index"
-                            class="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-extrabold text-white backdrop-blur transition hover:bg-white/15"
-                        >
-                            Back to Users
-                        </Link>
+                    <div class="flex gap-2">
+                        <Link v-if="urls.edit" :href="urls.edit" class="inline-flex h-8 items-center justify-center rounded-md bg-white px-3 text-[0.68rem] font-semibold text-[#014d3c] transition hover:bg-[#f3fbf6]">Edit User</Link>
+                        <Link :href="urls.index" class="inline-flex h-8 items-center justify-center rounded-md border border-white/25 px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/10">User List</Link>
                     </div>
                 </div>
             </section>
 
-            <section v-if="generatedCredentials" class="rounded-3xl border border-[#a8832a]/15 bg-[#fff9ec] p-6 shadow-[0_18px_40px_rgba(168,131,42,0.08)]">
-                <h2 class="text-xl font-black text-[#5b4a1c]">Generated Login Details</h2>
-                <p class="mt-2 text-sm text-[#6f5618]">Copy these now. The generated password is only shown once.</p>
-                <div class="mt-5 grid gap-4 md:grid-cols-3">
-                    <div class="rounded-2xl border border-[#d4a63b]/18 bg-white/80 p-4">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#8a6218]">Email</p>
-                        <p class="mt-2 font-semibold text-[#5b4a1c]">{{ user.email }}</p>
+            <section v-if="generatedCredentials" class="rounded-lg border border-[#ead9a9] bg-[#fff9ec] p-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="text-sm font-semibold text-[#5b4a1c]">Generated login details</h2>
+                    <p class="text-[0.65rem] text-[#6f5618]">Copy now—the password is shown once.</p>
+                </div>
+                <div class="mt-2 grid gap-2 md:grid-cols-3">
+                    <div class="rounded-md bg-white/80 px-3 py-2">
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#8a6218]">Email</p>
+                        <p class="mt-0.5 text-xs font-semibold text-[#5b4a1c]">{{ user.email }}</p>
                     </div>
-                    <div class="rounded-2xl border border-[#d4a63b]/18 bg-white/80 p-4">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#8a6218]">Default Password</p>
-                        <p class="mt-2 font-semibold text-[#5b4a1c]">{{ generatedCredentials.password }}</p>
+                    <div class="rounded-md bg-white/80 px-3 py-2">
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#8a6218]">Default Password</p>
+                        <p class="mt-0.5 text-xs font-semibold text-[#5b4a1c]">{{ generatedCredentials.password }}</p>
                     </div>
-                    <div v-if="generatedCredentials.employee_id" class="rounded-2xl border border-[#d4a63b]/18 bg-white/80 p-4">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#8a6218]">Employee ID</p>
-                        <p class="mt-2 font-semibold text-[#5b4a1c]">{{ generatedCredentials.employee_id }}</p>
+                    <div v-if="generatedCredentials.employee_id" class="rounded-md bg-white/80 px-3 py-2">
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#8a6218]">Employee ID</p>
+                        <p class="mt-0.5 text-xs font-semibold text-[#5b4a1c]">{{ generatedCredentials.employee_id }}</p>
                     </div>
                 </div>
             </section>
 
-            <div class="grid gap-6 xl:grid-cols-2">
-                <section class="rounded-3xl border border-[#0f5b46]/12 bg-white shadow-[0_18px_40px_rgba(0,54,41,0.08)]">
-                    <div class="border-b border-[#0f5b46]/10 bg-[#f5faf7] px-6 py-5">
+            <div class="grid gap-3 xl:grid-cols-[1.5fr_0.7fr]">
+                <section class="rounded-lg border border-[#dbe4de] bg-white">
+                    <div class="border-b border-[#edf2ee] px-4 py-3">
                         <div class="flex items-center justify-between gap-4">
-                            <h2 class="text-xl font-black text-primary">Account Overview</h2>
-                            <span class="rounded-full px-3 py-1 text-[0.72rem] font-bold" :class="user.status === 'Active' ? 'bg-secondary-container/55 text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant'">
+                            <h2 class="text-sm font-semibold text-primary">Account overview</h2>
+                            <span class="rounded-full px-2 py-0.5 text-[0.62rem] font-semibold" :class="user.status === 'Active' ? 'bg-secondary-container/55 text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant'">
                                 {{ user.status }}
                             </span>
                         </div>
                     </div>
-                    <div class="grid gap-4 p-6 md:grid-cols-2">
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Name</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.name }}</p></div>
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Email</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.email }}</p></div>
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Role</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.role }}</p></div>
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Updated</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.updatedAt }}</p></div>
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4 md:col-span-2"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Created</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.createdAt }}</p></div>
+                    <div class="grid gap-2 p-4 md:grid-cols-2">
+                        <div v-for="item in [{ label: 'Name', value: user.name }, { label: 'Email', value: user.email }, { label: 'Role', value: user.role }, { label: 'Updated', value: user.updatedAt }, { label: 'Created', value: user.createdAt }]" :key="item.label" class="rounded-md bg-[#f6f8f7] px-3 py-2" :class="{ 'md:col-span-2': item.label === 'Created' }">
+                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-on-surface-variant">{{ item.label }}</p>
+                            <p class="mt-0.5 text-xs font-semibold text-[#1b4337]">{{ item.value }}</p>
+                        </div>
                     </div>
                 </section>
 
-                <section class="rounded-3xl border border-[#0f5b46]/12 bg-white shadow-[0_18px_40px_rgba(0,54,41,0.08)]">
-                    <div class="border-b border-[#0f5b46]/10 bg-[#f5faf7] px-6 py-5">
-                        <h2 class="text-xl font-black text-primary">Account Classification</h2>
+                <section class="rounded-lg border border-[#dbe4de] bg-white">
+                    <div class="border-b border-[#edf2ee] px-4 py-3">
+                        <h2 class="text-sm font-semibold text-primary">Classification</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4">
-                            <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Account Type</p>
-                            <p class="mt-2 font-semibold text-[#1b4337]">{{ user.role === 'Farmer' ? 'Farmer Account' : 'Office Account' }}</p>
+                    <div class="p-4">
+                        <div class="rounded-md bg-[#f6f8f7] px-3 py-2">
+                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-on-surface-variant">Account Type</p>
+                            <p class="mt-0.5 text-xs font-semibold text-[#1b4337]">{{ user.role === 'Farmer' ? 'Farmer Account' : 'Office Account' }}</p>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <section v-if="user.officeProfile" class="rounded-3xl border border-[#0f5b46]/12 bg-white shadow-[0_18px_40px_rgba(0,54,41,0.08)]">
-                <div class="border-b border-[#0f5b46]/10 bg-[#f5faf7] px-6 py-5">
-                    <h2 class="text-xl font-black text-primary">Office Profile</h2>
+            <section v-if="user.officeProfile" class="rounded-lg border border-[#dbe4de] bg-white">
+                <div class="border-b border-[#edf2ee] px-4 py-3">
+                    <h2 class="text-sm font-semibold text-primary">Office profile</h2>
                 </div>
-                <div class="grid gap-4 p-6 md:grid-cols-3">
-                    <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Employee ID</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.officeProfile.employeeId || 'Not set' }}</p></div>
-                    <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Job Title</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.officeProfile.jobTitle || 'Not set' }}</p></div>
-                    <div class="rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4"><p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-on-surface-variant">Contact Number</p><p class="mt-2 font-semibold text-[#1b4337]">{{ user.officeProfile.contactNumber || 'Not set' }}</p></div>
+                <div class="grid gap-2 p-4 md:grid-cols-3">
+                    <div v-for="item in [{ label: 'Employee ID', value: user.officeProfile.employeeId }, { label: 'Job Title', value: user.officeProfile.jobTitle }, { label: 'Contact Number', value: user.officeProfile.contactNumber }]" :key="item.label" class="rounded-md bg-[#f6f8f7] px-3 py-2">
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-on-surface-variant">{{ item.label }}</p>
+                        <p class="mt-0.5 text-xs font-semibold text-[#1b4337]">{{ item.value || 'Not set' }}</p>
+                    </div>
                 </div>
             </section>
 
-            <section v-if="urls.archive" class="rounded-3xl border border-[#a83d2a]/12 bg-white shadow-[0_18px_40px_rgba(100,31,18,0.08)]">
-                <div class="border-b border-[#a83d2a]/10 bg-[#fff5f3] px-6 py-5">
-                    <h2 class="text-xl font-black text-[#8f2f22]">Archive Account</h2>
+            <section v-if="urls.archive" class="flex flex-col gap-2 rounded-lg border border-[#efcbc5] bg-[#fff8f6] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-xs font-semibold text-[#8f2f22]">Archive account</h2>
+                    <p class="mt-0.5 text-[0.65rem] text-[#8f5a52]">Remove this account from active user access.</p>
                 </div>
-                <div class="p-6">
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#a83d2a]/15 bg-white px-5 py-3 text-sm font-semibold text-[#a83d2a] transition hover:bg-[#fff1ee]" @click="archiveUser">
+                <div>
+                    <button type="button" class="inline-flex h-8 items-center justify-center rounded-md border border-[#a83d2a]/20 bg-white px-3 text-[0.68rem] font-semibold text-[#a83d2a] transition hover:bg-[#fff1ee]" @click="archiveUser">
                         Archive User
                     </button>
                 </div>
