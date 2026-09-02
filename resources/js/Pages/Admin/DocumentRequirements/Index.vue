@@ -189,42 +189,45 @@ function transactionTone(value) {
     <Head title="Document Requirements" />
 
     <AdminLayout title="Document Requirements">
-        <div class="space-y-5">
-            <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <article class="rounded-[1.35rem] border border-[#dbe4de] bg-white p-5 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">Total Rules</p>
-                    <h2 class="mt-3 text-[2.2rem] font-black leading-none text-[#0f172a]">{{ summary.total }}</h2>
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Membership configuration</p>
+                <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Document Requirements</h1>
+            </section>
+
+            <section class="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                <article class="rounded-lg border border-[#dbe4de] bg-white px-3 py-2.5">
+                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Total Rules</p>
+                    <h2 class="mt-1 text-xl font-semibold leading-none text-[#0f172a]">{{ summary.total }}</h2>
                 </article>
-                <article class="rounded-[1.35rem] border border-[#dbe4de] bg-white p-5 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">Active Rules</p>
-                    <h2 class="mt-3 text-[2.2rem] font-black leading-none text-[#0f5b46]">{{ summary.active }}</h2>
+                <article class="rounded-lg border border-[#dbe4de] bg-white px-3 py-2.5">
+                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Active Rules</p>
+                    <h2 class="mt-1 text-xl font-semibold leading-none text-[#0f5b46]">{{ summary.active }}</h2>
                 </article>
-                <article class="rounded-[1.35rem] border border-[#dbe4de] bg-white p-5 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">Required Rules</p>
-                    <h2 class="mt-3 text-[2.2rem] font-black leading-none text-[#b46d00]">{{ summary.required }}</h2>
+                <article class="rounded-lg border border-[#dbe4de] bg-white px-3 py-2.5">
+                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Required Rules</p>
+                    <h2 class="mt-1 text-xl font-semibold leading-none text-[#b46d00]">{{ summary.required }}</h2>
                 </article>
-                <article class="rounded-[1.35rem] border border-[#dbe4de] bg-white p-5 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">Visible Records</p>
-                    <h2 class="mt-3 text-[2.2rem] font-black leading-none text-[#0f172a]">{{ visibleTransactionCount }}</h2>
+                <article class="rounded-lg border border-[#dbe4de] bg-white px-3 py-2.5">
+                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Visible Records</p>
+                    <h2 class="mt-1 text-xl font-semibold leading-none text-[#0f172a]">{{ visibleTransactionCount }}</h2>
                 </article>
             </section>
 
-            <section class="rounded-[1.35rem] border border-[#dde4de] bg-white p-5 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                        <h2 class="text-lg font-black text-[#0f172a]">Transaction Scope</h2>
-                    </div>
-                    <button type="button" class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#01362a] disabled:cursor-not-allowed disabled:opacity-60" :disabled="isBusy" @click="refreshRecords">
-                        Refresh Records
+            <section class="rounded-lg border border-[#dde4de] bg-white p-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="text-sm font-semibold text-[#0f172a]">Transaction scope</h2>
+                    <button type="button" class="inline-flex h-8 items-center justify-center rounded-md border border-[#dbe3dd] px-3 text-[0.68rem] font-semibold text-[#0f5b46] transition hover:bg-[#f4f7f5] disabled:opacity-60" :disabled="isBusy" @click="refreshRecords">
+                        Refresh
                     </button>
                 </div>
 
-                <div class="mt-5 flex flex-wrap gap-3">
+                <div class="mt-2 flex flex-wrap gap-2">
                     <button
                         v-for="option in transactionTypeOptions"
                         :key="option.value"
                         type="button"
-                        class="rounded-xl border px-4 py-2.5 text-sm font-bold transition"
+                        class="h-8 rounded-md border px-3 text-[0.68rem] font-semibold transition"
                         :class="filters.transaction_type === option.value ? 'border-[#014d3c] bg-[#014d3c] text-white' : 'border-[#dbe4de] bg-white text-[#64748b] hover:bg-[#f4f7f5]'"
                         :disabled="isBusy"
                         @click="applyTransactionFilter(option.value)"
@@ -233,11 +236,11 @@ function transactionTone(value) {
                     </button>
                 </div>
 
-                <div class="mt-5 grid gap-3 md:grid-cols-3">
-                    <article v-for="transaction in summary.transactionCounts" :key="transaction.value" class="rounded-2xl border border-[#e9efeb] bg-[#fbfcfb] px-5 py-4">
+                <div class="mt-2 grid gap-2 md:grid-cols-3">
+                    <article v-for="transaction in summary.transactionCounts" :key="transaction.value" class="rounded-md bg-[#f6f8f7] px-3 py-2">
                         <div class="flex items-center justify-between gap-3">
-                            <p class="text-sm font-bold text-[#0f172a]">{{ transaction.label }}</p>
-                            <span class="rounded-full px-3 py-1 text-xs font-bold" :class="transactionTone(transaction.value)">{{ transaction.count }}</span>
+                            <p class="text-xs font-semibold text-[#0f172a]">{{ transaction.label }}</p>
+                            <span class="rounded-full px-2 py-0.5 text-[0.62rem] font-semibold" :class="transactionTone(transaction.value)">{{ transaction.count }}</span>
                         </div>
                     </article>
                 </div>
@@ -263,54 +266,52 @@ function transactionTone(value) {
                 :form="editForm"
                 :transaction-type-options="transactionTypeOptions"
                 :document-type-options="documentTypeOptions"
-                heading="Edit Requirement"
-                :description="editingRequirement ? `Update ${editingRequirement.documentType.label} for ${editingRequirement.transactionType.toLowerCase()} processing.` : 'Update the checklist behavior for the selected transaction type.'"
+                heading="Edit Configured Requirement"
+                description=""
                 submit-label="Save Changes"
                 :disabled="isBusy"
                 @submit="submitEdit(editingRequirement)"
                 @cancel="cancelEdit"
             />
 
-            <section class="overflow-hidden rounded-[1.35rem] border border-[#dde4de] bg-white shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                <div class="border-b border-[#edf2ee] bg-[#fbfcfb] px-6 py-4">
-                    <h2 class="text-lg font-black text-[#0f172a]">Configured Requirement Records</h2>
+            <section class="overflow-hidden rounded-lg border border-[#dde4de] bg-white">
+                <div class="border-b border-[#edf2ee] px-4 py-3">
+                    <h2 class="text-sm font-semibold text-[#0f172a]">Configured requirements</h2>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full border-collapse text-sm">
+                    <table class="min-w-full border-collapse text-xs">
                         <thead class="bg-[#f9fbfa]">
-                            <tr class="border-b border-[#e8eeea] text-left text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">
-                                <th class="px-6 py-4">Transaction</th>
-                                <th class="px-6 py-4">Document Type</th>
-                                <th class="px-6 py-4">Required</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
+                            <tr class="border-b border-[#e8eeea] text-left text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">
+                                <th class="px-4 py-2.5">Transaction</th>
+                                <th class="px-4 py-2.5">Document Type</th>
+                                <th class="px-4 py-2.5">Required</th>
+                                <th class="px-4 py-2.5">Status</th>
+                                <th class="px-4 py-2.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="requirement in requirements" :key="requirement.id" class="border-b border-[#edf2ee] transition hover:bg-[#fcfefd]">
-                                <td class="px-6 py-5 align-top">
-                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold" :class="transactionTone(requirement.transactionType)">
+                                <td class="px-4 py-3 align-middle">
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-semibold" :class="transactionTone(requirement.transactionType)">
                                         {{ requirement.transactionType }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 align-top">
-                                    <div class="space-y-1">
-                                        <p class="font-semibold text-[#0f172a]">{{ requirement.documentType.label }}</p>
-                                    </div>
+                                <td class="px-4 py-3 align-middle">
+                                    <p class="font-semibold text-[#0f172a]">{{ requirement.documentType.label }}</p>
                                 </td>
-                                <td class="px-6 py-5 align-top">
-                                    <span class="rounded-full px-3 py-1 text-xs font-bold" :class="requirement.isRequired ? 'bg-[#d9f4c2] text-[#50761b]' : 'bg-[#eceff1] text-[#5e6c74]'">
+                                <td class="px-4 py-3 align-middle">
+                                    <span class="rounded-full px-2 py-0.5 text-[0.62rem] font-semibold" :class="requirement.isRequired ? 'bg-[#d9f4c2] text-[#50761b]' : 'bg-[#eceff1] text-[#5e6c74]'">
                                         {{ requirement.isRequired ? 'Required' : 'Optional' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 align-top">
-                                    <span class="rounded-full px-3 py-1 text-xs font-bold" :class="requirement.isActive ? 'bg-[#eef7f2] text-[#0f5b46]' : 'bg-[#eceff1] text-[#5e6c74]'">
+                                <td class="px-4 py-3 align-middle">
+                                    <span class="rounded-full px-2 py-0.5 text-[0.62rem] font-semibold" :class="requirement.isActive ? 'bg-[#eef7f2] text-[#0f5b46]' : 'bg-[#eceff1] text-[#5e6c74]'">
                                         {{ requirement.isActive ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 align-top">
-                                    <div class="flex items-center justify-end gap-4 text-sm">
+                                <td class="px-4 py-3 align-middle">
+                                    <div class="flex items-center justify-end gap-3 text-xs">
                                         <button type="button" class="font-medium text-[#014d3c] transition hover:underline disabled:cursor-not-allowed disabled:opacity-50" :disabled="isBusy" @click="startEdit(requirement)">
                                             Edit
                                         </button>
@@ -321,7 +322,7 @@ function transactionTone(value) {
                                 </td>
                             </tr>
                             <tr v-if="requirements.length === 0">
-                                <td colspan="5" class="px-6 py-16 text-center text-sm text-[#64748b]">No document requirements found for the selected transaction type.</td>
+                                <td colspan="5" class="px-4 py-10 text-center text-xs text-[#64748b]">No document requirements found for the selected transaction type.</td>
                             </tr>
                         </tbody>
                     </table>
