@@ -1,49 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Mortuary Claim Queue</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #1a2420; font-size: 12px; }
-        h1 { margin: 0 0 6px; font-size: 22px; }
-        p { margin: 0 0 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-        th, td { border: 1px solid #d7e0db; padding: 8px 10px; text-align: left; vertical-align: top; }
-        th { background: #f4f7f5; font-size: 11px; text-transform: uppercase; }
-        .meta { margin-bottom: 18px; color: #52615a; }
-        .empty { text-align: center; padding: 18px; color: #697772; }
-    </style>
-</head>
-<body>
-    <h1>Mortuary Claim Queue</h1>
-    <div class="meta">
-        <p>Generated: {{ $generatedAt->format('F d, Y h:i A') }}</p>
-        <p>Search: {{ data_get($filters, 'search') ?: 'All farmers' }}</p>
-        <p>Year: {{ data_get($filters, 'year') ?: 'All years' }}</p>
-        <p>Barangay: {{ $selectedBarangay?->name ?? 'All barangays' }}</p>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                @foreach ($selectedColumns as $label)
-                    <th>{{ $label }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($rows as $row)
-                <tr>
-                    @foreach (array_keys($selectedColumns) as $column)
-                        <td>{{ $row[$column] ?? '' }}</td>
-                    @endforeach
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="{{ count($selectedColumns) }}" class="empty">No mortuary queue records matched the current filters.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Mortuary Claim Queue</title>
+<style>
+@page{margin:24px 28px 28px}*{box-sizing:border-box}body{margin:0;font-family:DejaVu Sans,sans-serif;color:#17231f;font-size:8px}.header{width:100%;border-collapse:collapse;margin-bottom:10px}.header td{border:0;padding:0;vertical-align:middle}.brand{width:72%;background:#00523f;color:#fff;padding:12px 15px!important}.brand strong{display:block;font-size:15px;letter-spacing:.5px}.brand span{display:block;margin-top:3px;font-size:7px;letter-spacing:1.2px;text-transform:uppercase}.generated{background:#eef4f1;padding:9px 12px!important;text-align:right;color:#52635c;line-height:1.5}h1{margin:0 0 8px;color:#173a30;font-size:13px}.filters{margin-bottom:9px;padding:6px 8px;border:1px solid #d8e2dd;background:#f7faf8;color:#52635c}.filters span{margin-right:18px}.summary{margin-bottom:7px;color:#41534c}table.report{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}tr{page-break-inside:avoid}th{padding:6px 5px;border:1px solid #bfcfc7;background:#e5eee9;color:#25483d;font-size:7px;text-align:left;text-transform:uppercase}td{padding:5px;border:1px solid #d6e0db;vertical-align:top;overflow-wrap:break-word}tbody tr:nth-child(even){background:#f8faf9}.amount{text-align:right;white-space:nowrap}tfoot td{background:#eaf2ee;font-weight:bold}.empty{padding:18px;text-align:center;color:#697772}.footer{position:fixed;right:0;bottom:-17px;left:0;border-top:1px solid #d8e2dd;padding-top:4px;color:#718079;font-size:6px}.page:after{content:counter(page)}
+</style></head><body>
+<table class="header"><tr><td class="brand"><strong>CITY AGRICULTURE OFFICE</strong><span>AniTech Farmer Registry</span></td><td class="generated"><strong>Mortuary Claim Queue</strong><br>Generated {{ $generatedAt->format('F d, Y h:i A') }}</td></tr></table>
+<h1>Eligible Farmers for Mortuary Claims</h1>
+<div class="summary"><strong>Total eligible farmers:</strong> {{ $rows->count() }}@if(array_key_exists('claim_amount',$selectedColumns)) &nbsp; | &nbsp; <strong>Total expected claims:</strong> PHP {{ number_format((float)$rows->sum('claim_amount'),2) }}@endif</div>
+<table class="report"><thead><tr>@foreach($selectedColumns as $label)<th>{{ $label }}</th>@endforeach</tr></thead><tbody>
+@forelse($rows as $row)<tr>@foreach(array_keys($selectedColumns) as $column)<td class="{{ $column === 'claim_amount' ? 'amount' : '' }}">{{ $column === 'claim_amount' ? 'PHP '.number_format((float)($row[$column] ?? 0),2) : ($row[$column] ?? '') }}</td>@endforeach</tr>@empty<tr><td colspan="{{ count($selectedColumns) }}" class="empty">No eligible farmers matched the selected filters.</td></tr>@endforelse
+</tbody>@if($rows->isNotEmpty())<tfoot><tr>@foreach(array_keys($selectedColumns) as $index=>$column)<td class="{{ $column === 'claim_amount' ? 'amount' : '' }}">@if($index===0)TOTAL: {{ $rows->count() }}@elseif($column==='claim_amount')PHP {{ number_format((float)$rows->sum('claim_amount'),2) }}@endif</td>@endforeach</tr></tfoot>@endif</table>
+<div class="footer">City Agriculture Office &bull; Confidential administrative report <span style="float:right">Page <span class="page"></span></span></div>
+</body></html>

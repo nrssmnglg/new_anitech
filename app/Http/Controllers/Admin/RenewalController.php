@@ -26,6 +26,7 @@ use App\Services\Farmers\FarmerRegistryService;
 use App\Services\Membership\FeeCalculatorService;
 use App\Services\Membership\RenewalRequestService;
 use App\Services\Notifications\RenewalReminderService;
+use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Payments\PaymentAssessmentService;
 use App\Services\Reports\Pdf\RenewalSummaryPdfService;
 use App\Services\Reports\Pdf\StoredPdfExportService;
@@ -38,6 +39,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -55,6 +57,7 @@ class RenewalController extends Controller
         private readonly FarmerRegistryService $farmerRegistryService,
         private readonly FeeCalculatorService $feeCalculatorService,
         private readonly RenewalReminderService $renewalReminderService,
+        private readonly NotificationDispatchService $notificationDispatchService,
         private readonly PaymentAssessmentService $paymentAssessmentService,
         private readonly RenewalSummaryPdfService $renewalSummaryPdfService,
         private readonly StoredPdfExportService $storedPdfExportService,
@@ -85,6 +88,7 @@ class RenewalController extends Controller
                 ->with([
                     'profile:farmer_id,first_name,middle_name,last_name,suffix',
                     'memberType:id,code,name',
+                    'users:id,farmer_id,email',
                 ])
                 ->orderByDesc('registered_at')
                 ->orderByDesc('id')
@@ -200,6 +204,83 @@ class RenewalController extends Controller
                 ? 'Browse and filter renewal history across all sources.'
                 : 'List of active farmers who still need renewal for the current year.',
         ]);
+    }
+
+    public function sendReminderEmail(Request $request, Farmer $farmer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+        ]);
+        $year = (int) $validated['year'];
+
+        if ($this->hasRecordedAnnualDue($farmer, $year)) {
+            return back()->with('error', "This farmer already has a recorded renewal for {$year}.");
+        }
+
+        $farmer->loadMissing(['profile', 'users:id,farmer_id,email']);
+        $user = $farmer->users->first(fn (User $account): bool => filled($account->email));
+        $email = trim((string) $user?->email);
+
+        if ($email === '') {
+            return back()->with('error', 'This farmer has no email address on record.');
+        }
+
+        $alreadySent = DB::table('notification_recipients as recipients')
+            ->join('notifications', 'notifications.id', '=', 'recipients.notification_id')
+            ->where('notifications.type', \App\Enums\NotificationType::RENEWAL_REMINDER->value)
+            ->where('notifications.channel', 'email')
+            ->where('notifications.payload->target_year', $year)
+            ->where('recipients.farmer_id', $farmer->id)
+            ->where('recipients.status', 'delivered')
+            ->exists();
+
+        if ($alreadySent) {
+            return back()->with('error', "A renewal email has already been sent for {$year}.");
+        }
+
+        $deadline = FeeSchedule::query()
+            ->where('year', $year)
+            ->orderByDesc('is_active')
+            ->orderByDesc('id')
+            ->value('renewal_deadline');
+        $deadlineLabel = $deadline
+            ? \Carbon\Carbon::parse($deadline)->format('F d, Y')
+            : "the {$year} renewal period";
+        $subject = "Annual Membership Renewal Reminder - {$year}";
+        $message = "Hello {$farmer->full_name},\n\n"
+            . "This is a reminder from the City Agriculture Office that your annual farmer membership renewal for {$year} is still due. "
+            . "Please complete your renewal on or before {$deadlineLabel}.\n\n"
+            . "Please visit the City Agriculture Office if you need assistance.\n\nThank you.";
+
+        try {
+            Mail::raw($message, fn ($mail) => $mail->to($email)->subject($subject));
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'The email could not be sent. Check the mail configuration and try again.');
+        }
+
+        $now = now()->toDateTimeString();
+        $this->notificationDispatchService->persistQueued([
+            'type' => \App\Enums\NotificationType::RENEWAL_REMINDER->value,
+            'channel' => 'email',
+            'subject' => $subject,
+            'message' => $message,
+            'payload' => ['target_year' => $year, 'deadline' => $deadline],
+            'status' => 'sent',
+            'queued_at' => $now,
+            'sent_at' => $now,
+            'created_by' => Auth::id(),
+            'recipients' => [[
+                'user_id' => $user?->id,
+                'farmer_id' => $farmer->id,
+                'recipient_address' => $email,
+                'status' => 'delivered',
+                'delivered_at' => $now,
+            ]],
+        ]);
+
+        return back()->with('success', "Renewal reminder emailed to {$email}.");
     }
 
     public function summaryReport(Request $request): View|BinaryFileResponse|StreamedResponse
@@ -1508,9 +1589,11 @@ class RenewalController extends Controller
             'reminder' => [
                 'sentAt' => $remindedAt,
                 'hasSent' => $remindedAt !== null,
+                'emailAvailable' => $farmer->users->contains(fn (User $account): bool => filled($account->email)),
             ],
             'actions' => [
                 'createUrl' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $year]),
+                'sendReminderEmailUrl' => route('admin.renewals.reminders.email', $farmer),
             ],
         ];
     }
@@ -1545,16 +1628,18 @@ class RenewalController extends Controller
         return DB::table('notification_recipients as recipients')
             ->join('notifications', 'notifications.id', '=', 'recipients.notification_id')
             ->where('notifications.type', \App\Enums\NotificationType::RENEWAL_REMINDER->value)
+            ->where('notifications.channel', 'email')
             ->where('notifications.payload->target_year', $targetYear)
             ->whereIn('recipients.farmer_id', $farmerIds)
+            ->where('recipients.status', 'delivered')
             ->orderByDesc('notifications.created_at')
             ->get([
                 'recipients.farmer_id',
-                'notifications.created_at',
+                'recipients.delivered_at',
             ])
             ->unique('farmer_id')
             ->mapWithKeys(fn (object $row): array => [
-                (int) $row->farmer_id => optional(\Carbon\Carbon::parse($row->created_at))->format('M d, Y h:i A'),
+                (int) $row->farmer_id => optional(\Carbon\Carbon::parse($row->delivered_at))->format('M d, Y h:i A'),
             ])
             ->all();
     }

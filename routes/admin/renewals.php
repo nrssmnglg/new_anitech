@@ -17,6 +17,9 @@ Route::get('renewals/create', [RenewalController::class, 'create'])
 Route::post('renewals', [RenewalController::class, 'store'])
     ->name('renewals.store');
 
+Route::post('renewals/reminders/{farmer}/email', [RenewalController::class, 'sendReminderEmail'])
+    ->name('renewals.reminders.email');
+
 Route::get('renewals/{renewal}', [RenewalController::class, 'show'])
     ->name('renewals.show');
 

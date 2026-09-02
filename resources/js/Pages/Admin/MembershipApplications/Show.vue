@@ -123,18 +123,6 @@ function submitRejection() {
 
             <RecordWarningsPanel title="" description="" :warnings="recordWarnings" :section-targets="warningSectionTargets" />
 
-            <section class="grid gap-2 md:grid-cols-2">
-                <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
-                    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#7b8782]">Last Updated By</p>
-                    <p class="mt-1 text-xs font-semibold text-[#14202c]">{{ application.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
-                    <p class="mt-0.5 text-[0.68rem] text-[#6c7772]">{{ application.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
-                </article>
-                <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
-                    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#7b8782]">Assigned Staff</p>
-                    <p class="mt-1 text-xs font-semibold text-[#14202c]">{{ application.accountability?.assignedStaff || 'Unassigned' }}</p>
-                </article>
-            </section>
-
             <section class="space-y-4">
                 <div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                     <div id="application-profile-section">
@@ -223,9 +211,9 @@ function submitRejection() {
 }
 .membership-review-compact :deep(input:not([type='checkbox'])),
 .membership-review-compact :deep(select) {
-    min-height: 2.25rem !important;
+    min-height: 2rem !important;
     border-radius: 0.375rem !important;
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.375rem 0.625rem !important;
     font-size: 0.75rem !important;
 }
 .membership-review-compact :deep(textarea) {

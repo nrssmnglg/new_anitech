@@ -60,7 +60,6 @@ const selectedExportColumns = reactive(
 );
 
 const activeExportColumns = computed(() => props.activeSection === 'records' ? recordsExportColumns : queueExportColumns);
-const exportModeLabel = computed(() => props.activeSection === 'records' ? 'Mortuary Records' : 'Mortuary Claim Queue');
 
 const exportReportUrl = computed(() => {
     const url = new URL(props.urls.report, window.location.origin);
@@ -148,33 +147,30 @@ function startExport() {
     <Head :title="pageTitle" />
 
     <AdminLayout :title="pageTitle">
-        <div class="space-y-8 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
+        <div class="space-y-4">
             <IndexHero :page-title="pageTitle" :page-subtitle="pageSubtitle" :summary="summary" :urls="urls" @export="openExportModal" />
 
-            <div class="space-y-6">
+            <div class="space-y-3">
                 <SectionTabs :active-section="activeSection" :urls="urls" />
                 <RecordsFilters :form="form" :filter-options="filterOptions" :active-section="activeSection" :urls="urls" @apply="applyFilters" @reset="resetFilters" @export="openExportModal" />
                 <ClaimsTable :claims="claims" :active-section="activeSection" />
             </div>
         </div>
 
-        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-6" @click.self="closeExportModal">
-            <section class="w-full max-w-3xl rounded-[28px] border border-[#dbe2de] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] sm:p-6">
-                <div class="flex flex-col gap-3 border-b border-[#e4ebe7] pb-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Export Report</p>
-                        <h2 class="mt-1 text-xl font-bold text-[#1a2420]">Generate {{ exportModeLabel }}</h2>
-                    </div>
-                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" @click="closeExportModal">
+        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/50 p-4" @click.self="closeExportModal">
+            <section class="w-full max-w-2xl rounded-xl border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
+                <div class="flex items-center justify-between border-b border-[#e4ebe7] pb-3">
+                    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-[#7a8781]">Export report</p>
+                    <button type="button" aria-label="Close export dialog" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" @click="closeExportModal">
                         <span class="text-lg leading-none">&times;</span>
                     </button>
                 </div>
 
-                <div class="mt-5 space-y-4">
-                    <div class="flex flex-wrap gap-3">
+                <div class="mt-3 space-y-3">
+                    <div class="flex flex-wrap gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-extrabold transition"
+                            class="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-semibold transition"
                             :class="exportFormat === 'pdf' ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#c8d8cf] bg-white text-[#003629] hover:bg-[#f4f7f5]'"
                             @click="setExportFormat('pdf')"
                         >
@@ -182,7 +178,7 @@ function startExport() {
                         </button>
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-extrabold transition"
+                            class="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-semibold transition"
                             :class="exportFormat === 'xlsx' ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#c8d8cf] bg-white text-[#003629] hover:bg-[#f4f7f5]'"
                             @click="setExportFormat('xlsx')"
                         >
@@ -190,16 +186,16 @@ function startExport() {
                         </button>
                     </div>
 
-                    <div class="rounded-2xl border border-[#d7e0db] bg-[#f8faf9] p-4">
+                    <div class="rounded-lg border border-[#d7e0db] bg-[#f8faf9] p-3">
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <p class="text-sm font-bold text-[#1a2420]">Columns to include</p>
-                            <p class="text-sm text-[#697772]">{{ selectedExportColumns.length }} column{{ selectedExportColumns.length === 1 ? '' : 's' }} selected</p>
+                            <p class="text-xs font-semibold text-[#1a2420]">Columns</p>
+                            <p class="text-[0.68rem] text-[#697772]">{{ selectedExportColumns.length }} selected</p>
                         </div>
-                        <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                             <label
                                 v-for="column in activeExportColumns"
                                 :key="column.value"
-                                class="flex items-center gap-3 rounded-2xl border border-[#d7e0db] bg-white px-4 py-3 text-sm text-[#1a2420]"
+                                class="flex h-9 items-center gap-2 rounded-md border border-[#d7e0db] bg-white px-3 text-xs text-[#1a2420]"
                             >
                                 <input
                                     :checked="selectedExportColumns.includes(column.value)"
@@ -214,11 +210,11 @@ function startExport() {
 
                 </div>
 
-                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-5 py-3 text-sm font-bold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
+                <div class="mt-4 flex gap-2 sm:justify-end">
+                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-3 text-xs font-semibold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
                         Cancel
                     </button>
-                    <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]" @click="startExport">
+                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" @click="startExport">
                         Export {{ exportFormat === 'pdf' ? 'PDF' : 'Excel' }}
                     </button>
                 </div>

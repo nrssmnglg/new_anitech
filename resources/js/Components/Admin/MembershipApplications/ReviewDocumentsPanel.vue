@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 defineProps({
     application: { type: Object, required: true },
@@ -14,31 +14,59 @@ defineEmits(['document-action', 'initialize-checklist']);
 
 const previewDocument = ref(null);
 const previewLoading = ref(false);
+const previewFailed = ref(false);
+let previewTimer = null;
 
 const previewUrl = computed(() => previewDocument.value?.actions?.viewUrl || '');
 const previewMimeType = computed(() => previewDocument.value?.previewMimeType || '');
 const previewName = computed(() => String(previewDocument.value?.originalName || ''));
 const previewExtension = computed(() => previewName.value.includes('.') ? previewName.value.split('.').pop().toLowerCase() : '');
 const previewIsImage = computed(() => {
-    return previewMimeType.value.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(previewExtension.value);
+    return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(previewMimeType.value)
+        || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(previewExtension.value);
 });
 const previewIsPdf = computed(() => {
     return previewMimeType.value === 'application/pdf' || previewExtension.value === 'pdf';
 });
 const previewCanInline = computed(() => previewIsImage.value || previewIsPdf.value);
 
+function clearPreviewTimer() {
+    if (previewTimer) {
+        window.clearTimeout(previewTimer);
+        previewTimer = null;
+    }
+}
+
 function openPreview(document) {
+    clearPreviewTimer();
     previewDocument.value = document;
+    previewFailed.value = false;
     previewLoading.value = previewCanInline.value;
+
+    if (previewLoading.value) {
+        previewTimer = window.setTimeout(() => {
+            previewLoading.value = false;
+            previewFailed.value = true;
+        }, 10000);
+    }
 }
 
 function closePreview() {
+    clearPreviewTimer();
     previewDocument.value = null;
     previewLoading.value = false;
+    previewFailed.value = false;
 }
 
 function markPreviewLoaded() {
+    clearPreviewTimer();
     previewLoading.value = false;
+}
+
+function markPreviewFailed() {
+    clearPreviewTimer();
+    previewLoading.value = false;
+    previewFailed.value = true;
 }
 
 function openPreviewInNewTab() {
@@ -49,31 +77,12 @@ function openPreviewInNewTab() {
     window.open(previewUrl.value, '_blank', 'noopener');
 }
 
+onBeforeUnmount(clearPreviewTimer);
+
 function documentBadge(value) {
     if (value === 'verified') return 'bg-[#eef7e3] text-[#416918]';
     if (value === 'rejected') return 'bg-[#ffdad6] text-[#93000a]';
     return 'bg-[#fff3dc] text-[#a86100]';
-}
-
-function presenceBadge(document, source) {
-    if (document.verificationStatus.value === 'verified') {
-        return {
-            label: source === 'walk_in' ? 'Confirmed' : 'Reviewed',
-            className: 'bg-[#eef7e3] text-[#416918]',
-        };
-    }
-
-    if (document.uploadPresent) {
-        return {
-            label: source === 'walk_in' ? 'Received' : 'Uploaded',
-            className: 'bg-[#edf1ef] text-[#48615a]',
-        };
-    }
-
-    return {
-        label: 'Waiting',
-        className: 'bg-[#edf1ef] text-[#697772]',
-    };
 }
 
 function verificationLabel(document) {
@@ -99,42 +108,41 @@ function alertBadge(document) {
         };
     }
 
-    if (!document.uploadPresent) {
-        return {
-            label: 'Missing Scan',
-            className: 'bg-[#edf1ef] text-[#697772]',
-        };
-    }
-
     return null;
+}
+
+function visibleValidationNotes(document) {
+    return (document.validationNotes || []).filter((note) => {
+        return String(note).trim().toLowerCase() !== 'no scan uploaded yet.';
+    });
 }
 </script>
 
 <template>
-    <section class="rounded-[24px] border border-[#dbe2de] bg-white shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
-        <div class="flex items-center justify-between border-b border-[#e4ebe7] px-5 py-4">
+    <section class="rounded-lg border border-[#dbe2de] bg-white">
+        <div class="flex items-center justify-between border-b border-[#e4ebe7] bg-[#f6f8f7] px-4 py-2.5">
             <div>
-                <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Step 2</p>
-                <h2 class="mt-1 text-base font-bold text-[#1a2420]">Document checklist</h2>
+                <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#7a8781]">Step 2</p>
+                <h2 class="mt-0.5 text-xs font-semibold text-[#1a2420]">Document checklist</h2>
             </div>
-            <span class="inline-flex rounded-full px-3 py-1 text-xs font-black" :class="flow.documentsComplete ? 'bg-[#eef7e3] text-[#416918]' : 'bg-[#fff3dc] text-[#a86100]'">
+            <span class="inline-flex rounded-md px-2 py-1 text-[0.62rem] font-semibold" :class="flow.documentsComplete ? 'bg-[#eef7e3] text-[#416918]' : 'bg-[#fff3dc] text-[#a86100]'">
                 {{ flow.verifiedCount }}/{{ flow.requiredCount }} verified
             </span>
         </div>
 
-        <div class="space-y-4 px-5 py-5">
+        <div class="space-y-2 p-2.5">
             <div
                 v-if="flow.canInitializeChecklist"
-                class="rounded-[20px] border border-[#dbe2de] bg-[#fbfdfc] px-4 py-5"
+                class="rounded-md border border-[#dbe2de] bg-[#fbfdfc] px-3 py-2.5"
             >
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p class="text-sm font-bold text-[#1a2420]">Document checklist has not started yet.</p>
-                        <p class="mt-1 text-sm text-[#5f6c67]">Start intake first to generate the required document rows for this walk-in application.</p>
+                        <p class="text-xs font-semibold text-[#1a2420]">Document checklist has not started yet.</p>
+                        <p class="mt-0.5 text-[0.68rem] text-[#5f6c67]">Start intake to generate the required document rows.</p>
                     </div>
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center rounded-xl bg-[#003629] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#0d4637]"
+                        class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-3 text-xs font-semibold text-white transition hover:bg-[#0d4637]"
                         @click="$emit('initialize-checklist')"
                     >
                         Start Intake Checklist
@@ -142,85 +150,58 @@ function alertBadge(document) {
                 </div>
             </div>
 
-            <div class="grid gap-3 md:grid-cols-3">
-                <div class="rounded-[18px] border border-[#dfe5e1] bg-[#f7faf8] px-4 py-4">
-                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Missing Documents</p>
-                    <p class="mt-1.5 text-[1.8rem] font-black text-[#1a2420]">{{ flow.missingCount || 0 }}</p>
-                </div>
-                <div class="rounded-[18px] border border-[#f2dfb2] bg-[#fffaf0] px-4 py-4">
-                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#9d6b00]">Expired Flags</p>
-                    <p class="mt-1.5 text-[1.8rem] font-black text-[#9d6b00]">{{ flow.expiredCount || 0 }}</p>
-                </div>
-                <div class="rounded-[18px] border border-[#f4cfd6] bg-[#fff7f8] px-4 py-4">
-                    <p class="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#b42341]">Needs Re-submission</p>
-                    <p class="mt-1.5 text-[1.8rem] font-black text-[#b42341]">{{ flow.resubmissionCount || 0 }}</p>
-                </div>
-            </div>
-
             <div
                 v-if="(flow.missingCount || 0) > 0 || (flow.expiredCount || 0) > 0 || (flow.resubmissionCount || 0) > 0"
-                class="rounded-[20px] border border-[#f0d9aa] bg-[#fffaf0] px-4 py-4 text-sm text-[#7a5a16]"
+                class="rounded-md border border-[#f0d9aa] bg-[#fffaf0] px-3 py-2.5 text-xs text-[#7a5a16]"
             >
                 Resolve all missing, expired, or rejected documents before final approval or payment completion.
-            </div>
-
-            <div
-                v-if="application.source === 'walk_in'"
-                class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] px-4 py-4 text-sm text-[#5f6c67]"
-            >
-                Walk-in processing uses checklist.
             </div>
 
             <article
                 v-for="document in documents"
                 v-show="flow.checklistInitialized"
                 :key="document.id"
-                class="rounded-[24px] border border-[#e3eae6] bg-[linear-gradient(135deg,_#ffffff_0%,_#f8fbf9_100%)] p-4 shadow-[0_8px_22px_rgba(15,23,42,0.04)]"
+                class="rounded-md border border-[#e3eae6] bg-[#fafcfb] p-2.5"
             >
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <p class="text-base font-bold text-[#191c1c]">{{ document.label }}</p>
-                            <span class="inline-flex rounded-full bg-[#edf1ef] px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#697772]">
+                <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <p class="text-xs font-semibold text-[#191c1c]">{{ document.label }}</p>
+                            <span class="inline-flex rounded-md bg-[#edf1ef] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.05em] text-[#697772]">
                                 {{ document.isRequired ? 'Required' : 'Optional' }}
                             </span>
-                        </div>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-black" :class="presenceBadge(document, application.source).className">
-                                {{ presenceBadge(document, application.source).label }}
-                            </span>
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-black" :class="documentBadge(document.verificationStatus.value)">
+                            <span class="inline-flex rounded-md px-1.5 py-0.5 text-[0.58rem] font-semibold" :class="documentBadge(document.verificationStatus.value)">
                                 {{ verificationLabel(document) }}
                             </span>
                             <span
                                 v-if="alertBadge(document)"
-                                class="inline-flex rounded-full px-2.5 py-1 text-xs font-black"
+                                class="inline-flex rounded-md px-1.5 py-0.5 text-[0.58rem] font-semibold"
                                 :class="alertBadge(document).className"
                             >
                                 {{ alertBadge(document).label }}
                             </span>
                         </div>
-                        <div class="mt-3 space-y-2">
-                            <p class="text-sm text-[#78857f]">{{ document.remarks || 'No validation remarks yet.' }}</p>
-                            <ul v-if="document.validationNotes?.length" class="space-y-1 text-xs text-[#5f6c67]">
-                                <li v-for="(note, index) in document.validationNotes" :key="`${document.id}-note-${index}`">
+                        <div v-if="document.remarks || visibleValidationNotes(document).length" class="mt-1 space-y-0.5">
+                            <p v-if="document.remarks" class="text-[0.62rem] text-[#78857f]">{{ document.remarks }}</p>
+                            <ul v-if="visibleValidationNotes(document).length" class="space-y-0.5 text-[0.62rem] text-[#5f6c67]">
+                                <li v-for="(note, index) in visibleValidationNotes(document)" :key="`${document.id}-note-${index}`">
                                     {{ note }}
                                 </li>
                             </ul>
                         </div>
                     </div>
 
-                    <div class="flex w-full flex-col gap-3 lg:max-w-[320px]">
+                    <div class="flex w-full gap-1.5 lg:max-w-[430px] lg:items-center">
                         <input
                             v-model="documentRemarks[document.id]"
                             type="text"
                             placeholder="Optional remarks"
-                            class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"
+                            class="h-8 min-w-0 flex-1 rounded-md border border-[#d7e0db] bg-[#f8faf9] px-2.5 text-[0.68rem] text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"
                         >
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex shrink-0 flex-wrap gap-1.5">
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-xl bg-[#003629] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-[#0d4637]"
+                                class="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md bg-[#003629] px-2.5 text-[0.65rem] font-semibold text-white transition hover:bg-[#0d4637]"
                                 :disabled="application.source !== 'walk_in' && !document.uploadPresent"
                                 @click="$emit('document-action', document, document.verificationStatus.value === 'verified' ? 'unreceive' : 'receive')"
                             >
@@ -229,7 +210,7 @@ function alertBadge(document) {
                             <button
                                 v-if="document.uploadPresent"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-xl border border-[#f4cfd6] bg-[#fff7f8] px-3 py-2.5 text-xs font-bold text-[#b42341] transition hover:bg-[#fff0f2]"
+                                class="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md border border-[#f4cfd6] bg-[#fff7f8] px-2.5 text-[0.65rem] font-semibold text-[#b42341] transition hover:bg-[#fff0f2]"
                                 @click="$emit('document-action', document, 'reject')"
                             >
                                 Reject Document
@@ -237,14 +218,14 @@ function alertBadge(document) {
                             <button
                                 v-if="features.walkInAttachScanEnabled && application.source === 'walk_in'"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
+                                class="inline-flex h-8 items-center justify-center rounded-md border border-[#d7e0db] px-2.5 text-[0.65rem] font-semibold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
                             >
                                 Attach Scan
                             </button>
                             <button
                                 v-if="document.actions.viewUrl"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
+                                class="inline-flex h-8 items-center justify-center rounded-md border border-[#d7e0db] px-2.5 text-[0.65rem] font-semibold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
                                 @click="openPreview(document)"
                             >
                                 View File
@@ -263,62 +244,63 @@ function alertBadge(document) {
 
         <div
             v-if="previewDocument"
-            class="fixed inset-0 z-[90] flex items-center justify-center bg-[#09110d]/70 px-4 py-6"
+            class="fixed inset-0 z-[90] flex items-center justify-center bg-[#09110d]/65 p-4"
             @click.self="closePreview"
         >
-            <div class="flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.22)]">
-                <div class="flex items-center justify-between border-b border-[#e4ebe7] px-5 py-4">
+            <div class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-[#dbe2de] bg-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]">
+                <div class="flex items-center justify-between border-b border-[#e4ebe7] px-4 py-2.5">
                     <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">File Preview</p>
-                        <h3 class="mt-1 text-lg font-bold text-[#1a2420]">{{ previewDocument.label }}</h3>
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#7a8781]">File preview</p>
+                        <h3 class="mt-0.5 text-sm font-semibold text-[#1a2420]">{{ previewDocument.label }}</h3>
                     </div>
                     <button
                         type="button"
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7e0db] text-lg font-bold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
+                        aria-label="Close preview"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-base text-[#5f6c67] transition hover:bg-[#f4f7f5]"
                         @click="closePreview"
                     >
                         ×
                     </button>
                 </div>
 
-                <div class="min-h-[65vh] overflow-auto bg-[#f5f7f6] p-4">
+                <div class="relative min-h-[360px] flex-1 overflow-auto bg-[#f5f7f6] p-3">
                     <div
                         v-if="previewLoading"
-                        class="absolute inset-x-0 top-[88px] bottom-0 flex items-center justify-center bg-[#f5f7f6]/78 backdrop-blur-[1px]"
+                        class="absolute inset-0 z-10 flex items-center justify-center bg-[#f5f7f6]/90"
                     >
-                        <div class="flex flex-col items-center gap-3 text-[#31584a]">
-                            <span class="h-10 w-10 animate-spin rounded-full border-4 border-[#d7e0db] border-t-[#0f5b46]"></span>
-                            <p class="text-sm font-bold">Loading file preview...</p>
+                        <div class="flex items-center gap-2 text-[#31584a]">
+                            <span class="h-6 w-6 animate-spin rounded-full border-[3px] border-[#d7e0db] border-t-[#0f5b46]"></span>
+                            <p class="text-xs font-semibold">Loading preview...</p>
                         </div>
                     </div>
                     <img
-                        v-if="previewIsImage"
+                        v-if="previewIsImage && !previewFailed"
                         :src="previewUrl"
                         :alt="previewDocument.label"
-                        class="mx-auto max-h-[70vh] w-auto max-w-full rounded-[20px] bg-white object-contain shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
+                        class="mx-auto max-h-[72vh] w-auto max-w-full rounded-md bg-white object-contain"
                         @load="markPreviewLoaded"
-                        @error="markPreviewLoaded"
+                        @error="markPreviewFailed"
                     >
                     <iframe
-                        v-else-if="previewIsPdf"
+                        v-else-if="previewIsPdf && !previewFailed"
                         :src="previewUrl"
-                        class="h-[70vh] w-full rounded-[20px] border border-[#d7e0db] bg-white"
+                        class="h-[72vh] min-h-[420px] w-full rounded-md border border-[#d7e0db] bg-white"
                         title="Uploaded file preview"
                         @load="markPreviewLoaded"
                     ></iframe>
                     <div
                         v-else
-                        class="flex h-[70vh] items-center justify-center rounded-[20px] border border-[#d7e0db] bg-white px-6 text-center"
+                        class="flex min-h-[360px] items-center justify-center rounded-md border border-[#d7e0db] bg-white px-5 text-center"
                     >
-                        <div class="max-w-md space-y-3">
-                            <h4 class="text-lg font-bold text-[#1a2420]">Preview not available</h4>
-                            <p class="text-sm text-[#5f6c67]">
-                                This file type cannot be displayed inside the modal. Convert it to an image or PDF if you need inline preview.
+                        <div class="max-w-sm space-y-2.5">
+                            <h4 class="text-sm font-semibold text-[#1a2420]">Preview unavailable</h4>
+                            <p class="text-xs leading-5 text-[#5f6c67]">
+                                This browser cannot display the uploaded format here. Open the original file to view or download it.
                             </p>
                             <button
                                 v-if="previewUrl"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-4 py-3 text-sm font-bold text-[#31584a] transition hover:bg-[#f4f7f5]"
+                                class="inline-flex h-8 items-center justify-center rounded-md bg-[#003629] px-3 text-[0.68rem] font-semibold text-white transition hover:bg-[#0d4637]"
                                 @click="openPreviewInNewTab"
                             >
                                 Open file in new tab

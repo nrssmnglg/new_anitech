@@ -85,33 +85,33 @@ function submit() {
     <Head title="Encode Old Record" />
 
     <AdminLayout title="Encode Old Record">
-        <div class="space-y-7 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
-            <section class="rounded-[28px] border border-[#dbe7e0] bg-white/90 px-6 py-6 shadow-[0_24px_80px_rgba(18,53,42,0.08)]">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div class="space-y-2">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.28em] text-[#7a8781]">Farmer Registry</p>
-                        <h1 class="text-3xl font-black tracking-[-0.03em] text-[#16352c]">Encode Old Record</h1>
+        <div class="old-record-compact mx-auto w-full max-w-[1536px] space-y-4">
+            <section class="rounded-[10px] bg-[#00513f] px-5 py-4 text-white sm:px-6">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[#b9dccc]">Farmer Registry</p>
+                        <h1 class="mt-1 text-2xl font-semibold tracking-tight">Encode Old Record</h1>
                     </div>
-                    <div class="rounded-[22px] border border-[#d7e0db] bg-[#f5f8f6] px-5 py-4">
-                        <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Next Farmer Code</p>
-                        <p class="mt-2 text-lg font-extrabold text-[#16352c]">{{ nextFarmerCode }}</p>
+                    <div class="rounded-md bg-white/10 px-3 py-2">
+                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.07em] text-[#b9dccc]">Next Farmer Code</p>
+                        <p class="mt-0.5 text-xs font-semibold text-white">{{ nextFarmerCode }}</p>
                     </div>
                 </div>
             </section>
 
-            <section v-if="form.errors.duplicate_check" class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+            <section v-if="form.errors.duplicate_check" class="rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-700">
                 {{ form.errors.duplicate_check }}
             </section>
 
-            <section v-if="duplicateMatches.length" class="rounded-[28px] border border-amber-200 bg-amber-50/80 px-6 py-6 shadow-[0_20px_60px_rgba(120,84,14,0.08)]">
-                <div class="space-y-4">
+            <section v-if="duplicateMatches.length" class="rounded-lg border border-amber-200 bg-amber-50/80 p-4">
+                <div class="space-y-3">
                     <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.26em] text-[#8a6a16]">Duplicate Check</p>
-                        <h2 class="mt-2 text-xl font-black text-[#16352c]">Possible existing farmer records found</h2>
+                        <p class="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#8a6a16]">Duplicate Check</p>
+                        <h2 class="mt-1 text-sm font-semibold text-[#16352c]">Possible existing farmer records found</h2>
                     </div>
 
                     <div class="space-y-3">
-                        <div v-for="match in duplicateMatches" :key="match.id" class="rounded-[22px] border border-amber-200 bg-white px-4 py-4">
+                        <div v-for="match in duplicateMatches" :key="match.id" class="rounded-md border border-amber-200 bg-white px-3 py-2.5">
                             <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                                 <div>
                                     <p class="text-sm font-extrabold text-[#16352c]">{{ match.full_name }}</p>
@@ -121,21 +121,21 @@ function submit() {
                                     Open record
                                 </Link>
                             </div>
-                            <p class="mt-3 text-xs font-medium text-[#745d28]">{{ match.reasons.join(', ') }}</p>
+                            <p class="mt-1.5 text-[0.68rem] font-medium text-[#745d28]">{{ match.reasons.join(', ') }}</p>
                         </div>
                     </div>
 
-                    <label class="inline-flex items-start gap-3 text-sm text-[#4f5d58]">
+                    <label class="inline-flex items-start gap-2.5 text-xs text-[#4f5d58]">
                         <input v-model="form.confirm_duplicate_override" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
                         <span>These records are different people. Continue saving this old record.</span>
                     </label>
                 </div>
             </section>
 
-            <form class="space-y-6" @submit.prevent="submit">
+            <form class="space-y-4" @submit.prevent="submit">
                 <EditSectionCard eyebrow="Registry Details" title="Assignment and status">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        <div class="rounded-[20px] border border-[#e3eae6] bg-[#f7faf8] px-4 py-3">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] px-3 py-2.5">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Record Origin</p>
                             <p class="mt-2 text-sm font-semibold text-[#191c1c]">Old Record</p>
                         </div>
@@ -163,7 +163,7 @@ function submit() {
                 </EditSectionCard>
 
                 <EditSectionCard eyebrow="Renewal Setup" title="Optional renewal year">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2 md:col-span-2 xl:col-span-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Renewal Year (Optional)</span>
                             <input
@@ -178,7 +178,7 @@ function submit() {
                             <p class="text-[0.72rem] italic text-[#7a8781]">When renewal recording is enabled, this uses the registered date year.</p>
                             <p v-if="form.errors.renewal_year" class="text-xs font-medium text-rose-600">{{ form.errors.renewal_year }}</p>
                         </label>
-                        <label class="inline-flex items-start gap-3 rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-4 md:col-span-2 xl:col-span-2">
+                        <label class="inline-flex items-start gap-2.5 rounded-md border border-[#d7e0db] bg-[#f8faf9] px-3 py-2.5 md:col-span-2 xl:col-span-2">
                             <input v-model="form.create_renewal_record" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
                             <span class="text-sm text-[#4f5d58]">
                                 Create a renewal payment record for the registered year.
@@ -188,7 +188,7 @@ function submit() {
                 </EditSectionCard>
 
                 <EditSectionCard eyebrow="Identity" title="Personal details">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">First Name</span><input v-model="form.first_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"><p v-if="form.errors.first_name" class="text-xs font-medium text-rose-600">{{ form.errors.first_name }}</p></label>
                         <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Middle Name</span><input v-model="form.middle_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"><p v-if="form.errors.middle_name" class="text-xs font-medium text-rose-600">{{ form.errors.middle_name }}</p></label>
                         <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Last Name</span><input v-model="form.last_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"><p v-if="form.errors.last_name" class="text-xs font-medium text-rose-600">{{ form.errors.last_name }}</p></label>
@@ -218,7 +218,7 @@ function submit() {
                 </EditSectionCard>
 
                 <EditSectionCard eyebrow="Location" title="Contact and assignment">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Mobile Number</span><input v-model="form.mobile_number" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"><p v-if="form.errors.mobile_number" class="text-xs font-medium text-rose-600">{{ form.errors.mobile_number }}</p></label>
                         <label class="space-y-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Barangay</span>
@@ -249,11 +249,11 @@ function submit() {
                     </div>
                 </EditSectionCard>
 
-                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <Link :href="indexUrl" class="inline-flex items-center justify-center rounded-2xl border border-[#d7e0db] px-5 py-3 text-sm font-bold text-[#697772] transition hover:bg-[#f4f7f5]">
+                <div class="flex justify-end gap-2 border-t border-[#e3e9e6] pt-3">
+                    <Link :href="indexUrl" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-4 text-xs font-semibold text-[#697772] transition hover:bg-[#f4f7f5]">
                         Cancel
                     </Link>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-[#003629] px-6 py-3 text-sm font-extrabold text-white shadow-[0_16px_30px_rgba(0,54,41,0.16)] transition hover:bg-[#0d4637]" :disabled="form.processing">
+                    <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" :disabled="form.processing">
                         {{ form.processing ? 'Saving...' : 'Save Old Record' }}
                     </button>
                 </div>
@@ -261,3 +261,26 @@ function submit() {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.old-record-compact :deep(label) { gap: 0.25rem; }
+.old-record-compact :deep(label > span),
+.old-record-compact :deep(.text-\[0\.68rem\]) {
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.07em !important;
+}
+.old-record-compact :deep(input:not([type='checkbox'])),
+.old-record-compact :deep(select) {
+    height: 2.25rem !important;
+    border-radius: 0.375rem !important;
+    padding: 0 0.75rem !important;
+    font-size: 0.75rem !important;
+}
+.old-record-compact :deep(textarea) {
+    border-radius: 0.375rem !important;
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.25rem !important;
+}
+</style>
