@@ -358,11 +358,16 @@ function toggleSort(key) {
     <Head title="Farmer Inquiries" />
 
     <AdminLayout title="Farmer Inquiries">
-        <div class="space-y-6">
-            <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <article class="rounded-[1.5rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_12px_28px_rgba(15,91,70,0.06)]">
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Communication</p>
+                <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Farmer Inquiries</h1>
+            </section>
+
+            <section class="grid grid-cols-2 gap-2 lg:grid-cols-5">
+                <article class="rounded-lg border border-[#d9e2dc] bg-white p-3">
                     <div class="flex items-start justify-between gap-4">
-                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl" :class="statTone('total').iconWrap">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md" :class="statTone('total').iconWrap">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                                 <path d="M5 6.5h14v11H5z" />
                                 <path d="M8 10.5h8M8 14.5h5" />
@@ -370,16 +375,15 @@ function toggleSort(key) {
                         </span>
                         <span class="text-xs font-bold text-[#50761b]">{{ progressRate }}% resolved</span>
                     </div>
-                    <p class="mt-3 text-[0.72rem] font-black uppercase tracking-[0.1em] text-[#334155]">Total Inquiries</p>
+                    <p class="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">Total Inquiries</p>
                     <div class="mt-2 flex items-end gap-2">
-                        <h2 class="text-[2.5rem] font-black leading-none text-[#111827]">{{ summary.total }}</h2>
-                        <span class="pb-1.5 text-base text-[#475569]">entries</span>
+                        <h2 class="text-xl font-semibold leading-none text-[#111827]">{{ summary.total }}</h2>
                     </div>
                 </article>
 
-                <article class="rounded-[1.5rem] border border-[#eadfc9] bg-white p-4 shadow-[0_12px_28px_rgba(15,91,70,0.06)]">
+                <article class="rounded-lg border border-[#eadfc9] bg-white p-3">
                     <div class="flex items-start justify-between gap-4">
-                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl" :class="statTone('new').iconWrap">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md" :class="statTone('new').iconWrap">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                                 <circle cx="12" cy="12" r="7" />
                                 <path d="M9.5 12h5" />
@@ -387,32 +391,30 @@ function toggleSort(key) {
                         </span>
                         <span class="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.08em]" :class="statTone('new').meta">Incoming</span>
                     </div>
-                    <p class="mt-3 text-[0.72rem] font-black uppercase tracking-[0.1em] text-[#334155]">New Tickets</p>
+                    <p class="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">New Tickets</p>
                     <div class="mt-2 flex items-end gap-2">
-                        <h2 class="text-[2.5rem] font-black leading-none" :class="statTone('new').value">{{ summary.new }}</h2>
-                        <span class="pb-1.5 text-base text-[#475569]">incoming</span>
+                        <h2 class="text-xl font-semibold leading-none" :class="statTone('new').value">{{ summary.new }}</h2>
                     </div>
                 </article>
 
-                <article class="rounded-[1.5rem] border border-[#dce7cf] bg-white p-4 shadow-[0_12px_28px_rgba(15,91,70,0.06)]">
+                <article class="rounded-lg border border-[#dce7cf] bg-white p-3">
                     <div class="flex items-start justify-between gap-4">
-                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl" :class="statTone('in_progress').iconWrap">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md" :class="statTone('in_progress').iconWrap">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                                 <path d="M5 7.5h14v9H8l-3 3v-12z" />
                             </svg>
                         </span>
                         <span class="text-xs font-bold" :class="statTone('in_progress').meta">{{ inProgressRate }}% open</span>
                     </div>
-                    <p class="mt-3 text-[0.72rem] font-black uppercase tracking-[0.1em] text-[#334155]">In Progress</p>
+                    <p class="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">In Progress</p>
                     <div class="mt-2 flex items-end gap-2">
-                        <h2 class="text-[2.5rem] font-black leading-none" :class="statTone('in_progress').value">{{ summary.inProgress }}</h2>
-                        <span class="pb-1.5 text-base text-[#475569]">active</span>
+                        <h2 class="text-xl font-semibold leading-none" :class="statTone('in_progress').value">{{ summary.inProgress }}</h2>
                     </div>
                 </article>
 
-                <article class="rounded-[1.5rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_12px_28px_rgba(15,91,70,0.06)]">
+                <article class="rounded-lg border border-[#d9e2dc] bg-white p-3">
                     <div class="flex items-start justify-between gap-4">
-                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl" :class="statTone('resolved').iconWrap">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md" :class="statTone('resolved').iconWrap">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                                 <path d="M8 6.5h8v11H8z" />
                                 <path d="M10 9.5h4M10 12.5h4" />
@@ -420,16 +422,15 @@ function toggleSort(key) {
                         </span>
                         <span class="text-xs font-bold text-[#52626b]">{{ progressRate }}% rate</span>
                     </div>
-                    <p class="mt-3 text-[0.72rem] font-black uppercase tracking-[0.1em] text-[#334155]">Resolved</p>
+                    <p class="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">Resolved</p>
                     <div class="mt-2 flex items-end gap-2">
-                        <h2 class="text-[2.5rem] font-black leading-none" :class="statTone('resolved').value">{{ summary.resolved }}</h2>
-                        <span class="pb-1.5 text-base text-[#475569]">done</span>
+                        <h2 class="text-xl font-semibold leading-none" :class="statTone('resolved').value">{{ summary.resolved }}</h2>
                     </div>
                 </article>
 
-                <article class="rounded-[1.5rem] border border-[#f0d4db] bg-white p-4 shadow-[0_12px_28px_rgba(15,91,70,0.06)]">
+                <article class="rounded-lg border border-[#f0d4db] bg-white p-3">
                     <div class="flex items-start justify-between gap-4">
-                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl" :class="statTone('escalated').iconWrap">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md" :class="statTone('escalated').iconWrap">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="1.8">
                                 <path d="M12 4v10" />
                                 <path d="m8 10 4 4 4-4" />
@@ -438,43 +439,42 @@ function toggleSort(key) {
                         </span>
                         <span class="text-xs font-bold" :class="statTone('escalated').meta">{{ escalatedRate }}% escalated</span>
                     </div>
-                    <p class="mt-3 text-[0.72rem] font-black uppercase tracking-[0.1em] text-[#334155]">Escalated</p>
+                    <p class="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">Escalated</p>
                     <div class="mt-2 flex items-end gap-2">
-                        <h2 class="text-[2.5rem] font-black leading-none" :class="statTone('escalated').value">{{ summary.escalated }}</h2>
-                        <span class="pb-1.5 text-base text-[#475569]">priority</span>
+                        <h2 class="text-xl font-semibold leading-none" :class="statTone('escalated').value">{{ summary.escalated }}</h2>
                     </div>
                 </article>
 
             </section>
 
-            <section class="rounded-[2rem] border border-[#d9e2dc] bg-white p-6 shadow-[0_16px_40px_rgba(15,91,70,0.06)]">
-                <div class="grid gap-5 xl:grid-cols-[auto_1fr_auto] xl:items-end">
-                    <div class="flex items-center gap-3 pt-2 text-[#334155]">
+            <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                <div class="grid gap-3 xl:grid-cols-[auto_1fr_auto] xl:items-end">
+                    <div class="flex items-center gap-2 text-[#334155]">
                         <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
                             <path d="M4 7h16M7 12h10M10 17h4" />
                         </svg>
-                        <span class="text-lg font-bold">Advanced Filters</span>
+                        <span class="text-xs font-semibold">Filters</span>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-3">
-                        <label class="space-y-2">
-                            <span class="ml-1 text-sm font-bold text-[#52626b]">Status</span>
-                            <select v-model="form.status" class="w-full rounded-2xl border border-[#d9e2dc] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/10">
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <label class="space-y-1">
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#52626b]">Status</span>
+                            <select v-model="form.status" class="h-9 w-full rounded-md border border-[#d9e2dc] bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#0f5b46]">
                                 <option v-for="option in filterOptions.statuses" :key="option.value" :value="option.value">{{ option.label }}</option>
                             </select>
                         </label>
 
-                        <label class="space-y-2">
-                            <span class="ml-1 text-sm font-bold text-[#52626b]">Year</span>
-                            <select v-model="form.year" class="w-full rounded-2xl border border-[#d9e2dc] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/10">
+                        <label class="space-y-1">
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#52626b]">Year</span>
+                            <select v-model="form.year" class="h-9 w-full rounded-md border border-[#d9e2dc] bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#0f5b46]">
                                 <option value="">All years</option>
                                 <option v-for="option in filterOptions.years" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
                             </select>
                         </label>
 
-                        <label class="space-y-2 md:col-span-2 xl:col-span-1">
-                            <span class="ml-1 text-sm font-bold text-[#52626b]">Barangay</span>
-                            <select v-model="form.barangay_id" class="w-full rounded-2xl border border-[#d9e2dc] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#0f5b46] focus:ring-2 focus:ring-[#0f5b46]/10">
+                        <label class="space-y-1 md:col-span-2 xl:col-span-1">
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#52626b]">Barangay</span>
+                            <select v-model="form.barangay_id" class="h-9 w-full rounded-md border border-[#d9e2dc] bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#0f5b46]">
                                 <option value="">All Locations</option>
                                 <option v-for="option in filterOptions.barangays" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
                             </select>
@@ -482,21 +482,21 @@ function toggleSort(key) {
                     </div>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-[#014d3c] px-6 py-3 text-sm font-black text-white transition hover:bg-[#013628] disabled:cursor-not-allowed disabled:opacity-60" :disabled="applying" @click="applyFilters">
-                            {{ applying ? 'Applying...' : 'Apply Filters' }}
+                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-[#014d3c] px-4 text-xs font-semibold text-white transition hover:bg-[#013628] disabled:opacity-60" :disabled="applying" @click="applyFilters">
+                            {{ applying ? 'Applying...' : 'Apply' }}
                         </button>
-                        <button type="button" class="inline-flex items-center justify-center rounded-2xl bg-[#eef0ee] px-5 py-3 text-sm font-bold text-[#52626b] transition hover:bg-[#e3e8e4] disabled:cursor-not-allowed disabled:opacity-60" :disabled="applying" @click="resetFilters">
+                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d9e2dc] px-3 text-xs font-semibold text-[#52626b] transition hover:bg-[#e3e8e4] disabled:opacity-60" :disabled="applying" @click="resetFilters">
                             Clear
                         </button>
                     </div>
                 </div>
             </section>
 
-            <section class="overflow-hidden rounded-[2rem] border border-[#d9e2dc] bg-white shadow-[0_16px_40px_rgba(15,91,70,0.06)]">
-                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#e6ece8] px-5 py-5 sm:px-6">
+            <section class="overflow-hidden rounded-lg border border-[#d9e2dc] bg-white">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6ece8] px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <h2 class="text-[1.75rem] font-black tracking-[-0.04em] text-[#0f172a]">Inquiry Queue</h2>
-                        <span class="rounded-full bg-[#c9f7df] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#0f7d5a]">{{ activeCount }} Active</span>
+                        <h2 class="text-sm font-semibold text-[#0f172a]">Inquiry queue</h2>
+                        <span class="rounded-full bg-[#c9f7df] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#0f7d5a]">{{ activeCount }} Active</span>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -538,7 +538,7 @@ function toggleSort(key) {
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse">
                         <thead>
-                            <tr class="border-b border-[#e6ece8] text-left text-[0.78rem] font-black uppercase tracking-[0.08em] text-[#334155]">
+                            <tr class="border-b border-[#e6ece8] text-left text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#334155]">
                                 <th class="px-5 py-4 sm:px-6"><button type="button" class="font-black uppercase tracking-[0.08em]" @click="toggleSort('farmer')">Farmer Details</button></th>
                                 <th class="px-5 py-4 sm:px-6">Inquiry &amp; Subject</th>
                                 <th class="px-5 py-4 sm:px-6"><button type="button" class="font-black uppercase tracking-[0.08em]" @click="toggleSort('status')">Status</button></th>
@@ -550,19 +550,19 @@ function toggleSort(key) {
                         <tbody>
                             <tr v-for="query in sortedQueries" :key="query.id" class="border-b border-[#edf2ee] align-top transition hover:bg-[#fbfdfc]">
                                 <td class="px-5 sm:px-6" :class="compactMode ? 'py-3' : 'py-5'">
-                                    <div class="flex items-start gap-4">
-                                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#dff7e9] text-sm font-black text-[#0f5b46]">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#dff7e9] text-[0.65rem] font-semibold text-[#0f5b46]">
                                             {{ farmerInitials(query.farmer.name) }}
                                         </div>
                                         <div class="min-w-0">
-                                            <p class="text-lg font-black leading-5 text-[#0f172a]">{{ query.farmer.name }}</p>
-                                            <p class="mt-1 text-sm text-[#52626b]">ID: {{ query.farmer.code }}</p>
+                                            <p class="text-xs font-semibold leading-4 text-[#0f172a]">{{ query.farmer.name }}</p>
+                                            <p class="mt-0.5 text-[0.65rem] text-[#52626b]">{{ query.farmer.code }}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-5 sm:px-6" :class="compactMode ? 'py-3' : 'py-5'">
-                                    <p class="text-lg font-black leading-5 text-[#0f172a]">{{ query.subject }}</p>
-                                    <p class="mt-1 max-w-[22rem] truncate text-sm text-[#52626b]">"{{ query.messagePreview }}"</p>
+                                    <p class="text-xs font-semibold leading-4 text-[#0f172a]">{{ query.subject }}</p>
+                                    <p class="mt-0.5 max-w-[22rem] truncate text-[0.65rem] text-[#52626b]">{{ query.messagePreview }}</p>
                                 </td>
                                 <td class="px-5 sm:px-6" :class="compactMode ? 'py-3' : 'py-5'">
                                     <div class="space-y-2">

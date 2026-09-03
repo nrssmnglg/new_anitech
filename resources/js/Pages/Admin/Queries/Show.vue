@@ -173,65 +173,65 @@ function closeAttachmentPreview() {
     <Head title="Inquiry Thread" />
 
     <AdminLayout title="Inquiry Thread">
-        <div class="space-y-5">
-            <section class="overflow-hidden rounded-[2rem] bg-[#0e4f3f] text-white shadow-[0_18px_45px_rgba(0,54,41,0.18)]">
-                <div class="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex min-w-0 items-center gap-4">
-                        <Link :href="urls.index" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/10" aria-label="Back to inquiry queue">
-                            <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2.2">
+        <div class="space-y-3">
+            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <Link :href="urls.index" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/20 text-white transition hover:bg-white/10" aria-label="Back to inquiry queue">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2.2">
                                 <path d="M15 18 9 12l6-6" />
                             </svg>
                         </Link>
                         <div class="min-w-0">
-                            <p class="text-xs font-black uppercase tracking-[0.14em] text-white/75">Inquiry Thread</p>
-                            <h1 class="truncate text-lg font-black text-white sm:text-xl">{{ queryRecord.subject }}</h1>
+                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Inquiry thread</p>
+                            <h1 class="truncate text-lg font-semibold text-white">{{ queryRecord.subject }}</h1>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-3 self-end sm:self-auto">
-                        <span class="rounded-full px-4 py-2 text-sm font-black" :class="statusTone(queryRecord.status)">
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <span class="rounded-full px-2.5 py-1 text-[0.65rem] font-semibold" :class="statusTone(queryRecord.status)">
                             {{ statusLabel }}
                         </span>
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-sm font-black text-white">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-[0.65rem] font-semibold text-white">
                             {{ responderInitials('AniTech Support') }}
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div class="grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-                <div class="space-y-4">
-                    <section class="rounded-[1.75rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_14px_30px_rgba(15,91,70,0.06)]">
-                        <div class="flex items-start gap-4">
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0f5b46] text-base font-black text-white">
+            <div class="grid gap-3 xl:grid-cols-[16rem_minmax(0,1fr)]">
+                <div class="space-y-3">
+                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                        <div class="flex items-start gap-3">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#0f5b46] text-xs font-semibold text-white">
                                 {{ farmerInitials(queryRecord.farmer.name) }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-base font-black leading-5 text-[#0f172a]">{{ queryRecord.farmer.name }}</p>
-                                <p class="mt-1 text-sm text-[#52626b]">Farmer ID: {{ queryRecord.farmer.code }}</p>
+                                <p class="text-xs font-semibold leading-4 text-[#0f172a]">{{ queryRecord.farmer.name }}</p>
+                                <p class="mt-0.5 text-[0.65rem] text-[#52626b]">{{ queryRecord.farmer.code }}</p>
                             </div>
                         </div>
 
-                        <div class="mt-5 space-y-3">
-                            <div class="rounded-2xl bg-[#f4f6f4] px-4 py-3">
-                                <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#71808b]">Barangay</p>
-                                <p class="mt-1 text-sm font-bold text-[#0f172a]">{{ queryRecord.farmer.barangay }}</p>
+                        <div class="mt-3 space-y-2">
+                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
+                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Barangay</p>
+                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.farmer.barangay }}</p>
                             </div>
-                            <div class="rounded-2xl bg-[#f4f6f4] px-4 py-3">
-                                <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#71808b]">Association</p>
-                                <p class="mt-1 text-sm font-bold text-[#0f172a]">{{ queryRecord.farmer.association }}</p>
+                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
+                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Association</p>
+                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.farmer.association }}</p>
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_14px_30px_rgba(15,91,70,0.06)]">
-                        <p class="text-[0.78rem] font-black uppercase tracking-[0.08em] text-[#52626b]">Thread Controls</p>
+                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                        <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Thread controls</p>
 
-                        <div class="mt-4 space-y-3">
+                        <div class="mt-2 space-y-2">
                             <button
                                 v-if="queryRecord.status === 'Resolved'"
                                 type="button"
-                                class="inline-flex w-full items-center justify-center rounded-2xl bg-[#0f5b46] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0b4938] disabled:cursor-not-allowed disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#0f5b46] px-3 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="reopenInquiry"
                             >
@@ -240,7 +240,7 @@ function closeAttachmentPreview() {
                             <button
                                 v-else
                                 type="button"
-                                class="inline-flex w-full items-center justify-center rounded-2xl bg-[#0f5b46] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0b4938] disabled:cursor-not-allowed disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#0f5b46] px-3 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="closeInquiry"
                             >
@@ -249,7 +249,7 @@ function closeAttachmentPreview() {
                             <button
                                 v-if="queryRecord.canEscalateToAdmin && queryRecord.status !== 'Resolved' && queryRecord.status !== 'Escalated'"
                                 type="button"
-                                class="inline-flex w-full items-center justify-center rounded-2xl border border-[#f0c6cf] bg-[#fff5f7] px-4 py-3 text-sm font-black text-[#b73d59] transition hover:bg-[#ffedf1] disabled:cursor-not-allowed disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-md border border-[#f0c6cf] bg-[#fff5f7] px-3 text-xs font-semibold text-[#b73d59] transition hover:bg-[#ffedf1] disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="escalateInquiry"
                             >
@@ -258,7 +258,7 @@ function closeAttachmentPreview() {
 
                             <Link
                                 :href="urls.index"
-                                class="inline-flex w-full items-center justify-center rounded-2xl border border-[#e58e8e] bg-white px-4 py-3 text-sm font-semibold text-[#c94f4f] transition hover:bg-[#fff6f6]"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-md border border-[#e58e8e] bg-white px-3 text-xs font-semibold text-[#c94f4f] transition hover:bg-[#fff6f6]"
                             >
                                 Back to Queue
                             </Link>
@@ -266,32 +266,32 @@ function closeAttachmentPreview() {
 
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_14px_30px_rgba(15,91,70,0.06)]">
-                        <p class="text-[0.78rem] font-black uppercase tracking-[0.08em] text-[#52626b]">Accountability</p>
-                        <div class="mt-4 space-y-3">
-                            <div class="rounded-2xl bg-[#f4f6f4] px-4 py-3">
-                                <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#71808b]">Last Updated By</p>
-                                <p class="mt-1 text-sm font-bold text-[#0f172a]">{{ queryRecord.accountability?.lastUpdatedBy || 'System' }}</p>
-                                <p class="mt-1 text-xs text-[#71808b]">{{ queryRecord.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
+                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                        <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Accountability</p>
+                        <div class="mt-2 space-y-2">
+                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
+                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Last record edited by</p>
+                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
+                                <p class="mt-0.5 text-[0.6rem] text-[#71808b]">{{ queryRecord.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
                             </div>
-                            <div class="rounded-2xl bg-[#f4f6f4] px-4 py-3">
-                                <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#71808b]">Assigned Staff</p>
-                                <p class="mt-1 text-sm font-bold text-[#0f172a]">{{ queryRecord.accountability?.assignedStaff || 'Unassigned' }}</p>
+                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
+                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Assigned Staff</p>
+                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.accountability?.assignedStaff || 'Unassigned' }}</p>
                             </div>
                         </div>
                     </section>
                 </div>
 
-                <div class="space-y-4">
-                    <section class="rounded-[1.75rem] border border-[#d9e2dc] bg-white p-5 shadow-[0_14px_30px_rgba(15,91,70,0.06)]">
-                        <div class="space-y-4">
+                <div class="space-y-3">
+                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                        <div class="space-y-3">
                             <article class="flex justify-start">
-                                <div class="max-w-[46rem] rounded-[1.6rem] border border-[#e6f1d8] bg-[#fff9ec] px-5 py-4 text-[#3b3120] shadow-[0_8px_22px_rgba(0,0,0,0.03)]">
-                                    <div class="flex items-center justify-between gap-4 text-sm text-[#7d6a43]">
-                                        <span class="font-bold">{{ queryRecord.farmer.name }}</span>
+                                <div class="max-w-[46rem] rounded-lg border border-[#e6f1d8] bg-[#fff9ec] px-3 py-2.5 text-[#3b3120]">
+                                    <div class="flex items-center justify-between gap-4 text-[0.65rem] text-[#7d6a43]">
+                                        <span class="font-semibold">{{ queryRecord.farmer.name }}</span>
                                         <span>{{ queryRecord.submittedAt }}</span>
                                     </div>
-                                    <p class="mt-3 whitespace-pre-line text-[0.96rem] leading-7">{{ queryRecord.message }}</p>
+                                    <p class="mt-1.5 whitespace-pre-line text-xs leading-5">{{ queryRecord.message }}</p>
 
                                     <div v-if="queryRecord.attachments.length" class="mt-4 flex flex-wrap gap-2">
                                         <button
@@ -308,12 +308,12 @@ function closeAttachmentPreview() {
                             </article>
 
                             <article v-for="response in queryRecord.responses" :key="response.id" class="flex justify-end">
-                                <div class="max-w-[46rem] rounded-[1.6rem] border border-[#e3e7e5] bg-white px-5 py-4 text-[#22343b] shadow-[0_8px_22px_rgba(0,0,0,0.03)]">
-                                    <div class="flex items-center justify-between gap-4 text-sm text-[#52626b]">
-                                        <span class="font-bold">AniTech Support ({{ response.responder }})</span>
+                                <div class="max-w-[46rem] rounded-lg border border-[#e3e7e5] bg-white px-3 py-2.5 text-[#22343b]">
+                                    <div class="flex items-center justify-between gap-4 text-[0.65rem] text-[#52626b]">
+                                        <span class="font-semibold">AniTech Support ({{ response.responder }})</span>
                                         <span>{{ response.respondedAt }}</span>
                                     </div>
-                                    <p class="mt-3 whitespace-pre-line text-[0.96rem] leading-7">{{ response.message }}</p>
+                                    <p class="mt-1.5 whitespace-pre-line text-xs leading-5">{{ response.message }}</p>
 
                                     <div v-if="response.attachments.length" class="mt-4 flex flex-wrap gap-2">
                                         <button
@@ -335,12 +335,12 @@ function closeAttachmentPreview() {
                         </div>
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-[#d9e2dc] bg-white p-4 shadow-[0_14px_30px_rgba(15,91,70,0.06)]">
-                        <form v-if="queryRecord.status !== 'Resolved'" class="space-y-4" @submit.prevent="submitResponse">
-                            <div class="space-y-3 rounded-[1.35rem] border border-[#d9e2dc] bg-[#fbfdfc] p-4">
+                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
+                        <form v-if="queryRecord.status !== 'Resolved'" class="space-y-3" @submit.prevent="submitResponse">
+                            <div class="space-y-2 rounded-md border border-[#d9e2dc] bg-[#fbfdfc] p-3">
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#52626b]">Response Templates</p>
+                                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Response templates</p>
                                     </div>
                                 </div>
 
@@ -357,11 +357,11 @@ function closeAttachmentPreview() {
                                 </div>
                             </div>
 
-                            <div class="rounded-[1.4rem] bg-[#f5f7f6] p-3">
+                            <div class="rounded-md bg-[#f5f7f6] p-2">
                                 <textarea
                                     v-model="form.message"
                                     rows="4"
-                                    class="w-full resize-none rounded-[1rem] bg-transparent px-3 py-3 text-sm text-[#0f172a] outline-none"
+                                    class="w-full resize-none bg-transparent px-2 py-2 text-xs text-[#0f172a] outline-none"
                                     :placeholder="`Type your response to ${queryRecord.farmer.name}...`"
                                 />
                             </div>
@@ -379,7 +379,7 @@ function closeAttachmentPreview() {
                                     <span class="text-xs">{{ queryRecord.status === 'Escalated' ? 'Escalated priority' : 'Standard priority' }}</span>
                                 </div>
 
-                                <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-[#0f5b46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#0b4938] disabled:cursor-not-allowed disabled:opacity-60" :disabled="form.processing || acting">
+                                <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#0f5b46] px-4 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60" :disabled="form.processing || acting">
                                     {{ form.processing ? 'Sending...' : 'Send Response' }}
                                 </button>
                             </div>
