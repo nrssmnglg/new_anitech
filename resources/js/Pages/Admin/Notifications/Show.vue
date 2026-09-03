@@ -67,8 +67,8 @@ function resendDispatch() {
     <Head title="Notification Detail" />
 
     <AdminLayout title="Notification Detail">
-        <div class="space-y-8 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
-            <section class="relative overflow-hidden rounded-[28px] bg-[#002117] px-6 py-6 text-white shadow-[0_22px_50px_rgba(15,23,42,0.14)] sm:px-7 lg:px-8">
+        <div class="notification-show space-y-3">
+            <section class="notification-show-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
                 <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_#1b4d3e_0%,_transparent_50%),radial-gradient(at_100%_0%,_#376757_0%,_transparent_48%),radial-gradient(at_100%_100%,_#16332c_0%,_transparent_50%),radial-gradient(at_0%_100%,_#003629_0%,_transparent_48%)]"></div>
                 <div class="absolute -right-14 top-[-52px] h-60 w-60 rounded-full bg-[#a5d577]/10 blur-[90px]"></div>
                 <div class="absolute -bottom-24 left-[18%] h-72 w-72 rounded-full bg-white/10 blur-[110px]"></div>
@@ -120,7 +120,7 @@ function resendDispatch() {
                 </div>
             </section>
 
-            <section class="rounded-[2rem] border border-[#d9e2dc] bg-white p-6 shadow-[0_16px_40px_rgba(15,91,70,0.06)]">
+            <section class="notification-message rounded-lg border border-[#d9e2dc] bg-white p-3">
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="inline-flex rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.08em]" :class="deliveryTone(dispatch.delivery_label)">
                         {{ dispatch.delivery_label }}
@@ -134,7 +134,7 @@ function resendDispatch() {
                 </div>
             </section>
 
-            <section class="overflow-hidden rounded-[2rem] border border-[#d9e2dc] bg-white shadow-[0_16px_40px_rgba(15,91,70,0.06)]">
+            <section class="notification-recipients overflow-hidden rounded-lg border border-[#d9e2dc] bg-white">
                 <div class="border-b border-[#e6ece8] px-5 py-5 sm:px-6">
                     <h2 class="text-[1.55rem] font-black tracking-[-0.04em] text-[#0f172a]">Recipients</h2>
                     <p class="mt-2 text-sm text-[#64748b]">Per-recipient delivery state, read activity, and failure details.</p>
@@ -182,3 +182,118 @@ function resendDispatch() {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.notification-show-hero > div:not(.relative) {
+    display: none;
+}
+.notification-show-hero .relative.space-y-6 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.notification-show-hero .relative > div:first-child {
+    align-items: center;
+    gap: 0.75rem;
+}
+.notification-show-hero .inline-flex.rounded-full:first-child {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+.notification-show-hero .inline-flex.rounded-full:first-child > span:first-child {
+    display: none;
+}
+.notification-show-hero .inline-flex.rounded-full:first-child > span:last-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgb(255 255 255 / 60%);
+}
+.notification-show-hero h1 {
+    margin-top: 0.125rem;
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+}
+.notification-show-hero h1 + p {
+    margin-top: 0.125rem;
+    font-size: 0.68rem;
+}
+.notification-show-hero a,
+.notification-show-hero button {
+    min-height: 2rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+.notification-show-hero .grid {
+    gap: 0.5rem;
+}
+.notification-show-hero .grid article {
+    border-radius: 0.375rem;
+    padding: 0.6rem 0.75rem;
+    background: rgb(255 255 255 / 10%);
+    color: white;
+}
+.notification-show-hero .grid article p:first-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgb(255 255 255 / 60%);
+}
+.notification-show-hero .grid article p:last-child {
+    margin-top: 0.2rem;
+    font-size: 1.1rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    color: white;
+}
+.notification-message > div:first-child {
+    gap: 0.5rem;
+}
+.notification-message > div:first-child span {
+    font-size: 0.62rem;
+}
+.notification-message > div:last-child {
+    margin-top: 0.65rem;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+}
+.notification-message > div:last-child p:first-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.notification-message > div:last-child p:last-child {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+}
+.notification-recipients > div:first-child {
+    padding: 0.75rem 1rem;
+}
+.notification-recipients h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.notification-recipients h2 + p {
+    margin-top: 0.2rem;
+    font-size: 0.65rem;
+}
+.notification-recipients th {
+    padding: 0.625rem 1rem;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.notification-recipients td {
+    padding: 0.75rem 1rem;
+    font-size: 0.68rem;
+}
+.notification-recipients td p,
+.notification-recipients td span {
+    font-size: inherit;
+}
+</style>

@@ -60,24 +60,24 @@ function removeAttachment(attachment) {
     <Head title="Edit Advisory" />
 
     <AdminLayout title="Edit Advisory">
-        <div class="space-y-6">
+        <div class="space-y-3">
             <AdvisoryForm
                 :form="form"
                 :reference="reference"
                 heading="Edit Advisory"
-                description="Update the advisory content, adjust its audience, and keep attachments in sync."
+                description=""
                 submit-label="Save Changes"
                 :cancel-href="urls.show"
                 :disabled="submitting || form.processing"
                 @submit="submit"
             />
 
-            <section v-if="form.existingAttachments.length" class="overflow-hidden rounded-3xl border border-[#0f5b46]/12 bg-white shadow-[0_20px_45px_rgba(0,54,41,0.08)]">
-                <div class="border-b border-[#0f5b46]/10 bg-[#f5faf7] px-6 py-4">
-                    <h2 class="text-xl font-black text-primary">Current Attachments</h2>
+            <section v-if="form.existingAttachments.length" class="overflow-hidden rounded-lg border border-[#0f5b46]/12 bg-white">
+                <div class="border-b border-[#0f5b46]/10 px-4 py-3">
+                    <h2 class="text-sm font-semibold text-primary">Current attachments</h2>
                 </div>
-                <div class="space-y-3 p-6">
-                    <article v-for="attachment in form.existingAttachments" :key="attachment.id" class="flex flex-col gap-3 rounded-2xl border border-[#0f5b46]/10 bg-[#f8fbf9] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-2 p-4">
+                    <article v-for="attachment in form.existingAttachments" :key="attachment.id" class="flex flex-col gap-2 rounded-md border border-[#0f5b46]/10 bg-[#f8fbf9] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p class="font-bold text-primary">{{ attachment.name }}</p>
                             <p class="text-xs text-on-surface-variant">{{ attachment.uploadedAt || 'No upload timestamp' }}</p>

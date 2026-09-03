@@ -130,28 +130,27 @@ onMounted(() => {
     <Head title="Notifications" />
 
     <AdminLayout title="Notifications">
-        <div class="space-y-8 bg-[radial-gradient(circle_at_top_left,_rgba(186,238,217,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(165,213,119,0.12),_transparent_22%)]">
-            <section class="relative overflow-hidden rounded-[28px] bg-[#002117] px-6 py-6 text-white shadow-[0_22px_50px_rgba(15,23,42,0.14)] sm:px-7 lg:px-8">
+        <div class="notification-management space-y-3">
+            <section class="notification-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
                 <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_#1b4d3e_0%,_transparent_50%),radial-gradient(at_100%_0%,_#376757_0%,_transparent_48%),radial-gradient(at_100%_100%,_#16332c_0%,_transparent_50%),radial-gradient(at_0%_100%,_#003629_0%,_transparent_48%)]"></div>
                 <div class="absolute -right-14 top-[-52px] h-60 w-60 rounded-full bg-[#a5d577]/10 blur-[90px]"></div>
                 <div class="absolute -bottom-24 left-[18%] h-72 w-72 rounded-full bg-white/10 blur-[110px]"></div>
 
-                <div class="relative z-10 space-y-6">
-                    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div class="relative z-10 space-y-2.5">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div class="max-w-3xl">
-                            <div class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                                <span class="h-2.5 w-2.5 rounded-full bg-[#c0f190] shadow-[0_0_16px_rgba(192,241,144,0.8)]"></span>
-                                <span class="text-[0.68rem] font-black uppercase tracking-[0.28em] text-white/85">Communication Module</span>
+                            <div class="inline-flex items-center">
+                                <span class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Communication Module</span>
                             </div>
 
-                            <h1 class="mt-4 text-4xl font-black tracking-[-0.045em] sm:text-[2.85rem]">Notification Management</h1>
+                            <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Notification Management</h1>
                         </div>
 
-                        <div class="flex flex-col gap-3 sm:flex-row">
+                        <div class="flex gap-2">
                             <button
                                 v-if="unreadCount > 0"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-full bg-[#c0f190] px-5 py-3 text-sm font-extrabold text-[#2a5000] transition hover:scale-[1.02]"
+                                class="inline-flex h-8 items-center justify-center rounded-md bg-[#c0f190] px-3 text-[0.68rem] font-semibold text-[#2a5000] transition"
                                 @click="markAllAsRead"
                             >
                                 Mark All as Read
@@ -159,7 +158,7 @@ onMounted(() => {
                             <button
                                 v-else
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-extrabold text-white/75 backdrop-blur transition"
+                                class="inline-flex h-8 items-center justify-center rounded-md border border-white/20 bg-white/10 px-3 text-[0.68rem] font-semibold text-white/75"
                                 disabled
                             >
                                 All Caught Up
@@ -167,54 +166,54 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                        <div class="rounded-[22px] border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+                        <div class="rounded-md border border-white/10 bg-white/10 px-3 py-2">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Total Dispatches</p>
                             <div class="mt-2.5 flex items-end gap-3">
                                 <span class="text-3xl font-black tracking-[-0.04em]">{{ managementSummary.totalDispatches }}</span>
                                 <span class="pb-1 text-xs font-black uppercase tracking-[0.18em] text-[#c0f190]">All Time</span>
                             </div>
-                            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div class="hidden">
                                 <div class="h-full w-[82%] rounded-full bg-[#c0f190]"></div>
                             </div>
                         </div>
-                        <div class="rounded-[22px] border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                        <div class="rounded-md border border-white/10 bg-white/10 px-3 py-2">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Queued</p>
                             <div class="mt-2.5 flex items-end gap-3">
                                 <span class="text-3xl font-black tracking-[-0.04em]">{{ managementSummary.queuedDispatches }}</span>
                                 <span class="pb-1 text-xs font-black uppercase tracking-[0.18em] text-[#ffe08a]">Pending Send</span>
                             </div>
-                            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div class="hidden">
                                 <div class="h-full w-[54%] rounded-full bg-[#ffe08a]"></div>
                             </div>
                         </div>
-                        <div class="rounded-[22px] border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                        <div class="rounded-md border border-white/10 bg-white/10 px-3 py-2">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Delivered</p>
                             <div class="mt-2.5 flex items-end gap-3">
                                 <span class="text-3xl font-black tracking-[-0.04em]">{{ managementSummary.deliveredRecipients }}</span>
                                 <span class="pb-1 text-xs font-black uppercase tracking-[0.18em] text-[#baeed9]">Recipients</span>
                             </div>
-                            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div class="hidden">
                                 <div class="h-full w-[74%] rounded-full bg-[#baeed9]"></div>
                             </div>
                         </div>
-                        <div class="rounded-[22px] border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                        <div class="rounded-md border border-white/10 bg-white/10 px-3 py-2">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Failed</p>
                             <div class="mt-2.5 flex items-end gap-3">
                                 <span class="text-3xl font-black tracking-[-0.04em]">{{ managementSummary.failedRecipients }}</span>
                                 <span class="pb-1 text-xs font-black uppercase tracking-[0.18em] text-[#ffb5c2]">Needs Review</span>
                             </div>
-                            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div class="hidden">
                                 <div class="h-full w-[33%] rounded-full bg-[#ffb5c2]"></div>
                             </div>
                         </div>
-                        <div class="rounded-[22px] border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                        <div class="rounded-md border border-white/10 bg-white/10 px-3 py-2">
                             <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Scheduled Reminders</p>
                             <div class="mt-2.5 flex items-end gap-3">
                                 <span class="text-3xl font-black tracking-[-0.04em]">{{ managementSummary.scheduledReminders }}</span>
                                 <span class="pb-1 text-xs font-black uppercase tracking-[0.18em] text-[#b7d8ff]">Auto Queue</span>
                             </div>
-                            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div class="hidden">
                                 <div class="h-full w-[46%] rounded-full bg-[#b7d8ff]"></div>
                             </div>
                         </div>
@@ -222,7 +221,7 @@ onMounted(() => {
                 </div>
             </section>
 
-            <section class="rounded-[24px] border border-[#dfe5e1] bg-[#f2f4f3] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+            <section class="notification-filters rounded-lg border border-[#dfe5e1] bg-white p-3">
                 <form class="grid gap-4 xl:grid-cols-[1fr_1fr_1fr_auto]" @submit.prevent="applyFilters">
                     <label class="space-y-2">
                         <span class="text-[0.66rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Module</span>
@@ -253,7 +252,7 @@ onMounted(() => {
                 </form>
             </section>
 
-            <section class="flex justify-center">
+            <section class="notification-tabs flex justify-center">
                 <div class="inline-flex flex-wrap items-center gap-2 rounded-full border border-[#dfe5e1] bg-[#eceeed] p-1.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.05)]">
                     <button
                         v-for="tab in tabs"
@@ -268,7 +267,7 @@ onMounted(() => {
                 </div>
             </section>
 
-            <section v-if="activeSection === 'inbox'" class="overflow-hidden rounded-[24px] border border-[#dfe5e1] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <section v-if="activeSection === 'inbox'" class="notification-table overflow-hidden rounded-lg border border-[#dfe5e1] bg-white">
                 <div class="border-b border-[#e6ece8] px-5 py-5 sm:px-6">
                     <div class="flex items-center gap-3">
                         <h2 class="text-[1.55rem] font-black tracking-[-0.04em] text-[#0f172a]">Inbox Notifications</h2>
@@ -337,7 +336,7 @@ onMounted(() => {
                 </div>
             </section>
 
-            <section v-if="activeSection === 'dispatches'" class="overflow-hidden rounded-[24px] border border-[#dfe5e1] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+            <section v-if="activeSection === 'dispatches'" class="notification-table overflow-hidden rounded-lg border border-[#dfe5e1] bg-white">
                 <div class="border-b border-[#e6ece8] px-5 py-5 sm:px-6">
                     <h2 class="text-[1.55rem] font-black tracking-[-0.04em] text-[#0f172a]">Dispatch History</h2>
                 </div>
@@ -410,7 +409,7 @@ onMounted(() => {
                 </div>
             </section>
 
-            <section v-if="activeSection === 'issues'" class="grid gap-6 xl:grid-cols-2">
+            <section v-if="activeSection === 'issues'" class="notification-issues grid gap-3 xl:grid-cols-2">
                 <article class="rounded-[2rem] border border-[#d9e2dc] bg-white p-6 shadow-[0_16px_40px_rgba(15,91,70,0.06)]">
                     <h2 class="text-[1.45rem] font-black tracking-[-0.04em] text-[#0f172a]">Failed Notifications</h2>
                     <div class="mt-5 space-y-4">
@@ -448,3 +447,159 @@ onMounted(() => {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.notification-hero > div:not(.relative) {
+    display: none;
+}
+
+.notification-hero .relative {
+    position: relative;
+}
+
+.notification-hero .relative.space-y-6 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.notification-hero h1 {
+    margin-top: 0.125rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+}
+
+.notification-hero .inline-flex.rounded-full:first-child {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.notification-hero .inline-flex.rounded-full:first-child > span:first-child {
+    display: none;
+}
+
+.notification-hero .inline-flex.rounded-full:first-child > span:last-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgb(255 255 255 / 60%);
+}
+
+.notification-hero button {
+    min-height: 2rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.notification-hero .grid {
+    gap: 0.5rem;
+}
+
+.notification-hero .grid > div {
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.75rem;
+}
+
+.notification-hero .grid p {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.notification-hero .grid .text-3xl {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+}
+
+.notification-hero .grid .pb-1,
+.notification-hero .grid .h-1\.5 {
+    display: none;
+}
+
+.notification-filters form {
+    gap: 0.75rem;
+}
+
+.notification-filters label {
+    gap: 0.25rem;
+}
+
+.notification-filters label > span {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.notification-filters select,
+.notification-filters button {
+    height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+
+.notification-tabs > div {
+    gap: 0.25rem;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+}
+
+.notification-tabs button {
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.notification-table > div:first-child {
+    padding: 0.75rem 1rem;
+}
+
+.notification-table h2 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+}
+
+.notification-table table {
+    font-size: 0.75rem;
+}
+
+.notification-table th {
+    padding: 0.625rem 1rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.notification-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.68rem;
+}
+
+.notification-table td p,
+.notification-table td span {
+    font-size: inherit;
+}
+
+.notification-issues > article {
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: none;
+}
+
+.notification-issues h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.notification-issues article article {
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+}
+</style>

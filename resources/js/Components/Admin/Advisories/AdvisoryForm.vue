@@ -38,7 +38,7 @@ function updateAttachments(event) {
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-[2rem] border border-[#dbe4de] bg-[#f8fbf9] shadow-[0_20px_45px_rgba(0,54,41,0.08)]">
+    <section class="advisory-form overflow-hidden rounded-lg border border-[#dbe4de] bg-[#f8fbf9]">
         <div class="bg-[linear-gradient(135deg,#114739,#195642)] px-6 py-6 text-white">
             <a :href="cancelHref" class="inline-flex items-center gap-2 text-sm font-semibold text-[#cdeed4] transition hover:text-white">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
@@ -235,3 +235,88 @@ function updateAttachments(event) {
         </form>
     </section>
 </template>
+
+<style scoped>
+.advisory-form > div:first-child {
+    padding: 0.875rem 1rem;
+    background: #003629;
+}
+.advisory-form > div:first-child > a {
+    font-size: 0.68rem;
+}
+.advisory-form > div:first-child > div {
+    margin-top: 0.35rem;
+}
+.advisory-form h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+}
+.advisory-form > div:first-child p {
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    line-height: 1rem;
+}
+.advisory-form form {
+    padding: 1rem;
+    gap: 0.75rem;
+}
+.advisory-form form > div {
+    gap: 0.75rem;
+}
+.advisory-form form section {
+    border-radius: 0.5rem;
+    padding: 0.875rem;
+    box-shadow: none;
+}
+.advisory-form form section h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.advisory-form form section > div:first-child > span {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+}
+.advisory-form label > span,
+.advisory-form section > div > p:first-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.advisory-form input[type='text'],
+.advisory-form select {
+    height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+.advisory-form textarea {
+    min-height: 10rem;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+}
+.advisory-form label > div.min-h-\[14rem\] {
+    min-height: 7rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+.advisory-form aside {
+    gap: 0.75rem;
+}
+.advisory-form aside button {
+    border-radius: 0.375rem;
+    padding: 0.625rem 0.75rem;
+}
+.advisory-form aside button span.block {
+    font-size: 0.7rem;
+}
+.advisory-form aside .mt-6 button,
+.advisory-form aside .mt-6 a {
+    min-height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+</style>

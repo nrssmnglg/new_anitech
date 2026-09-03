@@ -123,9 +123,17 @@ function statusMeta(status) {
     <Head title="Advisories" />
 
     <AdminLayout title="Advisories">
-        <div class="space-y-5">
-            <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <article class="rounded-[1.2rem] bg-[linear-gradient(135deg,#134c45,#194f4f)] p-5 text-white shadow-[0_14px_28px_rgba(15,91,70,0.14)]">
+        <div class="space-y-3">
+            <section class="flex flex-col gap-3 rounded-xl bg-[#003629] px-4 py-3.5 text-white sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Communication</p>
+                    <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Advisories</h1>
+                </div>
+                <Link :href="urls.create" class="inline-flex h-8 items-center justify-center rounded-md bg-white px-3 text-[0.68rem] font-semibold text-[#014d3c] transition hover:bg-[#f3f7f5]">Create Advisory</Link>
+            </section>
+
+            <section class="grid grid-cols-2 gap-2 xl:grid-cols-4">
+                <article class="rounded-lg bg-[#134c45] p-3 text-white">
                     <div class="flex items-start justify-between gap-4">
                         <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/12 text-white">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
@@ -134,11 +142,11 @@ function statusMeta(status) {
                         </span>
                         <span class="text-xs text-white/70">Total</span>
                     </div>
-                    <p class="mt-4 text-[2.2rem] font-black leading-none">{{ summary.total }}</p>
-                    <p class="mt-2 text-sm text-white/75">+{{ publishedRate }}% this month</p>
+                    <p class="mt-2 text-xl font-semibold leading-none">{{ summary.total }}</p>
+                    <p class="mt-1 text-[0.62rem] text-white/75">{{ publishedRate }}% published</p>
                 </article>
 
-                <article class="rounded-[1.2rem] bg-[linear-gradient(135deg,#d7f6a8,#b9f07a)] p-5 text-[#214321] shadow-[0_14px_28px_rgba(153,192,78,0.18)]">
+                <article class="rounded-lg bg-[#d7f6a8] p-3 text-[#214321]">
                     <div class="flex items-start justify-between gap-4">
                         <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/45 text-[#496b12]">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
@@ -148,11 +156,11 @@ function statusMeta(status) {
                         </span>
                         <span class="text-xs text-[#496b12]">Published</span>
                     </div>
-                    <p class="mt-4 text-[2.2rem] font-black leading-none">{{ summary.published }}</p>
-                    <p class="mt-2 text-sm text-[#587a20]">{{ statusMeta('Published') }}</p>
+                    <p class="mt-2 text-xl font-semibold leading-none">{{ summary.published }}</p>
+                    <p class="mt-1 text-[0.62rem] text-[#587a20]">{{ statusMeta('Published') }}</p>
                 </article>
 
-                <article class="rounded-[1.2rem] bg-[linear-gradient(135deg,#fff6d5,#ffe69f)] p-5 text-[#5d4210] shadow-[0_14px_28px_rgba(210,166,61,0.14)]">
+                <article class="rounded-lg bg-[#fff1cb] p-3 text-[#5d4210]">
                     <div class="flex items-start justify-between gap-4">
                         <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/45 text-[#d2870a]">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
@@ -161,11 +169,11 @@ function statusMeta(status) {
                         </span>
                         <span class="text-xs text-[#9b6a12]">Drafts</span>
                     </div>
-                    <p class="mt-4 text-[2.2rem] font-black leading-none">{{ summary.drafts }}</p>
-                    <p class="mt-2 text-sm text-[#b0780f]">{{ statusMeta('Draft') }}</p>
+                    <p class="mt-2 text-xl font-semibold leading-none">{{ summary.drafts }}</p>
+                    <p class="mt-1 text-[0.62rem] text-[#b0780f]">{{ statusMeta('Draft') }}</p>
                 </article>
 
-                <article class="rounded-[1.2rem] border border-[#dce2e5] bg-[#f7f8f8] p-5 text-[#1f2937] shadow-[0_14px_28px_rgba(15,91,70,0.06)]">
+                <article class="rounded-lg border border-[#dce2e5] bg-[#f7f8f8] p-3 text-[#1f2937]">
                     <div class="flex items-start justify-between gap-4">
                         <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#6b7280]">
                             <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
@@ -175,64 +183,58 @@ function statusMeta(status) {
                         </span>
                         <span class="text-xs text-[#66727c]">Archived</span>
                     </div>
-                    <p class="mt-4 text-[2.2rem] font-black leading-none">{{ summary.archived }}</p>
-                    <p class="mt-2 text-sm text-[#7b8790]">{{ statusMeta('Archived') }}</p>
+                    <p class="mt-2 text-xl font-semibold leading-none">{{ summary.archived }}</p>
+                    <p class="mt-1 text-[0.62rem] text-[#7b8790]">{{ statusMeta('Archived') }}</p>
                 </article>
 
             </section>
 
-            <div class="flex justify-end">
-                <Link :href="urls.create" class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#01362a]">
-                    Create Advisory
-                </Link>
-            </div>
-
-            <section class="rounded-[1.35rem] border border-[#dde4de] bg-white p-4 shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
-                <div class="grid gap-4 xl:grid-cols-[1fr_1fr_auto] xl:items-end">
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <label class="space-y-2">
-                            <span class="text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">Filter by Status</span>
-                            <select v-model="filterForm.status" class="w-full rounded-xl border border-[#dbe3dd] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#014d3c]">
+            <section class="rounded-lg border border-[#dde4de] bg-white p-3">
+                <div class="grid gap-3 xl:grid-cols-[1fr_1fr_auto] xl:items-end">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <label class="space-y-1">
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Status</span>
+                            <select v-model="filterForm.status" class="h-9 w-full rounded-md border border-[#dbe3dd] bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c]">
                                 <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                             </select>
                         </label>
 
-                        <label class="space-y-2">
-                            <span class="text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">Target Audience</span>
-                            <select v-model="filterForm.audience_type" class="w-full rounded-xl border border-[#dbe3dd] bg-white px-4 py-3 text-sm text-[#0f172a] outline-none transition focus:border-[#014d3c]">
+                        <label class="space-y-1">
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">Target Audience</span>
+                            <select v-model="filterForm.audience_type" class="h-9 w-full rounded-md border border-[#dbe3dd] bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c]">
                                 <option v-for="option in audienceOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                             </select>
                         </label>
                     </div>
 
-                    <div class="flex items-center gap-3 xl:justify-end">
-                        <button type="button" class="inline-flex items-center justify-center rounded-xl bg-[#014d3c] px-6 py-3 text-sm font-black text-white transition hover:bg-[#01362a]" @click="applyFilters">
-                            Apply Filters
+                    <div class="flex items-center gap-2 xl:justify-end">
+                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-[#014d3c] px-4 text-xs font-semibold text-white transition hover:bg-[#01362a]" @click="applyFilters">
+                            Apply
                         </button>
-                        <button type="button" class="inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]" @click="resetFilters">
+                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-[#dbe3dd] px-3 text-xs font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]" @click="resetFilters">
                             Reset
                         </button>
                     </div>
                 </div>
             </section>
 
-            <section class="overflow-hidden rounded-[1.35rem] border border-[#dde4de] bg-white shadow-[0_16px_34px_rgba(15,91,70,0.06)]">
+            <section class="overflow-hidden rounded-lg border border-[#dde4de] bg-white">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full border-collapse text-sm">
+                    <table class="min-w-full border-collapse text-xs">
                         <thead class="bg-[#f9fbfa]">
-                            <tr class="border-b border-[#e8eeea] text-left text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#64748b]">
-                                <th class="px-6 py-4">Advisory</th>
-                                <th class="px-6 py-4">Audience</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Attachments</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
+                            <tr class="border-b border-[#e8eeea] text-left text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#64748b]">
+                                <th class="px-4 py-2.5">Advisory</th>
+                                <th class="px-4 py-2.5">Audience</th>
+                                <th class="px-4 py-2.5">Status</th>
+                                <th class="px-4 py-2.5">Attachments</th>
+                                <th class="px-4 py-2.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="advisory in advisories.data" :key="advisory.id" class="border-b border-[#edf2ee] transition hover:bg-[#fcfefd]">
-                                <td class="px-6 py-5 align-top">
+                                <td class="px-4 py-3 align-middle">
                                     <div class="flex items-start gap-4">
-                                        <div class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black" :class="advisoryTone(advisory.status)">
+                                        <div class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-semibold" :class="advisoryTone(advisory.status)">
                                             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
                                                 <path v-if="advisory.status === 'Published'" d="M6 12h12M12 6v12" />
                                                 <path v-else-if="advisory.status === 'Draft'" d="M6 8.5 12 4l6 4.5v8L12 20l-6-3.5z" />
@@ -246,20 +248,20 @@ function statusMeta(status) {
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 align-top">
+                                <td class="px-4 py-3 align-middle">
                                     <span class="inline-flex rounded-md bg-[#f3f5f4] px-2.5 py-1 text-xs font-medium text-[#425466]">
                                         {{ advisory.audienceLabel }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 align-top">
+                                <td class="px-4 py-3 align-middle">
                                     <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold" :class="statusTone(advisory.status)">
                                         {{ advisory.status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 align-top font-medium text-[#334155]">
+                                <td class="px-4 py-3 align-middle font-medium text-[#334155]">
                                     {{ advisory.attachmentsCount ? advisory.attachmentsCount : '0' }}
                                 </td>
-                                <td class="px-6 py-5 align-top">
+                                <td class="px-4 py-3 align-middle">
                                     <div class="flex items-center justify-end gap-4 text-sm">
                                         <Link :href="advisory.actions.show" class="font-medium text-[#014d3c] transition hover:underline">View</Link>
                                         <Link :href="advisory.actions.edit" class="font-medium text-[#1f2937] transition hover:underline">Edit</Link>

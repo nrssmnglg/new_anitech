@@ -46,7 +46,7 @@ function removeAttachment(attachment) {
     <Head :title="advisory.title" />
 
     <AdminLayout title="Advisory Record">
-        <div class="space-y-8">
+        <div class="advisory-show space-y-3">
             <section class="space-y-4">
                 <nav class="flex flex-wrap items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.14em] text-on-surface-variant">
                     <Link :href="urls.index" class="transition hover:text-primary">Advisories</Link>
@@ -138,3 +138,90 @@ function removeAttachment(attachment) {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.advisory-show > section:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 0.75rem;
+    background: #003629;
+    padding: 0.875rem 1rem;
+    color: white;
+}
+.advisory-show > section:first-child nav,
+.advisory-show > section:first-child p {
+    display: none;
+}
+.advisory-show > section:first-child > div {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+.advisory-show > section:first-child h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    color: white;
+}
+.advisory-show > section:first-child a {
+    min-height: 2rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.68rem;
+    box-shadow: none;
+}
+.advisory-show > .grid:nth-child(2) {
+    gap: 0.5rem;
+}
+.advisory-show > .grid:nth-child(2) article {
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    box-shadow: none;
+}
+.advisory-show > .grid:nth-child(2) article p:first-child {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.advisory-show > .grid:nth-child(2) article h2 {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.advisory-show > .grid:nth-child(2) article p:last-child {
+    margin-top: 0.25rem;
+    font-size: 0.65rem;
+}
+.advisory-show > .grid:nth-child(3) {
+    gap: 0.75rem;
+}
+.advisory-show > .grid:nth-child(3) section {
+    border-radius: 0.5rem;
+    box-shadow: none;
+}
+.advisory-show > .grid:nth-child(3) section > div:first-child {
+    padding: 0.75rem 1rem;
+}
+.advisory-show > .grid:nth-child(3) h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.advisory-show > .grid:nth-child(3) section > div:last-child {
+    padding: 1rem;
+}
+.advisory-show > .grid:nth-child(3) button {
+    min-height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    box-shadow: none;
+}
+.advisory-show article.rounded-2xl {
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+}
+</style>
