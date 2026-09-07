@@ -87,8 +87,8 @@ function submitDocumentAction(document, action) {
     <Head :title="pageTitle" />
 
     <AdminLayout title="Renewal Processing">
-        <div class="space-y-6">
-            <section class="relative overflow-hidden rounded-[26px] bg-[#003629] px-6 py-6 text-white shadow-[0_20px_46px_rgba(15,23,42,0.14)] sm:px-7 lg:px-8">
+        <div class="renewal-record-view space-y-3">
+            <section class="renewal-record-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
                 <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_#003629_0%,_transparent_55%),radial-gradient(at_50%_0%,_#0b503d_0%,_transparent_50%),radial-gradient(at_100%_0%,_#376757_0%,_transparent_48%)]"></div>
                 <div class="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-[100px]"></div>
                 <div class="absolute -left-12 -bottom-20 h-72 w-72 rounded-full bg-[#c0f190]/10 blur-[120px]"></div>
@@ -134,7 +134,7 @@ function submitDocumentAction(document, action) {
                 {{ pageErrors.payment || pageErrors.renewal }}
             </section>
 
-            <section class="-mt-1 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <section class="renewal-summary grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                 <article class="flex items-center gap-3 rounded-[18px] border border-[#dddeda] bg-white p-4 shadow-sm">
                     <div class="rounded-xl bg-[#eef5f1] px-3 py-2.5 text-[0.85rem] font-black text-[#003629]">Y</div>
                     <div>
@@ -395,3 +395,112 @@ function submitDocumentAction(document, action) {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.renewal-record-hero > div:not(.relative) {
+    display: none;
+}
+.renewal-record-hero > .relative {
+    align-items: center;
+    gap: 0.75rem;
+}
+.renewal-record-hero .rounded-full {
+    border-radius: 0.375rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+.renewal-record-hero h1 {
+    margin-top: 0.3rem;
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+}
+.renewal-record-hero h1 + div {
+    margin-top: 0.3rem;
+    font-size: 0.65rem;
+}
+.renewal-record-hero a {
+    min-height: 2rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    box-shadow: none;
+}
+.renewal-summary {
+    gap: 0.5rem;
+}
+.renewal-summary article {
+    gap: 0.6rem;
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    box-shadow: none;
+}
+.renewal-summary article > div:first-child {
+    border-radius: 0.375rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.65rem;
+}
+.renewal-summary article p:first-child {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+}
+.renewal-summary article p:last-child {
+    margin-top: 0.15rem;
+    font-size: 0.9rem;
+    line-height: 1.15rem;
+    font-weight: 600;
+}
+.renewal-record-view > .grid:last-of-type {
+    gap: 0.75rem;
+}
+.renewal-record-view section.rounded-\[20px\] {
+    border-radius: 0.5rem;
+    box-shadow: none;
+}
+.renewal-record-view section.rounded-\[20px\] > div:first-child {
+    padding: 0.7rem 1rem;
+}
+.renewal-record-view section.rounded-\[20px\] h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.renewal-record-view section.rounded-\[20px\] .grid > div {
+    border-radius: 0.375rem;
+    padding: 0.65rem 0.75rem;
+}
+.renewal-record-view section.rounded-\[20px\] .grid > div p:first-child {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+}
+.renewal-record-view section.rounded-\[20px\] .grid > div p:last-child {
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+}
+.renewal-record-view input,
+.renewal-record-view select {
+    min-height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+.renewal-record-view button[type='submit'] {
+    min-height: 2.25rem;
+    border-radius: 0.375rem;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    box-shadow: none;
+}
+.renewal-record-view table th {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    font-size: 0.58rem;
+}
+.renewal-record-view table td {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    font-size: 0.7rem;
+}
+</style>

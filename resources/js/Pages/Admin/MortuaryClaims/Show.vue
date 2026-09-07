@@ -16,7 +16,7 @@ const auditItems = computed(() => {
     const items = [
         {
             title: 'Claim Filed',
-            subtitle: `${props.claim.filedBy || 'System'} • ${props.claim.claimDate || 'No date'}`,
+            subtitle: `${props.claim.filedBy || 'No staff recorded'} • ${props.claim.claimDate || 'No date'}`,
             tone: 'primary',
         },
     ];
@@ -43,8 +43,8 @@ const statusTone = computed(() => {
     <Head :title="claim.claimReference" />
 
     <AdminLayout title="Mortuary Claim Details">
-        <div class="space-y-8 overflow-x-hidden">
-            <section class="relative overflow-hidden bg-[#003629] px-8 py-10 text-white">
+        <div class="mortuary-claim-view space-y-3 overflow-x-hidden">
+            <section class="claim-view-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
                 <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_rgba(27,77,62,1)_0px,_transparent_50%),radial-gradient(at_100%_100%,_rgba(22,51,44,1)_0px,_transparent_50%)]"></div>
                 <div class="absolute inset-0 opacity-5 [background-image:radial-gradient(circle,_#fff_1px,_transparent_1px)] [background-size:40px_40px]"></div>
                 <div class="relative mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -185,7 +185,7 @@ const statusTone = computed(() => {
                             <div class="mt-6 space-y-4 border-t border-[#c0c9c3] pt-6">
                                 <div class="text-sm text-[#191c1c]">{{ claim.claimer.contactNumber || 'No contact number' }}</div>
                                 <div class="text-sm text-[#191c1c]">{{ claim.claimer.address || 'No address recorded' }}</div>
-                                <div class="text-sm text-[#191c1c]">Released By: {{ claim.releasedBy || 'System' }}</div>
+                                <div class="text-sm text-[#191c1c]">Released By: {{ claim.releasedBy || 'No staff recorded' }}</div>
                             </div>
                         </section>
                     </div>
@@ -219,3 +219,28 @@ const statusTone = computed(() => {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.claim-view-hero > div:not(.relative) { display: none; }
+.claim-view-hero > .relative { max-width: none; align-items: center; gap: 0.75rem; }
+.claim-view-hero a { font-size: 0.68rem; font-weight: 600; }
+.claim-view-hero h1 { font-size: 1.25rem; line-height: 1.5rem; font-weight: 600; }
+.claim-view-hero h1 + span { padding: 0.2rem 0.55rem; font-size: 0.58rem; font-weight: 600; }
+.claim-view-hero p { margin-top: 0.2rem; font-size: 0.65rem; }
+.claim-view-hero div > a:last-child { min-height: 2rem; border-radius: 0.375rem; padding: 0 0.75rem; }
+.mortuary-claim-view > .grid { gap: 0.75rem; }
+.mortuary-claim-view > .grid:nth-of-type(1) article { gap: 0.6rem; border-radius: 0.5rem; padding: 0.75rem; box-shadow: none; }
+.mortuary-claim-view > .grid:nth-of-type(1) article > div:first-child { width: 2rem; height: 2rem; font-size: 0.68rem; }
+.mortuary-claim-view > .grid:nth-of-type(1) article p:first-child { font-size: 0.55rem; letter-spacing: 0.08em; }
+.mortuary-claim-view > .grid:nth-of-type(1) article p:last-child { margin-top: 0.15rem; font-size: 0.9rem; line-height: 1.15rem; font-weight: 600; }
+.mortuary-claim-view section { border-radius: 0.5rem; box-shadow: none; }
+.mortuary-claim-view section > div:first-child { padding: 0.75rem 1rem; }
+.mortuary-claim-view section h2 { font-size: 0.875rem; font-weight: 600; }
+.mortuary-claim-view section h3 { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.08em; }
+.mortuary-claim-view .space-y-6 { gap: 0.75rem; }
+.mortuary-claim-view .p-6 { padding: 1rem; }
+.mortuary-claim-view .px-6 { padding-left: 1rem; padding-right: 1rem; }
+.mortuary-claim-view .py-6 { padding-top: 1rem; padding-bottom: 1rem; }
+.mortuary-claim-view .text-xl { font-size: 0.875rem; line-height: 1.25rem; }
+.mortuary-claim-view .text-sm { font-size: 0.7rem; line-height: 1.1rem; }
+</style>

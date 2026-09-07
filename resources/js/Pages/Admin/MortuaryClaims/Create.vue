@@ -99,8 +99,8 @@ function submit() {
     <Head title="File Mortuary Claim" />
 
     <AdminLayout title="File Mortuary Claim">
-        <div class="space-y-8">
-            <section class="relative overflow-hidden bg-[#003629] px-8 py-10 text-white">
+        <div class="mortuary-claim-process space-y-3">
+            <section class="claim-process-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
                 <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_rgba(27,77,62,0.9)_0px,_transparent_50%),radial-gradient(at_100%_100%,_rgba(22,51,44,0.9)_0px,_transparent_50%),radial-gradient(at_50%_50%,_rgba(65,105,24,0.18)_0px,_transparent_50%)]"></div>
                 <div class="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.4)_1px,transparent_1px)] [background-size:40px_40px]"></div>
                 <div class="relative mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -402,3 +402,27 @@ function submit() {
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.claim-process-hero > div:not(.relative) { display: none; }
+.claim-process-hero > .relative { max-width: none; align-items: center; gap: 0.75rem; }
+.claim-process-hero h1 { margin-top: 0.15rem; font-size: 1.25rem; line-height: 1.5rem; font-weight: 600; }
+.claim-process-hero .text-\[0\.72rem\] { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.1em; }
+.claim-process-hero a { min-height: 2rem; border-radius: 0.375rem; padding: 0 0.75rem; font-size: 0.68rem; font-weight: 600; }
+.mortuary-claim-process section { box-shadow: none; }
+.mortuary-claim-process .-mt-10 { margin-top: 0; }
+.mortuary-claim-process .max-w-7xl { max-width: none; }
+.mortuary-claim-process .grid-cols-12 { gap: 0.75rem; }
+.mortuary-claim-process .col-span-4,
+.mortuary-claim-process .col-span-8 { gap: 0.75rem; }
+.mortuary-claim-process section.rounded-xl { border-radius: 0.5rem; padding: 0.875rem; }
+.mortuary-claim-process section.rounded-xl h2 { font-size: 0.875rem; font-weight: 600; }
+.mortuary-claim-process form > div:first-child { padding: 0.75rem 1rem; }
+.mortuary-claim-process form > div:nth-child(2) { gap: 0.75rem; padding: 1rem; }
+.mortuary-claim-process label { gap: 0.25rem; }
+.mortuary-claim-process label > span { font-size: 0.6rem; font-weight: 600; }
+.mortuary-claim-process input:not([type='checkbox']),
+.mortuary-claim-process select { min-height: 2.25rem; border-radius: 0.375rem; padding-top: 0; padding-bottom: 0; font-size: 0.75rem; }
+.mortuary-claim-process textarea { border-radius: 0.375rem; padding: 0.75rem; font-size: 0.75rem; }
+.mortuary-claim-process button { border-radius: 0.375rem; }
+</style>
