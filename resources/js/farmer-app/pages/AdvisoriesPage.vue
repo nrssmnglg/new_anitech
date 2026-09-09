@@ -14,14 +14,6 @@ const { items: advisories, meta, error, loading, fetchPage, fromCache, lastSynce
 let advisoriesPollTimer = null;
 
 const totalAdvisories = computed(() => advisories.value.length);
-const latestPublishedLabel = computed(() => {
-    if (!advisories.value.length) {
-        return 'Waiting for the next field bulletin.';
-    }
-
-    return formatDateTime(advisories.value[0]?.published_at);
-});
-
 const advisoryTone = (advisory) => {
     const audience = String(advisory.audience_type ?? '').toLowerCase();
     const title = String(advisory.title ?? '').toLowerCase();
@@ -53,7 +45,7 @@ const advisoryTag = (advisory) => {
 
 const advisoryMeta = (advisory) => {
     const target = advisory.member_type?.name || advisory.barangay?.name || advisory.audience_type || 'General';
-    return `${target} | ${formatDateTime(advisory.published_at)}`;
+    return target;
 };
 
 function refreshAdvisories() {
@@ -95,38 +87,25 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="farmer-app__advisories-screen">
-        <div class="farmer-app__advisories-backdrop"></div>
-
         <main class="farmer-app__advisories-shell">
-            <AppLoader v-if="loading" />
-            <AppState v-else-if="error" type="error" :message="error" action-label="Retry" @action="fetchPage()" />
+            <header class="farmer-app__advisories-header">
+                <div>
+                    <span>Updates</span>
+                    <h1>Advisories</h1>
+                </div>
+                <strong v-if="advisories.length">{{ totalAdvisories }} available</strong>
+            </header>
+
+            <AppLoader v-if="loading && !advisories.length" />
+            <AppState v-else-if="error && !advisories.length" type="error" :message="error" action-label="Retry" @action="fetchPage()" />
             <AppState
-                v-else-if="fromCache"
+                v-else-if="fromCache && advisories.length"
                 :message="`Showing saved advisories${lastSyncedAt ? ` from ${formatDateTime(lastSyncedAt)}` : ''}.`"
                 action-label="Refresh"
                 @action="fetchPage()"
             />
 
             <div v-if="advisories.length" class="farmer-app__advisories-stack">
-                <header class="farmer-app__advisories-header">
-                    <span class="farmer-app__advisories-eyebrow">Field Broadcasts</span>
-                    <h1>Advisories</h1>
-                    <p>Published advisories targeted for this farmer, refreshed while the app stays open.</p>
-                </header>
-
-                <section class="farmer-app__advisories-summary">
-                    <article class="farmer-app__advisories-summary-card">
-                        <span>Total Bulletins</span>
-                        <strong>{{ totalAdvisories }}</strong>
-                        <small>Loaded in this feed</small>
-                    </article>
-                    <article class="farmer-app__advisories-summary-card farmer-app__advisories-summary-card--accent">
-                        <span>Latest Release</span>
-                        <strong>{{ latestPublishedLabel }}</strong>
-                        <small>Most recent advisory publish time</small>
-                    </article>
-                </section>
-
                 <section class="farmer-app__advisories-list">
                     <RouterLink
                         v-for="advisory in advisories"
@@ -147,8 +126,8 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div class="farmer-app__advisories-card-footer">
-                            <span class="farmer-app__advisories-link">Read full report</span>
-                            <span class="farmer-app__advisories-icon" :class="`is-${advisoryTone(advisory)}`">&gt;</span>
+                            <span class="farmer-app__advisories-link">Read advisory</span>
+                            <span class="farmer-app__advisories-icon" aria-hidden="true">›</span>
                         </div>
                     </RouterLink>
                 </section>
@@ -162,3 +141,151 @@ onBeforeUnmount(() => {
         </main>
     </div>
 </template>
+
+<style scoped>
+.farmer-app__advisories-screen {
+    min-height: 100%;
+    background: transparent;
+}
+
+.farmer-app__advisories-shell {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 12px 12px 28px;
+    display: grid;
+    gap: 10px;
+}
+
+.farmer-app__advisories-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 2px 2px;
+}
+
+.farmer-app__advisories-header div > span {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.farmer-app__advisories-header h1 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.farmer-app__advisories-header > strong {
+    color: var(--pwa-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.farmer-app__advisories-stack,
+.farmer-app__advisories-list {
+    display: grid;
+    gap: 8px;
+}
+
+.farmer-app__advisories-card {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    color: inherit;
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.farmer-app__advisories-card:active {
+    background: var(--pwa-surface-soft);
+}
+
+.farmer-app__advisories-card-head,
+.farmer-app__advisories-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.farmer-app__advisories-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #eef3f0;
+    color: #52645d;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.farmer-app__advisories-pill.is-urgent {
+    background: #fff0f0;
+    color: #b42318;
+}
+
+.farmer-app__advisories-pill.is-warning {
+    background: #fff6df;
+    color: #9a6200;
+}
+
+.farmer-app__advisories-pill.is-info {
+    background: #eaf7f1;
+    color: var(--pwa-green-800);
+}
+
+.farmer-app__advisories-date {
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+}
+
+.farmer-app__advisories-card-body h2 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+
+.farmer-app__advisories-card-body p {
+    margin: 3px 0 0;
+    color: var(--pwa-muted);
+    font-size: 0.72rem;
+    text-transform: capitalize;
+}
+
+.farmer-app__advisories-card-footer {
+    padding-top: 8px;
+    border-top: 1px solid var(--pwa-border);
+}
+
+.farmer-app__advisories-link {
+    color: var(--pwa-green-800);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.farmer-app__advisories-icon {
+    color: var(--pwa-green-800);
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.farmer-app__advisories-pagination-wrap {
+    padding-top: 2px;
+}
+</style>

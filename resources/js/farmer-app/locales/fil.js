@@ -282,7 +282,7 @@ export default {
     },
     otp: {
         verify_title: 'I-verify ang OTP',
-        verify_intro: 'Ilagay ang 6-digit OTP na ipinadala sa email ng iyong farmer account. Sasabihin namin kung invalid, expired, o pansamantalang naka-block ang code.',
+        verify_intro: 'Ilagay ang 6-digit OTP na ipinadala sa email ng iyong farmer account.',
         no_email: 'Walang email na ibinigay',
         verify_failed: 'Hindi ma-verify ang OTP.',
         resend_success: 'Isang bagong OTP ang naipadala na.',

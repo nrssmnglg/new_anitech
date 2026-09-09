@@ -462,10 +462,6 @@ watch(
 
 <template>
     <div class="farmer-app__track-screen">
-        <div class="farmer-app__track-bg"></div>
-        <div class="farmer-app__track-overlay"></div>
-        <div class="farmer-app__track-grain"></div>
-
         <main class="farmer-app__track-shell">
             <section v-if="pageMode === 'start' || !application" class="farmer-app__track-lookup">
                 <div class="farmer-app__track-lookup-icon">
@@ -492,12 +488,9 @@ watch(
                     </button>
 
                     <AppState v-if="error" type="error" :message="error" />
-                    <AppState v-if="success" :message="success" />
+                    <AppState v-if="success" type="success" :message="success" />
 
-                    <p class="farmer-app__track-support">
-                        Having trouble?
-                        <RouterLink :to="{ name: 'login' }">Farmer Login</RouterLink>
-                    </p>
+                    <RouterLink :to="{ name: 'login' }" class="farmer-app__track-login">Farmer Login</RouterLink>
                 </div>
             </section>
 
@@ -513,7 +506,7 @@ watch(
                 </div>
 
                 <AppState v-if="error" type="error" :message="error" />
-                <AppState v-if="success" :message="success" />
+                <AppState v-if="success" type="success" :message="success" />
 
                 <article class="farmer-app__track-card">
                     <div class="farmer-app__track-timeline">
@@ -538,9 +531,6 @@ watch(
                         <div>
                             <h2>{{ application.farmer?.name || 'Application Overview' }}</h2>
                             <p>{{ submissionLabel }} {{ submissionTimestampLabel }}</p>
-                        </div>
-                        <div class="farmer-app__track-overview-mark">
-                            <img :src="brandLogo" alt="AniTech mark">
                         </div>
                     </div>
                     <div class="farmer-app__track-note">
@@ -719,5 +709,53 @@ watch(
     color: #4b625a;
     display: grid;
     gap: 0.45rem;
+}
+
+.farmer-app__track-screen { min-height: 100dvh; background: #f3f7f4; }
+.farmer-app__track-shell { position: relative; z-index: 1; width: min(100%, 760px); min-height: 100dvh; margin: 0 auto; padding: 16px; }
+.farmer-app__track-lookup { width: min(100%, 390px); margin: min(14vh, 90px) auto 0; padding: 18px; border: 1px solid var(--pwa-border); border-radius: 12px; background: #fff; box-shadow: var(--pwa-shadow-soft); text-align: left; }
+.farmer-app__track-lookup-icon { width: 42px; height: 42px; margin: 0 0 12px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.farmer-app__track-lookup-icon img { width: 42px; height: 42px; object-fit: contain; }
+.farmer-app__track-lookup h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; line-height: 1.3; }
+.farmer-app__track-lookup > p { margin: 4px 0 16px; color: var(--pwa-muted); font-size: .8rem; line-height: 1.45; }
+.farmer-app__track-form { display: grid; gap: 12px; }
+.farmer-app__track-field { display: grid; gap: 5px; }
+.farmer-app__track-field span { margin: 0; color: var(--pwa-ink); font-size: .76rem; font-weight: 700; }
+.farmer-app__track-field input { width: 100%; min-height: 44px; padding: 9px 11px !important; border: 1px solid var(--pwa-border); border-radius: 9px; background: #fff; color: var(--pwa-ink); font: inherit; font-size: .82rem; box-shadow: none; }
+.farmer-app__track-primary, .farmer-app__track-secondary { min-height: 44px; padding: 9px 12px; border-radius: 9px; box-shadow: none; font-size: .77rem; }
+.farmer-app__track-primary { background: var(--pwa-green-800); color: #fff; }
+.farmer-app__track-login { min-height: 40px; display: grid; place-items: center; color: var(--pwa-green-800); text-decoration: none; font-size: .76rem; font-weight: 700; }
+.farmer-app__track-status { display: grid; gap: 10px; }
+.farmer-app__track-status-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px; }
+.farmer-app__track-status-head h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; }
+.farmer-app__track-status-pill { min-height: 28px; padding: 5px 8px; border-radius: 999px; font-size: .67rem; }
+.farmer-app__track-card { padding: 12px; border: 1px solid var(--pwa-border); border-radius: 10px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__track-timeline { grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; }
+.farmer-app__track-step { gap: 4px; }
+.farmer-app__track-step-dot { width: 27px; height: 27px; font-size: .68rem; }
+.farmer-app__track-step span { color: var(--pwa-muted); font-size: .63rem; line-height: 1.2; }
+.farmer-app__track-overview { align-items: flex-start; }
+.farmer-app__track-overview h2 { margin: 0; color: var(--pwa-ink); font-size: .95rem; }
+.farmer-app__track-overview p { margin: 3px 0 0; color: var(--pwa-muted); font-size: .7rem; }
+.farmer-app__track-note { margin-top: 9px; padding: 9px; border-radius: 8px; font-size: .74rem; line-height: 1.4; }
+.farmer-app__track-card-head { align-items: center; margin-bottom: 8px; }
+.farmer-app__track-card h3, .farmer-app__track-card-head h3 { margin: 0; color: var(--pwa-ink); font-size: .86rem; }
+.farmer-app__track-card-head > span, .farmer-app__track-card-head > strong { font-size: .7rem; }
+.farmer-app__track-documents { gap: 6px; }
+.farmer-app__track-doc { min-height: 48px; padding: 8px 9px; border-radius: 8px; }
+.farmer-app__track-doc strong { font-size: .76rem; }
+.farmer-app__track-doc p, .farmer-app__track-doc-remark { margin: 2px 0 0; font-size: .66rem; }
+.farmer-app__track-doc-badge { padding: 4px 7px; font-size: .61rem; }
+.farmer-app__track-actions { margin-top: 9px; }
+.farmer-app__track-payment-rows { gap: 0; }
+.farmer-app__track-pay-row, .farmer-app__track-payment-reference, .farmer-app__track-payment-status { min-height: 38px; padding: 7px 0; font-size: .72rem; }
+.farmer-app__track-payment-guide { gap: 3px; padding-left: 16px; font-size: .7rem; line-height: 1.4; }
+.farmer-app__track-back { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--pwa-border); border-radius: 9px; background: #fff; color: var(--pwa-green-800); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
+
+@media (max-width: 520px) {
+    .farmer-app__track-shell { width: 100%; padding: 10px; }
+    .farmer-app__track-lookup { margin-top: 8vh; }
+    .farmer-app__track-timeline { display: flex; overflow-x: auto; justify-content: flex-start; padding-bottom: 3px; }
+    .farmer-app__track-step { min-width: 70px; }
 }
 </style>

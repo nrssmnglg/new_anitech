@@ -27,7 +27,7 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['figures/anitech-mark-official.svg', 'figures/anitech-logo-official.svg'],
             manifest: {
-                name: 'AniTech Farmer PWA',
+                name: 'AniTech',
                 short_name: 'AniTech',
                 description: 'Farmer member portal for AniTech registry services.',
                 theme_color: '#163f31',
@@ -36,11 +36,6 @@ export default defineConfig({
                 start_url: '/farmer/app/',
                 scope: '/farmer/app/',
                 icons: [
-                    {
-                        src: '/figures/anitech-logo.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                    },
                     {
                         src: '/figures/anitech-mark-official.svg',
                         sizes: 'any',

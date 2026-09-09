@@ -22,7 +22,7 @@ class FarmerVuePwaAppTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('AniTech Farmer PWA')
+            ->assertSee('<title>AniTech</title>', false)
             ->assertSee('"authenticated":false', false)
             ->assertSee('"apiBase":"https:\\/\\/localhost:8000\\/api\\/farmer"', false)
             ->assertSee('"appBase":"https:\\/\\/localhost:8000\\/farmer\\/app"', false);

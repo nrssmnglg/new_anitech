@@ -35,6 +35,7 @@ const form = reactive({
 });
 
 const otpValue = computed(() => otpDigits.value.join(''));
+const canVerify = computed(() => otpValue.value.length === 6 && Boolean(form.email));
 
 watch(
     otpValue,
@@ -193,14 +194,13 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="farmer-app__verify-screen">
-        <div class="farmer-app__verify-backdrop"></div>
-
         <main class="farmer-app__verify-shell">
+            <header class="farmer-app__verify-brand">
+                <div class="farmer-app__verify-mark"><img :src="brandLogo" alt="AniTech logo" /></div>
+                <div><strong>AniTech</strong><span>Farmer Portal</span></div>
+            </header>
             <section class="farmer-app__verify-card">
-                <div class="farmer-app__verify-brand">
-                    <div class="farmer-app__verify-mark">
-                        <img :src="brandLogo" alt="AniTech logo" />
-                    </div>
+                <div class="farmer-app__verify-heading">
                     <h1>{{ t('otp.verify_title') }}</h1>
                     <p>{{ t('otp.verify_intro') }}</p>
                 </div>
@@ -236,14 +236,14 @@ onBeforeUnmount(() => {
                     </p>
 
                     <AppState v-if="error" type="error" :message="error" />
-                    <AppState v-if="success" :message="success" />
+                    <AppState v-if="success" type="success" :message="success" />
 
                     <div class="farmer-app__verify-status">
                         <p v-if="otpMeta.retry_seconds_remaining > 0">{{ t('otp.resend_in', { seconds: otpMeta.retry_seconds_remaining }) }}</p>
                         <p v-else class="farmer-app__verify-hint">OTP codes expire after 10 minutes.</p>
                     </div>
 
-                    <button type="submit" class="farmer-app__btn farmer-app__verify-primary" :disabled="loading">
+                    <button type="submit" class="farmer-app__btn farmer-app__verify-primary" :disabled="loading || !canVerify">
                         {{ loading ? t('otp.verifying') : t('otp.verify') }}
                     </button>
                 </form>
@@ -271,7 +271,37 @@ onBeforeUnmount(() => {
                 </div>
             </section>
 
-            <footer class="farmer-app__verify-footer">Secure AniTech Authentication</footer>
         </main>
     </div>
 </template>
+
+<style scoped>
+.farmer-app__verify-screen { min-height: 100dvh; background: #f3f7f4; }
+.farmer-app__verify-shell { width: min(100%, 390px); min-height: 100dvh; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; justify-content: center; }
+.farmer-app__verify-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; text-align: left; }
+.farmer-app__verify-mark { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.farmer-app__verify-mark img { width: 44px; height: 44px; object-fit: contain; }
+.farmer-app__verify-brand strong, .farmer-app__verify-brand span { display: block; }
+.farmer-app__verify-brand strong { color: var(--pwa-green-900); font-size: 1.15rem; }
+.farmer-app__verify-brand span { color: var(--pwa-muted); font-size: .7rem; }
+.farmer-app__verify-card { display: block; width: 100%; padding: 18px; border: 1px solid var(--pwa-border); border-radius: 12px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__verify-heading { margin-bottom: 12px; }
+.farmer-app__verify-heading h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; line-height: 1.3; text-align: left; }
+.farmer-app__verify-heading p { margin: 4px 0 0; color: var(--pwa-muted); font-size: .8rem; line-height: 1.45; }
+.farmer-app__verify-email { min-height: 38px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding: 8px 10px; border: 1px solid var(--pwa-border); border-radius: 8px; background: var(--pwa-surface-soft); color: var(--pwa-muted); font-size: .76rem; overflow-wrap: anywhere; }
+.farmer-app__verify-email-icon { margin: 0; color: var(--pwa-green-700); }
+.farmer-app__verify-form { display: grid; gap: 12px; }
+.farmer-app__verify-otp-group { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+.farmer-app__verify-otp-input { width: 100%; min-width: 0; height: 48px; padding: 0 !important; border: 1px solid var(--pwa-border); border-radius: 8px; background: #fff; color: var(--pwa-ink); font: inherit; font-size: 1.05rem; font-weight: 700; text-align: center; }
+.farmer-app__verify-otp-input:focus { border-color: var(--pwa-green-700); outline: 3px solid rgba(35, 117, 84, .13); }
+.farmer-app__verify-error { margin: 0; color: var(--pwa-danger); font-size: .74rem; }
+.farmer-app__verify-status { min-height: 20px; color: var(--pwa-muted); font-size: .74rem; text-align: center; }
+.farmer-app__verify-status p { margin: 0; }
+.farmer-app__verify-primary { width: 100%; min-height: 46px; border-radius: 10px; background: var(--pwa-green-800); color: #fff; box-shadow: none; }
+.farmer-app__verify-actions { display: grid; gap: 10px; margin-top: 14px; color: var(--pwa-muted); font-size: .76rem; text-align: center; }
+.farmer-app__verify-actions p { margin: 0; }
+.farmer-app__verify-text-button { min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--pwa-green-700); font: inherit; font-weight: 700; cursor: pointer; }
+.farmer-app__verify-support { padding: 9px; border: 1px solid #ead49a; border-radius: 8px; background: #fff9e9; color: #735300; }
+.farmer-app__verify-back { min-height: 44px; display: grid; place-items: center; border: 1px solid var(--pwa-border); border-radius: 10px; color: var(--pwa-green-800); text-decoration: none; font-weight: 700; }
+@media (max-width: 350px) { .farmer-app__verify-otp-group { gap: 4px; } .farmer-app__verify-otp-input { height: 44px; font-size: .95rem; } }
+</style>

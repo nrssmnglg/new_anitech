@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppStore } from '../stores/app';
@@ -17,6 +17,7 @@ const { t } = useLocale();
 
 const shellConfig = window.__FARMER_PWA__ ?? {};
 const logoUrl = shellConfig.logoUrl ?? publicAsset('/figures/anitech-mark-official.svg');
+const notificationCount = computed(() => notifications.unreadCount > 99 ? '99+' : notifications.unreadCount);
 
 const navItems = [
     { name: 'dashboard', key: 'nav.home', icon: 'home' },
@@ -70,11 +71,6 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="pwa-shell farmer-app__shell farmer-app__shell--app">
-        <div v-if="app.statusText || notifications.unreadCount" class="farmer-app__shell-note farmer-app__shell-banner">
-            <span>{{ app.statusText || 'All systems synced.' }}</span>
-            <span v-if="notifications.unreadCount">{{ notifications.unreadCount }} unread alerts</span>
-        </div>
-
         <div v-if="notifications.surfacedItems.length" class="farmer-app__shell-surfaces">
             <article v-for="item in notifications.surfacedItems" :key="item.notification_id" class="farmer-app__shell-surface-card">
                 <div class="farmer-app__shell-surface-copy">
@@ -91,9 +87,8 @@ onBeforeUnmount(() => {
         </div>
 
         <header class="farmer-app__topbar">
-            <RouterLink :to="{ name: 'dashboard' }" class="farmer-app__brand farmer-app__brand--shell">
+            <RouterLink :to="{ name: 'dashboard' }" class="farmer-app__brand farmer-app__brand--shell" aria-label="AniTech home">
                 <img :src="logoUrl" alt="AniTech" />
-                <strong>AniTech</strong>
             </RouterLink>
 
             <div class="farmer-app__shell-controls">
@@ -121,12 +116,17 @@ onBeforeUnmount(() => {
                         Later
                     </button>
                 </div>
-                <RouterLink :to="{ name: 'notifications' }" class="farmer-app__shell-icon-btn">
+                <RouterLink
+                    :to="{ name: 'notifications' }"
+                    class="farmer-app__shell-icon-btn"
+                    :class="{ 'is-active': route.name === 'notifications' }"
+                    :aria-label="notifications.unreadCount ? `${notifications.unreadCount} unread notifications` : 'Notifications'"
+                >
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M12 5.5a4 4 0 0 0-4 4v2.2c0 .5-.17.98-.49 1.36L6 14.8h12l-1.51-1.74a2.06 2.06 0 0 1-.49-1.36V9.5a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                         <path d="M10.2 17.5a2 2 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
-                    <small v-if="notifications.unreadCount">{{ notifications.unreadCount }}</small>
+                    <small v-if="notifications.unreadCount">{{ notificationCount }}</small>
                 </RouterLink>
             </div>
         </header>

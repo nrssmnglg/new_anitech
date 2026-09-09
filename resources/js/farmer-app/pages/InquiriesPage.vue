@@ -217,14 +217,15 @@ onMounted(async () => {
 
 <template>
     <div class="farmer-app__inquiries-screen">
-        <div class="farmer-app__inquiries-backdrop"></div>
-
         <main class="farmer-app__inquiries-shell">
             <div class="farmer-app__inquiries-stack">
                 <header class="farmer-app__inquiries-header">
-                    <h1>Inbox</h1>
+                    <div>
+                        <span>Support</span>
+                        <h1>My Inquiries</h1>
+                    </div>
                     <button type="button" class="farmer-app__inquiries-plus" @click="composing = !composing">
-                        +
+                        {{ composing ? 'Close' : '+ New' }}
                     </button>
                 </header>
 
@@ -270,14 +271,14 @@ onMounted(async () => {
 
                         <label class="farmer-app__inquiries-field">
                             <span>Message</span>
-                            <textarea v-model="form.message" placeholder="Describe your concern in detail..." rows="5"></textarea>
+                            <textarea v-model="form.message" placeholder="Describe your concern..." rows="4"></textarea>
                             <p v-if="submitValidationErrors.message" class="farmer-app__inquiries-error">{{ submitValidationErrors.message }}</p>
                         </label>
 
                         <label class="farmer-app__inquiries-field">
                             <span>Attachments</span>
                             <input type="file" accept="image/*,.pdf" multiple @change="setAttachments" />
-                            <p class="farmer-app__inquiries-hint">Choose photos or files from your device, or use the camera if available. Maximum 5 MB each.</p>
+                            <p class="farmer-app__inquiries-hint">Photos or PDF, up to 5 MB each.</p>
                         </label>
 
                         <div v-if="attachments.length" class="farmer-app__inquiries-attachments">
@@ -316,10 +317,10 @@ onMounted(async () => {
                     </div>
                 </section>
 
-                <AppLoader v-if="loading" />
-                <AppState v-else-if="error" type="error" :message="error" :action-label="t('common.retry')" @action="refreshList()" />
+                <AppLoader v-if="loading && !inquiries.length" />
+                <AppState v-else-if="error && !inquiries.length" type="error" :message="error" :action-label="t('common.retry')" @action="refreshList()" />
                 <AppState
-                    v-else-if="fromCache"
+                    v-else-if="fromCache && inquiries.length"
                     :message="lastSyncedAt ? t('inquiries.saved_from', { time: formatDateTime(lastSyncedAt) }) : t('inquiries.saved')"
                     :action-label="t('common.refresh')"
                     @action="refreshList()"
@@ -336,10 +337,11 @@ onMounted(async () => {
                             <div class="farmer-app__inquiries-card-main">
                                 <strong>{{ inquiry.subject }}</strong>
                                 <div class="farmer-app__inquiries-card-meta">
-                                    <span>{{ inquiry.status }}</span>
+                                    <span class="farmer-app__inquiries-status" :class="statusClass(inquiry.status)">{{ inquiry.status }}</span>
                                     <span>{{ formatDateTime(inquiry.created_at) }}</span>
                                 </div>
                             </div>
+                            <span class="farmer-app__inquiries-chevron" aria-hidden="true">›</span>
                         </RouterLink>
                     </div>
 
@@ -355,36 +357,127 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.farmer-app__inquiries-form-copy,
-.farmer-app__inquiries-history-head > div:first-child {
+.farmer-app__inquiries-screen {
+    min-height: 100%;
+    background: transparent;
+}
+
+.farmer-app__inquiries-shell {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 12px 12px 28px;
+}
+
+.farmer-app__inquiries-stack {
     display: grid;
-    gap: 0.35rem;
+    gap: 10px;
 }
 
 .farmer-app__inquiries-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 12px;
+    padding: 0 2px 2px;
+}
+
+.farmer-app__inquiries-header div > span {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.farmer-app__inquiries-header h1 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
 }
 
 .farmer-app__inquiries-plus {
-    width: 42px;
-    height: 42px;
-    border: 1px solid rgba(0, 54, 41, 0.12);
-    border-radius: 999px;
-    background: #ffffff;
-    color: #0d4738;
-    font-size: 1.5rem;
-    line-height: 1;
-    font-weight: 600;
+    min-width: 64px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--pwa-green-800);
+    border-radius: 9px;
+    background: var(--pwa-green-800);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.farmer-app__inquiries-form-card {
+    padding: 14px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.farmer-app__inquiries-form-head h2 {
+    margin: 0 0 12px;
+    color: var(--pwa-ink);
+    font-size: 1rem;
+}
+
+.farmer-app__inquiries-form {
+    display: grid;
+    gap: 11px;
+}
+
+.farmer-app__inquiries-field {
+    display: grid;
+    gap: 5px;
+}
+
+.farmer-app__inquiries-field > span,
+.farmer-app__inquiries-templates > span {
+    color: #52645d;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.farmer-app__inquiries-field input:not([type='file']),
+.farmer-app__inquiries-field select,
+.farmer-app__inquiries-field textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px !important;
+    border: 1px solid var(--pwa-border) !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: var(--pwa-ink);
+    font-size: 0.82rem !important;
+}
+
+.farmer-app__inquiries-field textarea {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.farmer-app__inquiries-field input[type='file'] {
+    width: 100%;
+    padding: 8px;
+    border: 1px dashed var(--pwa-border);
+    border-radius: 9px;
+    background: var(--pwa-surface-soft);
+    font-size: 0.72rem;
 }
 
 .farmer-app__inquiries-templates,
 .farmer-app__inquiries-template-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.65rem;
+    gap: 6px;
 }
 
 .farmer-app__inquiries-templates {
@@ -392,54 +485,130 @@ onMounted(async () => {
 }
 
 .farmer-app__inquiries-template-chip {
-    border: 1px solid rgba(0, 54, 41, 0.12);
+    min-height: 34px;
+    border: 1px solid var(--pwa-border);
     background: #f7fbf8;
-    color: #0d4738;
+    color: var(--pwa-green-800);
     border-radius: 999px;
-    padding: 0.65rem 0.95rem;
-    font-size: 0.86rem;
+    padding: 0 10px;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
-.farmer-app__inquiries-history-head {
-    display: grid;
-    gap: 1rem;
-}
-
+.farmer-app__inquiries-list,
 .farmer-app__inquiries-attachments {
     display: grid;
-    gap: 0.75rem;
+    gap: 8px;
+}
+
+.farmer-app__inquiries-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px;
+    color: inherit;
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.farmer-app__inquiries-card-main {
+    min-width: 0;
+}
+
+.farmer-app__inquiries-card-main > strong {
+    display: block;
+    color: var(--pwa-ink);
+    font-size: 0.86rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.farmer-app__inquiries-chevron {
+    flex: 0 0 auto;
+    color: var(--pwa-green-800);
+    font-size: 1.2rem;
 }
 
 .farmer-app__inquiries-attachment {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 10px;
     align-items: center;
-    border: 1px solid rgba(0, 54, 41, 0.12);
-    border-radius: 14px;
-    padding: 0.8rem 0.95rem;
-    background: #fbfdfb;
+    border: 1px solid var(--pwa-border);
+    border-radius: 9px;
+    padding: 9px 10px;
+    background: var(--pwa-surface-soft);
 }
 
 .farmer-app__inquiries-hint,
 .farmer-app__inquiries-preview {
-    margin: 0.35rem 0 0;
-    color: #5e736a;
-    font-size: 0.84rem;
+    margin: 0;
+    color: var(--pwa-muted);
+    font-size: 0.7rem;
 }
 
 .farmer-app__inquiries-card-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 0.85rem;
+    gap: 6px 9px;
     align-items: center;
 }
 
 .farmer-app__inquiries-card-meta {
-    margin-top: 0.45rem;
-    font-size: 0.82rem;
-    color: #64746c;
+    margin-top: 5px;
+    font-size: 0.68rem;
+    color: var(--pwa-muted);
+}
+
+.farmer-app__inquiries-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.farmer-app__inquiries-form-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 2px;
+}
+
+.farmer-app__inquiries-primary,
+.farmer-app__inquiries-secondary {
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 9px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.farmer-app__inquiries-primary {
+    border: 1px solid var(--pwa-green-800);
+    background: var(--pwa-green-800);
+    color: #fff;
+}
+
+.farmer-app__inquiries-secondary {
+    border: 1px solid var(--pwa-border);
+    background: #fff;
+    color: #52645d;
+}
+
+.farmer-app__inquiries-error {
+    margin: 0;
+    color: #b42318;
+    font-size: 0.7rem;
+}
+
+.farmer-app__inquiries-pagination-wrap {
+    padding-top: 8px;
 }
 
 .farmer-app__inquiries-status--new {

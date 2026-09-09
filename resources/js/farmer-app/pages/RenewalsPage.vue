@@ -118,11 +118,13 @@ const syncLabel = computed(() => {
 });
 
 const badgeClass = (status) => {
-    if (status === 'approved' || status === 'completed') {
+    const normalized = String(status || '').toLowerCase();
+
+    if (['approved', 'completed', 'paid', 'verified', 'overpaid', 'waived'].includes(normalized)) {
         return 'farmer-app__renewals-badge--approved';
     }
 
-    if (status === 'rejected') {
+    if (['rejected', 'cancelled'].includes(normalized)) {
         return 'farmer-app__renewals-badge--rejected';
     }
 
@@ -291,15 +293,17 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="farmer-app__renewals-screen">
-        <div class="farmer-app__renewals-backdrop"></div>
-
         <main class="farmer-app__renewals-shell">
             <AppLoader v-if="!initialLoadComplete && loading && !renewals.length && !eligibility" />
             <AppState v-else-if="!initialLoadComplete && error && !renewals.length && !eligibility" type="error" :message="error" />
 
             <div v-else class="farmer-app__renewals-stack">
+                <header class="farmer-app__renewals-header">
+                    <div><h1>Renewals</h1><p>Review your current membership renewal.</p></div>
+                    <span v-if="eligibility?.year">{{ eligibility.year }}</span>
+                </header>
                 <AppState v-if="actionError" type="error" :message="actionError" />
-                <AppState v-if="actionSuccess" :message="actionSuccess" />
+                <AppState v-if="actionSuccess" type="success" :message="actionSuccess" />
                 <AppState v-if="renewalBlocker" type="error" :message="`${t('renewals.blocked_title')}: ${renewalBlocker}`" />
                 <AppState v-if="renewalWaiting" :message="`${t('renewals.waiting_title')}: ${renewalWaiting}`" />
 
@@ -358,7 +362,7 @@ onBeforeUnmount(() => {
                         <div class="farmer-app__renewals-card-main">
                             <div class="farmer-app__renewals-card-head">
                                 <span class="farmer-app__renewals-app-no">{{ currentYearPayment?.reference_no || currentYearRenewal.application_no }}</span>
-                                <span class="farmer-app__renewals-badge farmer-app__renewals-badge--approved">
+                                <span class="farmer-app__renewals-badge" :class="badgeClass(currentYearPayment?.status || currentYearRenewal.status)">
                                     {{ currentYearPayment?.status_label || currentYearRenewal.status_label || 'Recorded' }}
                                 </span>
                             </div>
@@ -492,5 +496,38 @@ onBeforeUnmount(() => {
 .farmer-app__renewals-step span.is-current {
     background: #0c6a52;
     color: #fff;
+}
+
+/* Compact renewals page */
+.farmer-app__renewals-screen { min-height: 100dvh; background: #f3f7f4; }
+.farmer-app__renewals-shell { width: min(100%, 760px); margin: 0 auto; padding: 12px 14px 28px; }
+.farmer-app__renewals-stack { display: grid; gap: 10px; }
+.farmer-app__renewals-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px; }
+.farmer-app__renewals-header h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; line-height: 1.3; }
+.farmer-app__renewals-header p { margin: 3px 0 0; color: var(--pwa-muted); font-size: .76rem; }
+.farmer-app__renewals-header > span { padding: 5px 8px; border-radius: 999px; background: var(--pwa-green-100); color: var(--pwa-green-800); font-size: .7rem; font-weight: 700; }
+.farmer-app__renewals-eligibility { gap: 10px; padding: 12px; border-color: var(--pwa-border); border-radius: 10px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__renewals-card-stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 7px; }
+.farmer-app__renewals-card-stats > div { min-width: 0; padding: 9px; border-radius: 8px; background: var(--pwa-surface-soft); }
+.farmer-app__renewals-card-stats span { font-size: .66rem; }.farmer-app__renewals-card-stats strong { margin-top: 3px; font-size: .8rem; overflow-wrap: anywhere; }
+.farmer-app__renewals-checklist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.farmer-app__renewals-checklist-card { padding: 10px; border-color: var(--pwa-border); border-radius: 8px; }
+.farmer-app__renewals-checklist-card > strong { font-size: .76rem; }
+.farmer-app__renewals-checklist-card ul { margin: 6px 0 0; padding-left: 15px; gap: 3px; color: var(--pwa-muted); font-size: .69rem; line-height: 1.4; }
+.farmer-app__renewals-actions { gap: 7px; }
+.farmer-app__renewals-actions .farmer-app__btn { min-height: 44px; padding: 9px 12px; border-radius: 9px; font-size: .76rem; box-shadow: none; }
+.farmer-app__renewals-list { gap: 8px; }
+.farmer-app__renewals-card { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--pwa-border); border-radius: 10px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__renewals-card-main { gap: 7px; }
+.farmer-app__renewals-card-head { gap: 8px; }
+.farmer-app__renewals-app-no { font-size: .68rem; letter-spacing: .04em; }
+.farmer-app__renewals-badge { min-height: 25px; padding: 4px 7px; border-radius: 999px; font-size: .62rem; }
+.farmer-app__renewals-title-block h2 { margin: 0; font-size: .9rem; }.farmer-app__renewals-title-block p { margin: 2px 0 0; font-size: .68rem; }
+.farmer-app__renewals-pagination-wrap { margin-top: 2px; padding: 0; }
+
+@media (max-width: 520px) {
+    .farmer-app__renewals-shell { width: 100%; padding: 10px; }
+    .farmer-app__renewals-checklist-grid { grid-template-columns: 1fr; }
+    .farmer-app__renewals-card-stats { grid-template-columns: 1fr 1fr; }
 }
 </style>

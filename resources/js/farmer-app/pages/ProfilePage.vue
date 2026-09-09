@@ -179,8 +179,6 @@ onMounted(() => run());
 
 <template>
     <div class="farmer-app__profile-screen">
-        <div class="farmer-app__profile-backdrop"></div>
-
         <main class="farmer-app__profile-shell">
             <AppLoader v-if="loading && !profile" />
             <AppState v-else-if="error && !profile" type="error" :message="error" />
@@ -205,16 +203,15 @@ onMounted(() => run());
                     </div>
                 </section>
 
-                <section class="farmer-app__profile-completion">
+                <section v-if="completion.score < 100" class="farmer-app__profile-completion">
                     <div>
-                        <span class="farmer-app__profile-kicker">Profile Completion</span>
-                        <h2>{{ completion.score }}%</h2>
-                        <p>Complete your basic details before starting renewal so staff can review your record faster.</p>
+                        <span class="farmer-app__profile-kicker">Profile completion</span>
+                        <strong>{{ completion.score }}%</strong>
                     </div>
                     <div class="farmer-app__profile-progress">
                         <span :style="{ width: `${completion.score}%` }"></span>
                     </div>
-                    <p v-if="completion.missing_fields?.length">Missing: {{ completion.missing_fields.join(', ') }}</p>
+                    <p v-if="completion.missing_fields?.length">Add: {{ completion.missing_fields.join(', ') }}</p>
                 </section>
 
                 <AppState
@@ -222,6 +219,7 @@ onMounted(() => run());
                     type="error"
                     :message="`Profile warnings: ${dataWarnings.join(' ')}`"
                 />
+                <AppState v-if="formSuccess" :message="formSuccess" />
 
                 <section class="farmer-app__profile-card-grid">
                     <article v-for="card in registryCards" :key="card.label" class="farmer-app__profile-info-card">
@@ -233,7 +231,7 @@ onMounted(() => run());
                 <section class="farmer-app__profile-details-card">
                     <div class="farmer-app__profile-section-head">
                         <h2>Registry Details</h2>
-                        <p>Check your barangay, association, and personal details so mistakes are caught early.</p>
+                        <button v-if="!editing" type="button" class="farmer-app__profile-edit-link" @click="startEditing">Edit</button>
                     </div>
 
                     <div class="farmer-app__profile-detail-grid">
@@ -244,35 +242,13 @@ onMounted(() => run());
                     </div>
                 </section>
 
-                <section class="farmer-app__profile-edit-card">
+                <section v-if="editing" class="farmer-app__profile-edit-card">
                     <div class="farmer-app__profile-section-head">
                         <h2>Update Profile</h2>
                     </div>
 
                     <AppState v-if="formError" type="error" :message="formError" />
-                    <AppState v-if="formSuccess" :message="formSuccess" />
-
-                    <div v-if="!editing" class="farmer-app__profile-edit-preview">
-                        <div class="farmer-app__profile-edit-item">
-                            <span>Civil Status</span>
-                            <strong>{{ profile.profile?.civil_status || 'Not provided' }}</strong>
-                        </div>
-                        <div class="farmer-app__profile-edit-item">
-                            <span>Mobile Number</span>
-                            <strong>{{ profile.profile?.mobile_number || 'Not provided' }}</strong>
-                        </div>
-                        <div class="farmer-app__profile-edit-item farmer-app__profile-edit-item--full">
-                            <span>Address</span>
-                            <strong>{{ profile.profile?.address || 'Not provided' }}</strong>
-                        </div>
-                        <div class="farmer-app__profile-edit-actions">
-                            <button type="button" class="farmer-app__profile-primary-action" @click="startEditing">
-                                Edit Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    <form v-else class="farmer-app__profile-edit-form" @submit.prevent="submit">
+                    <form class="farmer-app__profile-edit-form" @submit.prevent="submit">
                         <label class="farmer-app__profile-field">
                             <span>Civil Status</span>
                             <select v-model="form.civil_status">
@@ -450,5 +426,259 @@ onMounted(() => run());
 
 .farmer-app__profile-edit-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.farmer-app__profile-screen {
+    min-height: 100%;
+    background: transparent;
+}
+
+.farmer-app__profile-shell {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 12px 12px 28px;
+}
+
+.farmer-app__profile-stack {
+    display: grid;
+    gap: 8px;
+}
+
+.farmer-app__profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.farmer-app__profile-avatar-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.farmer-app__profile-avatar {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--pwa-green-800);
+    color: #fff;
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.farmer-app__profile-avatar-badge {
+    display: none;
+}
+
+.farmer-app__profile-heading h1 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.farmer-app__profile-heading p {
+    margin: 2px 0 5px;
+    color: var(--pwa-muted);
+    font-size: 0.7rem;
+}
+
+.farmer-app__profile-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #eaf7f1;
+    color: var(--pwa-green-800);
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+.farmer-app__profile-completion,
+.farmer-app__profile-edit-card {
+    gap: 7px;
+    padding: 11px 12px;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: none;
+}
+
+.farmer-app__profile-completion > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.farmer-app__profile-kicker {
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+}
+
+.farmer-app__profile-completion strong {
+    color: var(--pwa-green-800);
+    font-size: 0.78rem;
+}
+
+.farmer-app__profile-completion p {
+    margin: 0;
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+}
+
+.farmer-app__profile-progress {
+    height: 6px;
+}
+
+.farmer-app__profile-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.farmer-app__profile-info-card {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.farmer-app__profile-info-card span,
+.farmer-app__profile-detail-item span {
+    color: var(--pwa-muted);
+    font-size: 0.65rem;
+}
+
+.farmer-app__profile-info-card strong,
+.farmer-app__profile-detail-item strong {
+    color: var(--pwa-ink);
+    font-size: 0.76rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.farmer-app__profile-details-card {
+    padding: 12px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.farmer-app__profile-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.farmer-app__profile-section-head h2 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 0.88rem;
+}
+
+.farmer-app__profile-edit-link {
+    min-width: 52px;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--pwa-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--pwa-green-800);
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.farmer-app__profile-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--pwa-border);
+}
+
+.farmer-app__profile-detail-item {
+    display: grid;
+    gap: 2px;
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--pwa-border);
+}
+
+.farmer-app__profile-field {
+    gap: 5px;
+}
+
+.farmer-app__profile-field span {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.farmer-app__profile-field select,
+.farmer-app__profile-field input,
+.farmer-app__profile-field textarea {
+    min-height: 44px;
+    padding: 10px 12px !important;
+    border: 1px solid var(--pwa-border) !important;
+    border-radius: 9px !important;
+    font-size: 0.8rem !important;
+}
+
+.farmer-app__profile-field textarea {
+    min-height: 82px;
+}
+
+.farmer-app__profile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.farmer-app__profile-primary-action,
+.farmer-app__profile-secondary-action {
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 9px;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.farmer-app__profile-primary-action {
+    border: 1px solid var(--pwa-green-800);
+    background: var(--pwa-green-800);
+    color: #fff;
+}
+
+.farmer-app__profile-secondary-action {
+    border: 1px solid var(--pwa-border);
+    background: #fff;
+    color: #52645d;
+}
+
+.farmer-app__profile-danger-action {
+    color: #b42318;
+}
+
+@media (max-width: 380px) {
+    .farmer-app__profile-card-grid,
+    .farmer-app__profile-detail-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

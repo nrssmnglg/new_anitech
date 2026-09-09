@@ -284,7 +284,7 @@ export default {
     },
     otp: {
         verify_title: 'Verify OTP',
-        verify_intro: 'Enter the 6-digit OTP sent to your farmer account email. We will tell you if the code is invalid, expired, or temporarily blocked.',
+        verify_intro: 'Enter the 6-digit OTP sent to your farmer account email.',
         no_email: 'No email provided',
         verify_failed: 'Unable to verify OTP.',
         resend_success: 'A new OTP has been sent.',

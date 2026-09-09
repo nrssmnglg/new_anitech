@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref, onMounted } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppState from '../components/ui/AppState.vue';
 import { useDraft } from '../composables/useDraft';
 import { useLocale } from '../composables/useLocale';
@@ -392,19 +392,25 @@ const submitDocuments = async () => {
 
         uploadProgress.value = 100;
         application.value = latestApplication;
-        success.value = 'Documents uploaded successfully. Redirecting to tracking...';
-        lookup.current_step = 'complete';
 
         await Promise.all(
             selectedFiles.map(([type]) => removeFile(type)),
         );
 
-        window.setTimeout(() => {
-            window.location.href = farmerPublicUrl('/farmer/upload-complete', {
-                application_no: lookup.application_no,
-                birth_date: lookup.birth_date,
-            });
-        }, 700);
+        const remainingDocuments = (latestApplication?.documents ?? []).filter((document) => !document.uploaded);
+        if (remainingDocuments.length > 0) {
+            success.value = `${selectedFiles.length} document${selectedFiles.length === 1 ? '' : 's'} uploaded. Add the remaining required documents to continue.`;
+            lookup.current_step = 'upload';
+        } else {
+            success.value = 'Documents uploaded successfully. Redirecting to tracking...';
+            lookup.current_step = 'complete';
+            window.setTimeout(() => {
+                window.location.href = farmerPublicUrl('/farmer/upload-complete', {
+                    application_no: lookup.application_no,
+                    birth_date: lookup.birth_date,
+                });
+            }, 700);
+        }
     } catch (err) {
         error.value = extractApiMessage(err, t('upload.upload_failed'));
         validationErrors.value = extractValidationErrors(err);
@@ -412,12 +418,6 @@ const submitDocuments = async () => {
         uploading.value = false;
     }
 };
-
-onMounted(() => {
-    if (lookup.current_step === 'upload' && lookup.application_no && lookup.birth_date) {
-        trackApplication();
-    }
-});
 
 const resetWorkflow = () => {
     application.value = null;
@@ -433,8 +433,6 @@ onMounted(() => {
 
 <template>
     <div class="farmer-app__upload-screen">
-        <div class="farmer-app__upload-backdrop"></div>
-
         <main class="farmer-app__upload-shell">
             <section class="farmer-app__upload-hero">
                 <h1>{{ t('upload.title') }}</h1>
@@ -471,7 +469,7 @@ onMounted(() => {
                 </div>
 
                 <AppState v-if="error" type="error" :message="error" />
-                <AppState v-if="success" :message="success" />
+                <AppState v-if="success" type="success" :message="success" />
                 <div v-if="formattedValidationErrors.length" class="farmer-app__upload-error-list">
                     <strong>Exact error details</strong>
                     <ul>
@@ -604,13 +602,6 @@ onMounted(() => {
                 </div>
             </section>
 
-            <div class="farmer-app__upload-help">
-                <RouterLink :to="{ name: 'track' }">Need help with your application? Track your request</RouterLink>
-            </div>
-
-            <footer class="farmer-app__upload-footer">
-                <p>&copy; 2026 AniTech. All rights reserved.</p>
-            </footer>
         </main>
     </div>
 </template>
@@ -1160,5 +1151,55 @@ onMounted(() => {
         align-items: stretch;
         gap: 0.8rem;
     }
+}
+
+/* Compact upload workflow */
+.farmer-app__upload-screen { min-height: 100dvh; overflow: visible; background: #f3f7f4; }
+.farmer-app__upload-shell { width: min(100%, 760px); min-height: 100dvh; margin: 0 auto; padding: 16px; }
+.farmer-app__upload-hero { margin-bottom: 12px; padding: 0; text-align: left; }
+.farmer-app__upload-hero h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; line-height: 1.3; }
+.farmer-app__upload-hero p { margin: 3px 0 0; color: var(--pwa-muted); font-size: .78rem; line-height: 1.4; }
+.farmer-app__upload-card { width: 100%; padding: 14px; border: 1px solid var(--pwa-border); border-radius: 12px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__upload-lookup, .farmer-app__upload-workflow { gap: 12px; }
+.farmer-app__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.farmer-app__upload-field { gap: 5px; }
+.farmer-app__upload-field span { margin: 0; color: var(--pwa-ink); font-size: .75rem; }
+.farmer-app__upload-field input { min-height: 44px; padding: 9px 11px !important; border: 1px solid var(--pwa-border); border-radius: 9px; background: #fff; font-size: .82rem; box-shadow: none; }
+.farmer-app__upload-primary { min-height: 44px; padding: 9px 12px; border-radius: 9px; background: var(--pwa-green-800); box-shadow: none; font-size: .78rem; }
+.farmer-app__upload-progress { grid-template-columns: 1fr auto; gap: 10px; padding: 11px; border-radius: 9px; background: var(--pwa-surface-soft); }
+.farmer-app__upload-progress-main { gap: 9px; }
+.farmer-app__upload-progress-count { width: 42px; height: 42px; border-radius: 9px; font-size: .8rem; }
+.farmer-app__upload-progress-main strong { font-size: .8rem; }
+.farmer-app__upload-progress-main p, .farmer-app__upload-progress-meta p, .farmer-app__upload-progress-meta small { margin: 2px 0 0; font-size: .7rem; }
+.farmer-app__upload-checklist { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 7px; }
+.farmer-app__upload-check { padding: 8px 9px; border-radius: 8px; font-size: .7rem; }
+.farmer-app__upload-list { gap: 9px; }
+.farmer-app__upload-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 11px; border-radius: 10px; box-shadow: none; }
+.farmer-app__upload-item-head { gap: 8px; }
+.farmer-app__upload-item-icon { width: 34px; height: 34px; border-radius: 8px; }
+.farmer-app__upload-item-icon img { width: 22px; height: 22px; }
+.farmer-app__upload-item-head h3 { margin: 0; font-size: .85rem; }
+.farmer-app__upload-item-head p, .farmer-app__upload-remark { margin: 2px 0 0; font-size: .68rem; }
+.farmer-app__upload-item-actions { align-items: flex-end; gap: 6px; }
+.farmer-app__upload-badge { min-height: 24px; padding: 4px 7px; border-radius: 999px; font-size: .62rem; }
+.farmer-app__upload-action-row { gap: 6px; }
+.farmer-app__upload-picker { min-width: 64px; min-height: 40px; padding: 7px 9px; border-radius: 8px; font-size: .7rem; }
+.farmer-app__upload-selected { grid-column: 1 / -1; gap: 8px; padding: 9px; border-radius: 8px; }
+.farmer-app__upload-selected-head strong { font-size: .72rem; }
+.farmer-app__upload-link { min-height: 40px; padding: 7px 9px; font-size: .7rem; }
+.farmer-app__upload-preview { max-height: 150px; border-radius: 8px; object-fit: contain; }
+.farmer-app__upload-actions { gap: 8px; }
+.farmer-app__upload-actions .farmer-app__upload-primary { flex: 1; }
+.farmer-app__upload-meter { height: 7px; border-radius: 999px; }
+.farmer-app__upload-error-list { padding: 10px; border-radius: 8px; font-size: .72rem; }
+
+@media (max-width: 560px) {
+    .farmer-app__upload-shell { width: 100%; padding: 10px; }
+    .farmer-app__upload-grid { grid-template-columns: 1fr; }
+    .farmer-app__upload-progress { grid-template-columns: 1fr; }
+    .farmer-app__upload-progress-meta { text-align: left; }
+    .farmer-app__upload-item { grid-template-columns: 1fr; }
+    .farmer-app__upload-item-actions { align-items: flex-start; }
+    .farmer-app__upload-actions { align-items: stretch; flex-direction: column; }
 }
 </style>

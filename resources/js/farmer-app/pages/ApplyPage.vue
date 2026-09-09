@@ -436,8 +436,6 @@ loadReapplyContext();
 
 <template>
     <div class="farmer-app__apply-screen">
-        <div class="farmer-app__apply-backdrop" aria-hidden="true"></div>
-
         <main class="farmer-app__apply-shell">
             <section class="farmer-app__apply-card">
                 <div class="farmer-app__apply-brand">
@@ -465,8 +463,7 @@ loadReapplyContext();
                 <AppState v-if="reapplyMessage" :message="reapplyMessage" />
                 <AppState v-if="duplicateGuidance" type="error" :message="duplicateGuidance" />
                 <AppState v-if="error" type="error" :message="error" />
-                <AppState v-if="success" :message="`${success} Redirecting to upload.`" />
-                <AppState v-if="!error && !success" :message="autosaveMessage" />
+                <AppState v-if="success" type="success" :message="`${success} Redirecting to upload.`" />
 
                 <form class="farmer-app__apply-form" @submit.prevent="submit">
                     <template v-if="currentStep === 1">
@@ -672,9 +669,6 @@ loadReapplyContext();
                 </form>
             </section>
 
-            <div class="farmer-app__apply-help">
-                Need help? Contact <span>support@anitech.com</span>
-            </div>
         </main>
     </div>
 </template>
@@ -758,5 +752,50 @@ loadReapplyContext();
     .farmer-app__apply-steps {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+}
+
+.farmer-app__apply-screen { min-height: 100dvh; background: #f3f7f4; }
+.farmer-app__apply-shell { width: min(100%, 760px); min-height: 100dvh; margin: 0 auto; padding: 16px; }
+.farmer-app__apply-card { display: block; width: 100%; padding: 16px; border: 1px solid var(--pwa-border); border-radius: 12px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
+.farmer-app__apply-brand { display: grid; grid-template-columns: 42px minmax(0, 1fr); column-gap: 10px; align-items: center; justify-items: stretch; margin-bottom: 14px; text-align: left; }
+.farmer-app__apply-mark { grid-row: 1 / span 2; width: 42px; height: 42px; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.farmer-app__apply-mark img { width: 42px; height: 42px; object-fit: contain; }
+.farmer-app__apply-brand h1 { margin: 0; color: var(--pwa-ink); font-size: 1.15rem; line-height: 1.25; text-align: left; }
+.farmer-app__apply-brand p { margin: 2px 0 0; color: var(--pwa-muted); font-size: .76rem; line-height: 1.4; }
+.farmer-app__apply-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+.farmer-app__apply-step { min-width: 0; min-height: 58px; align-content: center; justify-items: center; gap: 3px; padding: 6px 3px; border: 0; border-bottom: 3px solid var(--pwa-border); border-radius: 8px 8px 0 0; background: transparent; text-align: center; cursor: pointer; }
+.farmer-app__apply-step span { width: 25px; height: 25px; font-size: .7rem; }
+.farmer-app__apply-step strong { max-width: 100%; color: var(--pwa-muted); font-size: .64rem; line-height: 1.2; }
+.farmer-app__apply-step.is-active { border-color: var(--pwa-green-700); background: var(--pwa-green-100); }
+.farmer-app__apply-step.is-active strong { color: var(--pwa-green-900); }
+.farmer-app__apply-step.is-complete { border-color: var(--pwa-green-500); }
+.farmer-app__apply-form { display: grid; gap: 12px; }
+.farmer-app__apply-section-label { margin: 0; padding: 0 0 8px; border-bottom: 1px solid var(--pwa-border); color: var(--pwa-green-800); font-size: .7rem; letter-spacing: .1em; }
+.farmer-app__apply-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.farmer-app__apply-field { display: grid; gap: 5px; }
+.farmer-app__apply-field span { margin: 0; color: var(--pwa-ink); font-size: .75rem; font-weight: 700; }
+.farmer-app__apply-field input,
+.farmer-app__apply-field select,
+.farmer-app__apply-field textarea { width: 100%; min-height: 44px; padding: 9px 11px !important; border: 1px solid var(--pwa-border); border-radius: 9px; background: #fff; color: var(--pwa-ink); font: inherit; font-size: .82rem; box-shadow: none; }
+.farmer-app__apply-field textarea { min-height: 70px; resize: vertical; }
+.farmer-app__field-error, .farmer-app__field-hint { margin: 0; font-size: .7rem; line-height: 1.35; }
+.farmer-app__apply-review { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.farmer-app__apply-review-card, .farmer-app__apply-documents { padding: 11px; border-radius: 9px; background: var(--pwa-surface-soft); }
+.farmer-app__apply-review-card small { margin-bottom: 3px; font-size: .64rem; letter-spacing: .08em; }
+.farmer-app__apply-review-card strong { font-size: .84rem; }
+.farmer-app__apply-review-card p, .farmer-app__apply-documents, .farmer-app__apply-review-note { font-size: .74rem; line-height: 1.4; }
+.farmer-app__apply-documents ul { margin-top: 7px; gap: 3px; }
+.farmer-app__apply-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 2px; }
+.farmer-app__apply-actions .farmer-app__btn { width: 100%; min-height: 44px; padding: 9px 11px; border-radius: 9px; font-size: .76rem; box-shadow: none; }
+.farmer-app__apply-actions > :last-child { grid-column: 1 / -1; min-height: 38px; border: 0; background: transparent; }
+.farmer-app__apply-submit { background: var(--pwa-green-800); color: #fff; }
+.farmer-app__apply-secondary { border: 1px solid var(--pwa-border); background: #fff; color: var(--pwa-green-800); }
+
+@media (max-width: 520px) {
+    .farmer-app__apply-shell { padding: 10px; }
+    .farmer-app__apply-card { padding: 13px; }
+    .farmer-app__apply-grid, .farmer-app__apply-review { grid-template-columns: 1fr; }
+    .farmer-app__apply-step strong { display: none; }
+    .farmer-app__apply-step { min-height: 42px; }
 }
 </style>

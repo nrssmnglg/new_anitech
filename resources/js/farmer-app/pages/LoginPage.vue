@@ -28,18 +28,17 @@ const submit = async () => {
 
 <template>
     <div class="farmer-app__login-screen">
-        <div class="farmer-app__login-decor" aria-hidden="true">
-            <div class="farmer-app__login-orb farmer-app__login-orb--top"></div>
-            <div class="farmer-app__login-orb farmer-app__login-orb--bottom"></div>
-        </div>
-
         <div class="pwa-shell farmer-app__shell farmer-app__shell--login">
             <header class="farmer-app__login-brand">
                 <img :src="brandLogo" alt="AniTech logo">
-                <h1>AniTech</h1>
+                <div><h1>AniTech</h1><p>Farmer Portal</p></div>
             </header>
 
             <main class="farmer-app__login-card">
+                <div class="farmer-app__login-heading">
+                    <h2>Sign in</h2>
+                    <p>Access your farmer account.</p>
+                </div>
                 <div v-if="sessionHint" class="farmer-app__login-session-note">{{ sessionHint }}</div>
 
                 <div v-if="auth.error.value" class="farmer-app__error">{{ auth.error.value }}</div>
@@ -92,7 +91,13 @@ const submit = async () => {
                                 @click="showPassword = !showPassword"
                                 :aria-label="showPassword ? 'Hide password' : 'Show password'"
                             >
-
+                                <svg v-if="showPassword" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M3 3l18 18M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 5.2A9.8 9.8 0 0 1 12 5c5.2 0 8.5 5.2 8.5 7a7.6 7.6 0 0 1-1.5 2.7M6.2 6.2C4.5 7.6 3.5 10 3.5 12c0 1.8 3.3 7 8.5 7 1.3 0 2.5-.3 3.5-.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <svg v-else viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M3.5 12c0-1.8 3.3-7 8.5-7s8.5 5.2 8.5 7-3.3 7-8.5 7-8.5-5.2-8.5-7Z" stroke="currentColor" stroke-width="1.8" />
+                                    <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                                </svg>
                             </button>
                         </div>
                         <small v-if="auth.validationErrors.value.password" class="farmer-app__field-error">
@@ -101,7 +106,7 @@ const submit = async () => {
                     </label>
 
                     <button type="submit" class="farmer-app__btn farmer-app__btn--primary farmer-app__btn--hero" :disabled="auth.loading.value">
-                        {{ auth.loading.value ? 'SIGNING IN...' : 'SIGN IN' }}
+                        {{ auth.loading.value ? 'Signing in...' : 'Sign in' }}
                     </button>
                 </form>
 
@@ -118,18 +123,179 @@ const submit = async () => {
                     </RouterLink>
                 </div>
 
-                <div class="farmer-app__login-security">
-                    <span class="farmer-app__login-security-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 3.5 18.5 6v5.7c0 4.1-2.7 7.8-6.5 8.8-3.8-1-6.5-4.7-6.5-8.8V6L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                            <path d="m9.5 12 1.7 1.7 3.3-3.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    <div>
-                        <strong>Your farm data is protected</strong>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
 </template>
+
+<style scoped>
+.farmer-app__login-screen {
+    min-height: 100dvh;
+    background: #f3f7f4;
+}
+
+.farmer-app__shell--login {
+    width: min(100%, 390px);
+    min-height: 100dvh;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.farmer-app__login-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+.farmer-app__login-brand img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+.farmer-app__login-brand h1,
+.farmer-app__login-brand p {
+    margin: 0;
+}
+
+.farmer-app__login-brand h1 {
+    color: var(--pwa-green-900);
+    font-size: 1.2rem;
+    line-height: 1.2;
+}
+
+.farmer-app__login-brand p {
+    color: var(--pwa-muted);
+    font-size: .72rem;
+}
+
+.farmer-app__login-card {
+    padding: 18px;
+    border: 1px solid var(--pwa-border);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: var(--pwa-shadow-soft);
+}
+
+.farmer-app__login-heading {
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+.farmer-app__login-heading h2 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 1.2rem !important;
+    text-align: left !important;
+}
+
+.farmer-app__login-heading p {
+    margin: 3px 0 0;
+    color: var(--pwa-muted);
+    font-size: .82rem;
+}
+
+.farmer-app__auth-form--polished {
+    gap: 14px;
+}
+
+.farmer-app__login-field {
+    gap: 6px;
+}
+
+.farmer-app__login-field > span,
+.farmer-app__login-field-head > span {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: .78rem;
+}
+
+.farmer-app__input-wrap input {
+    min-height: 46px;
+    padding: 10px 44px 10px 42px !important;
+    border-radius: 10px;
+}
+
+.farmer-app__field-icon {
+    position: absolute;
+    z-index: 1;
+    left: 13px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.farmer-app__field-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.farmer-app__input-toggle {
+    right: 2px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+}
+
+.farmer-app__input-toggle svg {
+    width: 19px;
+    height: 19px;
+}
+
+.farmer-app__btn--hero {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: none;
+}
+
+.farmer-app__login-divider {
+    margin: 14px 0;
+}
+
+.farmer-app__login-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.farmer-app__login-actions .farmer-app__btn {
+    min-height: 44px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: .76rem;
+    text-align: center;
+    border: 1px solid var(--pwa-border);
+    background: #fff;
+    color: var(--pwa-green-800);
+    box-shadow: none;
+}
+
+.farmer-app__login-actions .farmer-app__btn:last-child {
+    border-color: transparent;
+    background: var(--pwa-green-100);
+}
+
+.farmer-app__login-session-note,
+.farmer-app__error {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: .78rem;
+}
+
+@media (max-width: 340px) {
+    .farmer-app__login-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

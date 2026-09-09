@@ -80,12 +80,26 @@ const router = createRouter({
             name: 'reset-verify',
             component: ResetVerifyPage,
             meta: { guestOnly: true },
+            beforeEnter: (to) => {
+                if (!String(to.query.email ?? '').trim()) {
+                    return { name: 'forgot-password' };
+                }
+
+                return true;
+            },
         },
         {
             path: '/reset-password/new',
             name: 'reset-new-password',
             component: NewPasswordPage,
             meta: { guestOnly: true },
+            beforeEnter: (to) => {
+                if (!String(to.query.email ?? '').trim()) {
+                    return { name: 'forgot-password' };
+                }
+
+                return true;
+            },
         },
         {
             path: '/',

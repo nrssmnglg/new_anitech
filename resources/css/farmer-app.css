@@ -635,6 +635,284 @@
     }
 }
 
+/* Farmer PWA visual foundation
+   This final cascade layer keeps legacy page styles on one compact design system. */
+:root {
+    --pwa-green-950: #0d3528;
+    --pwa-green-900: #124c39;
+    --pwa-green-800: #176047;
+    --pwa-green-700: #237554;
+    --pwa-green-500: #4f9b70;
+    --pwa-green-100: #e8f4ed;
+    --pwa-surface: #ffffff;
+    --pwa-surface-soft: #f5f8f6;
+    --pwa-ink: #17231e;
+    --pwa-muted: #607069;
+    --pwa-border: #d8e2dc;
+    --pwa-danger: #b4233c;
+    --pwa-warning: #946200;
+    --pwa-radius-sm: 8px;
+    --pwa-radius-md: 10px;
+    --pwa-radius-lg: 12px;
+    --pwa-shadow: 0 8px 24px rgba(18, 76, 57, 0.08);
+    --pwa-shadow-soft: 0 3px 12px rgba(18, 76, 57, 0.07);
+}
+
+body.pwa-body {
+    font-size: 15px;
+    line-height: 1.5;
+    background: #f3f7f4;
+}
+
+.farmer-app :where(h1, h2, h3, p) {
+    overflow-wrap: anywhere;
+}
+
+.farmer-app :where(button, a, input, select, textarea) {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.farmer-app :where(button, a, input, select, textarea):focus-visible {
+    outline: 3px solid rgba(35, 117, 84, 0.24);
+    outline-offset: 2px;
+}
+
+.farmer-app__shell--app {
+    padding-top: 68px;
+    padding-bottom: 96px;
+}
+
+.farmer-app__topbar {
+    min-height: 60px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--pwa-border);
+    box-shadow: 0 3px 12px rgba(18, 76, 57, 0.06);
+}
+
+.farmer-app__brand--shell img {
+    width: 36px;
+    height: 36px;
+}
+
+.farmer-app__panel,
+.farmer-app__card,
+.farmer-app__stat,
+.farmer-app__list-item,
+.farmer-app__auth-card,
+.farmer-app__notifications-card,
+.pwa-card,
+.pwa-hero,
+.pwa-member-hero,
+.pwa-stage-card,
+.pwa-document-card,
+.pwa-track-document,
+.pwa-dialog__panel {
+    border-radius: var(--pwa-radius-lg);
+    border-color: var(--pwa-border);
+    box-shadow: var(--pwa-shadow-soft);
+}
+
+.farmer-app__panel,
+.farmer-app__auth-card,
+.farmer-app__card,
+.pwa-card,
+.pwa-hero,
+.pwa-member-hero {
+    padding: 14px;
+}
+
+.farmer-app__stack,
+.farmer-app__list,
+.farmer-app__auth-form,
+.pwa-main {
+    gap: 12px;
+}
+
+.farmer-app__section-title {
+    margin-bottom: 10px;
+}
+
+.farmer-app__section-title h1,
+.pwa-title {
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
+    line-height: 1.25;
+}
+
+.farmer-app__section-title h2,
+.pwa-card__header h2 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+}
+
+.farmer-app__section-title p,
+.pwa-copy {
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.farmer-app__stat,
+.farmer-app__list-item,
+.farmer-app__stage-item,
+.pwa-member-stat,
+.pwa-payment-panel,
+.pwa-notice-row,
+.pwa-advisory-list li {
+    padding: 12px;
+    border-radius: var(--pwa-radius-md);
+}
+
+.farmer-app__field {
+    gap: 6px;
+}
+
+.farmer-app__field input,
+.farmer-app__field textarea,
+.farmer-app__field select,
+.farmer-app__select,
+.farmer-app__input-wrap input,
+.farmer-app__file {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: var(--pwa-radius-md);
+    border-color: var(--pwa-border);
+}
+
+.farmer-app__btn,
+.farmer-app__shell-chip,
+.farmer-app__notifications-primary,
+.farmer-app__notifications-secondary,
+.pwa-btn,
+.pwa-install-btn {
+    min-height: 44px;
+    border-radius: var(--pwa-radius-md);
+    padding: 10px 14px;
+}
+
+.farmer-app__btn--tiny {
+    min-height: 44px;
+    padding: 8px 12px;
+}
+
+.farmer-app__shell-icon-btn,
+.farmer-app__shell-avatar-btn,
+.pwa-header__alert {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: var(--pwa-radius-md);
+}
+
+.farmer-app__badge,
+.farmer-app__notifications-pill {
+    min-height: 28px;
+    padding: 5px 9px;
+}
+
+.farmer-app__nav {
+    min-height: 72px;
+    gap: 4px;
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--pwa-border);
+    box-shadow: 0 -3px 12px rgba(18, 76, 57, 0.06);
+}
+
+.farmer-app__nav a {
+    min-height: 56px;
+    padding: 6px 4px;
+    border-radius: var(--pwa-radius-sm);
+}
+
+.farmer-app__empty,
+.farmer-app__error,
+.farmer-app__state {
+    border-radius: var(--pwa-radius-md);
+}
+
+.farmer-app__state {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--pwa-border);
+    background: var(--pwa-surface-soft);
+    color: var(--pwa-muted);
+}
+
+.farmer-app__state--error {
+    border-color: #f2c7cf;
+    background: #fff3f5;
+    color: var(--pwa-danger);
+}
+
+.farmer-app__state--success {
+    border-color: #bfe3cd;
+    background: #edf8f1;
+    color: var(--pwa-green-800);
+}
+
+.farmer-app__state-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--pwa-radius-sm);
+    background: rgba(18, 76, 57, 0.08);
+}
+
+.farmer-app__state-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.farmer-app__state-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.farmer-app__state-actions {
+    margin-top: 8px;
+}
+
+.farmer-app__loader {
+    min-height: 96px;
+}
+
+.farmer-app__loader-spinner {
+    width: 30px;
+    height: 30px;
+}
+
+.farmer-app__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (min-width: 768px) {
+    .farmer-app__shell--app {
+        padding-top: 72px;
+        padding-bottom: 92px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .farmer-app *,
+    .farmer-app *::before,
+    .farmer-app *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
 .farmer-app__badge--pending {
     background: #fff4d6;
     color: #9a6a00;
@@ -3221,6 +3499,116 @@ label:has(> .farmer-app__field-error) textarea {
 @media (min-width: 768px) {
     .farmer-app__setup-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Final compact cascade: page-specific rules above cannot enlarge shared UI. */
+body.pwa-body .farmer-app :is(.farmer-app__panel, .farmer-app__card, .farmer-app__stat, .farmer-app__list-item, .farmer-app__auth-card, .farmer-app__notifications-card, .pwa-card, .pwa-hero, .pwa-member-hero, .pwa-stage-card, .pwa-document-card, .pwa-track-document, .pwa-dialog__panel) {
+    border-radius: var(--pwa-radius-lg);
+    border-color: var(--pwa-border);
+    box-shadow: var(--pwa-shadow-soft);
+}
+
+body.pwa-body .farmer-app :is(.farmer-app__panel, .farmer-app__auth-card, .farmer-app__card, .pwa-card, .pwa-hero, .pwa-member-hero) {
+    padding: 14px;
+}
+
+body.pwa-body .farmer-app :is(.farmer-app__stat, .farmer-app__list-item, .farmer-app__stage-item, .pwa-member-stat, .pwa-payment-panel, .pwa-notice-row, .pwa-advisory-list li) {
+    padding: 12px;
+    border-radius: var(--pwa-radius-md);
+}
+
+body.pwa-body .farmer-app :is(.farmer-app__field input, .farmer-app__field textarea, .farmer-app__field select, .farmer-app__select, .farmer-app__input-wrap input, .farmer-app__file) {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: var(--pwa-radius-md);
+    border-color: var(--pwa-border);
+}
+
+body.pwa-body .farmer-app :is(.farmer-app__btn, .farmer-app__shell-chip, .farmer-app__notifications-primary, .farmer-app__notifications-secondary, .pwa-btn, .pwa-install-btn) {
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: var(--pwa-radius-md);
+}
+
+body.pwa-body .farmer-app .farmer-app__section-title h1,
+body.pwa-body .farmer-app .pwa-title {
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
+    line-height: 1.25;
+}
+
+body.pwa-body .farmer-app .farmer-app__nav {
+    min-height: 72px;
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+}
+
+/* Compact farmer identity in the top bar. Bottom navigation intentionally unchanged. */
+.farmer-app__identity {
+    min-width: 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid var(--pwa-border);
+    border-radius: var(--pwa-radius-md);
+    background: var(--pwa-surface);
+    color: var(--pwa-ink);
+    text-decoration: none;
+}
+
+.farmer-app__identity.is-active,
+.farmer-app__shell-icon-btn.is-active {
+    border-color: rgba(35, 117, 84, 0.34);
+    background: var(--pwa-green-100);
+    color: var(--pwa-green-900);
+}
+
+.farmer-app__identity-avatar {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--pwa-green-900);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.farmer-app__identity-copy {
+    min-width: 0;
+    max-width: 128px;
+    line-height: 1.15;
+}
+
+.farmer-app__identity-copy strong,
+.farmer-app__identity-copy small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.farmer-app__identity-copy strong {
+    font-size: 0.78rem;
+}
+
+.farmer-app__identity-copy small {
+    margin-top: 3px;
+    color: var(--pwa-muted);
+    font-size: 0.66rem;
+}
+
+@media (max-width: 420px) {
+    .farmer-app__identity-copy {
+        max-width: 82px;
+    }
+
+    .farmer-app__shell-controls {
+        gap: 6px;
     }
 }
 

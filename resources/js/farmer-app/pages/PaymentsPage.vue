@@ -16,6 +16,8 @@ const { items: payments, meta, error, loading, fetchPage } = usePaginatedFetch(a
 }, {}, { cacheKey: 'payments' });
 
 const paymentRecords = computed(() => payments.value ?? []);
+const verifiedPayments = computed(() => paymentRecords.value.filter((payment) => payment.status_key === 'verified'));
+const verifiedTotal = computed(() => verifiedPayments.value.reduce((total, payment) => total + Number(payment.amount_paid || 0), 0));
 
 const paymentStatusClass = (statusKey) => ({
     verified: 'farmer-app__payments-history-badge--success',
@@ -64,9 +66,24 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="farmer-app__payments-screen">
-        <div class="farmer-app__payments-backdrop"></div>
-
         <main class="farmer-app__payments-shell">
+            <header class="farmer-app__payments-header">
+                <div>
+                    <span>Payments</span>
+                    <h1>Payment History</h1>
+                </div>
+                <div v-if="paymentRecords.length" class="farmer-app__payments-summary">
+                    <div>
+                        <span>Verified</span>
+                        <strong>{{ verifiedPayments.length }}</strong>
+                    </div>
+                    <div>
+                        <span>Total paid</span>
+                        <strong>{{ formatMoney(verifiedTotal) }}</strong>
+                    </div>
+                </div>
+            </header>
+
             <AppLoader v-if="loading && !paymentRecords.length" />
             <AppState v-else-if="error && !paymentRecords.length" type="error" :message="error" />
 
@@ -88,15 +105,15 @@ onBeforeUnmount(() => {
 
                     <div class="farmer-app__payments-history-grid">
                         <div>
-                            <span>Date Paid</span>
+                            <span>Date paid</span>
                             <strong>{{ formatDateTime(payment.paid_at) }}</strong>
                         </div>
                         <div>
-                            <span>Amount Paid</span>
+                            <span>Amount paid</span>
                             <strong>{{ formatMoney(payment.amount_paid) }}</strong>
                         </div>
                         <div>
-                            <span>Payment Method</span>
+                            <span>Method</span>
                             <strong>{{ payment.payment_method?.name ?? 'No method recorded' }}</strong>
                         </div>
                         <div>
@@ -120,18 +137,78 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.farmer-app__payments-screen {
+    min-height: 100%;
+    background: transparent;
+}
+
+.farmer-app__payments-shell {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 12px 12px 28px;
+    gap: 10px;
+}
+
+.farmer-app__payments-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 2px 2px;
+}
+
+.farmer-app__payments-header > div:first-child > span {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.farmer-app__payments-header h1 {
+    margin: 0;
+    color: var(--pwa-ink);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.farmer-app__payments-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.farmer-app__payments-summary div {
+    display: grid;
+    gap: 1px;
+    text-align: right;
+}
+
+.farmer-app__payments-summary span {
+    color: var(--pwa-muted);
+    font-size: 0.67rem;
+}
+
+.farmer-app__payments-summary strong {
+    color: var(--pwa-green-900);
+    font-size: 0.82rem;
+}
+
 .farmer-app__payments-history-list {
     display: grid;
-    gap: 12px;
+    gap: 8px;
 }
 
 .farmer-app__payments-history-card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(22, 63, 49, 0.1);
-    box-shadow: 0 10px 24px rgba(20, 48, 37, 0.06);
-    backdrop-filter: blur(10px);
-    border-radius: 22px;
-    padding: 18px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    box-shadow: none;
+    border-radius: 12px;
+    padding: 12px;
 }
 
 .farmer-app__payments-history-head {
@@ -139,7 +216,7 @@ onBeforeUnmount(() => {
     align-items: start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
 .farmer-app__payments-history-head strong,
@@ -149,29 +226,39 @@ onBeforeUnmount(() => {
 }
 
 .farmer-app__payments-history-head p {
-    margin: 6px 0 0;
-    color: #737874;
+    margin: 2px 0 0;
+    color: var(--pwa-muted);
+    font-size: 0.75rem;
 }
 
 .farmer-app__payments-history-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 8px 12px;
+    padding-top: 9px;
+    border-top: 1px solid var(--pwa-border);
 }
 
 .farmer-app__payments-history-grid span {
     display: block;
-    color: #737874;
-    font-size: 0.8rem;
+    color: var(--pwa-muted);
+    font-size: 0.68rem;
+    line-height: 1.3;
+}
+
+.farmer-app__payments-history-grid strong {
+    margin-top: 2px;
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 .farmer-app__payments-history-badge {
     display: inline-flex;
     align-items: center;
-    min-height: 30px;
-    padding: 0 12px;
+    min-height: 25px;
+    padding: 0 9px;
     border-radius: 999px;
-    font-size: 0.74rem;
+    font-size: 0.66rem;
     font-weight: 800;
 }
 
@@ -194,5 +281,23 @@ onBeforeUnmount(() => {
 .farmer-app__payments-history-badge--pending {
     background: #f4f4f5;
     color: #52525b;
+}
+
+.farmer-app__payments-pagination-wrap {
+    padding-top: 2px;
+}
+
+@media (max-width: 520px) {
+    .farmer-app__payments-header {
+        align-items: flex-start;
+    }
+
+    .farmer-app__payments-summary {
+        gap: 10px;
+    }
+
+    .farmer-app__payments-history-head {
+        align-items: flex-start;
+    }
 }
 </style>

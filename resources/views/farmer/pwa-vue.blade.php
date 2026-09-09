@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#163f31">
-    <title>AniTech Farmer PWA</title>
+    <title>AniTech</title>
+    <link rel="icon" type="image/svg+xml" sizes="any" href="{{ asset('figures/anitech-mark-official.svg') }}?v=3">
+    <link rel="shortcut icon" href="{{ asset('figures/anitech-mark-official.svg') }}?v=3">
+    <link rel="apple-touch-icon" href="{{ asset('figures/anitech-mark-official.svg') }}?v=3">
     @php
         $assetBase = url()->to(rtrim(str_replace('/index.php', '', request()->getBaseUrl()), '/'));
     @endphp
