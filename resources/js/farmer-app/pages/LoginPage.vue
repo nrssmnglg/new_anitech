@@ -151,9 +151,14 @@ const submit = async () => {
 }
 
 .farmer-app__login-brand img {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
+    width: 58px !important;
+    height: 58px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50%;
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: cover;
 }
 
 .farmer-app__login-brand h1,
@@ -269,10 +274,17 @@ const submit = async () => {
 }
 
 .farmer-app__login-actions .farmer-app__btn {
-    min-height: 44px;
-    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 56px;
+    min-height: 56px;
+    padding: 6px 8px;
+    box-sizing: border-box;
     border-radius: 10px;
     font-size: .76rem;
+    line-height: 1.25;
     text-align: center;
     border: 1px solid var(--pwa-border);
     background: #fff;
@@ -296,6 +308,11 @@ const submit = async () => {
 @media (max-width: 340px) {
     .farmer-app__login-actions {
         grid-template-columns: 1fr;
+    }
+
+    .farmer-app__login-actions .farmer-app__btn {
+        height: 46px;
+        min-height: 46px;
     }
 }
 </style>
