@@ -15,3 +15,7 @@ Schedule::command('app:send-renewal-reminders')
 Schedule::command('app:process-queued-notifications')
     ->everyTenMinutes()
     ->withoutOverlapping();
+
+Schedule::command('app:reject-stale-incomplete-membership-applications')
+    ->dailyAt('00:15')
+    ->withoutOverlapping();

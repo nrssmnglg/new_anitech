@@ -90,6 +90,7 @@ class MembershipApplicationController extends Controller
             ->withQueryString();
 
         $applications->through(function (MembershipApplication $application): array {
+            $automaticallyClosed = $application->rejection_reason === MembershipApplicationRejectionReason::UNABLE_TO_FOLLOW_UP->value;
             $verifiedCount = $application->documents
                 ->filter(fn (FarmerDocument $document) => $document->verification_status === DocumentVerificationStatus::VERIFIED)
                 ->count();
@@ -145,10 +146,10 @@ class MembershipApplicationController extends Controller
                 ],
                 'accountability' => $this->accountability($application),
                 'quickActions' => [
-                    'canReview' => true,
-                    'canMarkComplete' => $application->source !== 'walk_in',
-                    'canRequestCorrection' => true,
-                    'canForwardToAdmin' => ! (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false),
+                    'canReview' => ! $automaticallyClosed,
+                    'canMarkComplete' => ! $automaticallyClosed && $application->source !== 'walk_in',
+                    'canRequestCorrection' => ! $automaticallyClosed,
+                    'canForwardToAdmin' => ! $automaticallyClosed && ! (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false),
                 ],
             ];
         });
@@ -472,6 +473,7 @@ class MembershipApplicationController extends Controller
         $settledStatuses = [AssessmentStatus::PAID, AssessmentStatus::OVERPAID, AssessmentStatus::WAIVED];
         $paymentSettled = in_array($assessment?->status, $settledStatuses, true);
         $paymentRecorded = $payments->isNotEmpty();
+        $automaticallyClosed = $membershipApplication->rejection_reason === MembershipApplicationRejectionReason::UNABLE_TO_FOLLOW_UP->value;
         $paymentReady = $checklistInitialized
             && $documentsComplete
             && $membershipApplication->status !== ApplicationStatus::REJECTED
@@ -568,7 +570,7 @@ class MembershipApplicationController extends Controller
                 'isWalkIn' => $membershipApplication->source === 'walk_in',
                 'isMobile' => $membershipApplication->source === 'mobile',
                 'checklistInitialized' => $checklistInitialized,
-                'canInitializeChecklist' => $membershipApplication->source === 'walk_in' && ! $checklistInitialized,
+                'canInitializeChecklist' => ! $automaticallyClosed && $membershipApplication->source === 'walk_in' && ! $checklistInitialized,
                 'documentsComplete' => $documentsComplete,
                 'requiredCount' => $requiredDocuments->count(),
                 'verifiedCount' => $verifiedRequiredCount,
@@ -607,8 +609,8 @@ class MembershipApplicationController extends Controller
                 'needsResubmission' => (bool) $document->getAttribute('needs_resubmission'),
                 'validationNotes' => $document->getAttribute('validation_notes') ?? [],
                 'actions' => [
-                    'reviewUrl' => route('admin.membership-applications.documents.review', [$membershipApplication, $document]),
-                    'attachScanUrl' => route('admin.membership-applications.documents.attach-scan', [$membershipApplication, $document]),
+                    'reviewUrl' => $automaticallyClosed ? null : route('admin.membership-applications.documents.review', [$membershipApplication, $document]),
+                    'attachScanUrl' => $automaticallyClosed ? null : route('admin.membership-applications.documents.attach-scan', [$membershipApplication, $document]),
                     'viewUrl' => $document->getAttribute('upload_present')
                         ? route('admin.membership-applications.documents.view', [$membershipApplication, $document])
                         : null,
@@ -645,8 +647,8 @@ class MembershipApplicationController extends Controller
                 ->values()
                 ->all(),
             'permissions' => [
-                'canApproveDecision' => (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false),
-                'canRejectDecision' => (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false),
+                'canApproveDecision' => ! $automaticallyClosed && ((Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false)),
+                'canRejectDecision' => ! $automaticallyClosed && ((Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false)),
             ],
             'features' => [
                 'walkInAttachScanEnabled' => false,
@@ -881,6 +883,13 @@ class MembershipApplicationController extends Controller
         ];
 
         return MembershipApplication::query()
+            ->when(! ($filters['status'] ?? null), function (Builder $query): void {
+                $query->where(function (Builder $activeQueue): void {
+                    $activeQueue->where('status', '!=', $this->databaseStatusValue(ApplicationStatus::REJECTED))
+                        ->orWhereNull('rejection_reason')
+                        ->orWhere('rejection_reason', '!=', MembershipApplicationRejectionReason::UNABLE_TO_FOLLOW_UP->value);
+                });
+            })
             ->when($filters['source'] ?? null, fn (Builder $query, string $sourceValue) => $query->where('source', $sourceValue))
             ->when($filters['status'] ?? null, function (Builder $query, string $status): void {
                 if ($status === 'pending') {

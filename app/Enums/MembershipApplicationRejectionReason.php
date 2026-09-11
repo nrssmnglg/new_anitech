@@ -9,6 +9,7 @@ enum MembershipApplicationRejectionReason: string
     case DUPLICATE_FARMER_RECORD = 'duplicate_farmer_record';
     case NOT_ELIGIBLE = 'not_eligible';
     case UNVERIFIED_REQUIREMENTS = 'unverified_requirements';
+    case UNABLE_TO_FOLLOW_UP = 'unable_to_follow_up_or_continue_pending';
     case OTHER = 'other';
 
     public function label(): string
@@ -19,6 +20,7 @@ enum MembershipApplicationRejectionReason: string
             self::DUPLICATE_FARMER_RECORD => 'Duplicate Farmer Record',
             self::NOT_ELIGIBLE => 'Not Eligible',
             self::UNVERIFIED_REQUIREMENTS => 'Unverified Requirements',
+            self::UNABLE_TO_FOLLOW_UP => 'Unable to Follow Up or Continue Pending Application',
             self::OTHER => 'Other',
         };
     }
