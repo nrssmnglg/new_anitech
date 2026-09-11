@@ -61,10 +61,10 @@ export default {
     },
     track: {
         title: 'Track Application',
-        intro: 'Enter your details to check progress, document status, correction notes, and payment steps.',
+        intro: 'Enter your application number to check progress, document status, correction notes, and payment steps.',
         check_status: 'Check Status',
         checking_status: 'Checking Status...',
-        lookup_failed: 'We could not load your application status. Check the application number and birth date, then try again.',
+        lookup_failed: 'We could not load your application status. Check the application number, then try again.',
         payment_failed: 'We could not continue to payment. Try again in a moment or contact the office if the problem continues.',
         blocked_title: 'Why this record is blocked',
         waiting_title: 'What it is waiting for',

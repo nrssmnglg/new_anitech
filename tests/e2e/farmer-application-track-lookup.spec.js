@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Farmer Application — tracking lookup', () => {
     test.setTimeout(75_000);
 
-    test('finds a submitted sample application from its number and birth date', async ({ page }) => {
+    test('finds a submitted sample application from its number only', async ({ page }) => {
         const id = Date.now();
         const birthDate = '1990-01-15';
         const fullName = `Playwright Lookup${id}`;
@@ -33,7 +33,7 @@ test.describe('Farmer Application — tracking lookup', () => {
 
         await page.goto('/farmer/app/track', { waitUntil: 'domcontentloaded' });
         await page.getByLabel('Application Number').fill(applicationNo);
-        await page.getByLabel('Date of Birth').fill(birthDate);
+        await expect(page.getByLabel('Date of Birth')).toHaveCount(0);
         await page.getByRole('button', { name: 'Check Status' }).click();
 
         await expect(page).toHaveURL(/\/farmer\/app\/track-status\?application_no=/);

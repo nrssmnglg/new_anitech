@@ -130,7 +130,6 @@ class MembershipApplicationController extends Controller
     {
         $application = $this->resolveTrackedApplication(
             (string) $request->validated('application_no'),
-            (string) $request->validated('birth_date'),
         );
 
         return response()->json([
@@ -419,17 +418,19 @@ class MembershipApplicationController extends Controller
         ]);
     }
 
-    private function resolveTrackedApplication(string $applicationNo, string $birthDate): MembershipApplication
+    private function resolveTrackedApplication(string $applicationNo, ?string $birthDate = null): MembershipApplication
     {
         $application = MembershipApplication::query()
             ->with(['farmer.profile', 'farmer.memberType', 'documents', 'paymentAssessments'])
             ->where('application_no', $applicationNo)
-            ->whereHas('farmer.profile', fn ($query) => $query->whereDate('birth_date', $birthDate))
+            ->when($birthDate !== null, fn ($query) => $query->whereHas('farmer.profile', fn ($profile) => $profile->whereDate('birth_date', $birthDate)))
             ->first();
 
         if (! $application) {
             throw ValidationException::withMessages([
-                'application_no' => 'No membership application matched the application number and birth date you entered.',
+                'application_no' => $birthDate === null
+                    ? 'No membership application matched the application number you entered.'
+                    : 'No membership application matched the application number and birth date you entered.',
             ]);
         }
 

@@ -24,7 +24,7 @@ const lookup = ref({
 });
 
 const pageMode = computed(() => route.name === 'track-status' ? 'status' : 'start');
-const hasLookup = computed(() => Boolean(lookup.value.application_no && lookup.value.birth_date));
+const hasLookup = computed(() => Boolean(lookup.value.application_no.trim()));
 const cachedStatusTimestamp = ref('');
 const blockerMessage = computed(() => {
     if (!application.value) {
@@ -329,10 +329,10 @@ function restoreLookup() {
 
     try {
         const stored = JSON.parse(window.localStorage.getItem('anitech_mobile_application') || 'null');
-        if (stored?.application_no && stored?.birth_date) {
+        if (stored?.application_no) {
             lookup.value = {
                 application_no: String(stored.application_no),
-                birth_date: String(stored.birth_date),
+                birth_date: String(stored.birth_date ?? ''),
             };
         }
     } catch {
@@ -340,7 +340,7 @@ function restoreLookup() {
 }
 
 function cacheKey() {
-    return `application-track:${lookup.value.application_no}:${lookup.value.birth_date}`;
+    return `application-track:${lookup.value.application_no}`;
 }
 
 function hydrateCachedApplication() {
@@ -358,7 +358,7 @@ function hydrateCachedApplication() {
 
 async function loadApplication() {
     if (!hasLookup.value) {
-        error.value = 'Enter your application number and birth date.';
+        error.value = 'Enter your application number.';
         application.value = null;
         return;
     }
@@ -369,7 +369,6 @@ async function loadApplication() {
             name: 'track-status',
             query: {
                 application_no: lookup.value.application_no,
-                birth_date: lookup.value.birth_date,
             },
         });
         return;
@@ -382,10 +381,11 @@ async function loadApplication() {
 
     try {
         const response = await farmerApi.get('/application/track', {
-            params: lookup.value,
+            params: { application_no: lookup.value.application_no.trim() },
         });
 
         application.value = response?.data?.data ?? null;
+        lookup.value.birth_date = application.value?.farmer?.birth_date ?? '';
         cachedStatusTimestamp.value = new Date().toISOString();
         writeStorage(cacheKey(), {
             application: application.value,
@@ -475,12 +475,6 @@ watch(
                         <span>Application Number</span>
                         <input v-model="lookup.application_no" type="text" placeholder="e.g. AT-2024-8832">
                         <small v-if="validationErrors.application_no" class="farmer-app__field-error">{{ validationErrors.application_no }}</small>
-                    </label>
-
-                    <label class="farmer-app__track-field">
-                        <span>Date of Birth</span>
-                        <input v-model="lookup.birth_date" type="date" class="farmer-app__date-input">
-                        <small v-if="validationErrors.birth_date" class="farmer-app__field-error">{{ validationErrors.birth_date }}</small>
                     </label>
 
                     <button type="button" class="farmer-app__btn farmer-app__track-primary" :disabled="loading" @click="loadApplication">

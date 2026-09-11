@@ -59,7 +59,7 @@ class MobileMembershipApplicationTest extends TestCase
         $this->assertDatabaseCount('membership_applications', 0);
     }
 
-    public function test_mobile_application_can_be_tracked_by_application_number_and_birth_date(): void
+    public function test_mobile_application_can_be_tracked_by_application_number_only(): void
     {
         [$barangay, $association] = $this->makeLookups();
 
@@ -68,7 +68,6 @@ class MobileMembershipApplicationTest extends TestCase
 
         $trackResponse = $this->getJson(route('api.v1.membership-applications.track', [
             'application_no' => $applicationNo,
-            'birth_date' => '1995-04-15',
         ]));
 
         $trackResponse->assertOk();

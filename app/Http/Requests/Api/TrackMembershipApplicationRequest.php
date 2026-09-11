@@ -15,7 +15,6 @@ class TrackMembershipApplicationRequest extends JsonFormRequest
     {
         return [
             'application_no' => ['required', 'string', 'max:50'],
-            'birth_date' => ['required', 'date'],
         ];
     }
 }

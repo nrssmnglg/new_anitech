@@ -59,10 +59,10 @@ export default {
     },
     track: {
         title: 'Subaybayan ang Application',
-        intro: 'Ilagay ang iyong detalye para makita ang progreso, status ng dokumento, correction notes, at mga hakbang sa bayad.',
+        intro: 'Ilagay ang iyong application number para makita ang progreso, status ng dokumento, correction notes, at mga hakbang sa bayad.',
         check_status: 'Suriin ang Status',
         checking_status: 'Sinusuri ang Status...',
-        lookup_failed: 'Hindi namin makuha ang status ng application mo. Suriin ang application number at birth date, tapos subukan muli.',
+        lookup_failed: 'Hindi namin makuha ang status ng application mo. Suriin ang application number, tapos subukan muli.',
         payment_failed: 'Hindi kami makapagpatuloy sa bayad ngayon. Subukan muli mamaya o makipag-ugnayan sa opisina kung tuloy ang problema.',
         blocked_title: 'Bakit naka-block ang record na ito',
         waiting_title: 'Ano ang hinihintay nito',
