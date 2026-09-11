@@ -1,14 +1,16 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
-import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppStore } from '../stores/app';
 import { useNotificationStore } from '../stores/notifications';
 import { useSyncQueueStore } from '../stores/syncQueue';
 import { useLocale } from '../composables/useLocale';
 import { publicAsset } from '../utils/asset';
+import { resolveFarmerTarget } from '../utils/navigation';
 
 const route = useRoute();
+const router = useRouter();
 const auth = useAuthStore();
 const app = useAppStore();
 const notifications = useNotificationStore();
@@ -32,6 +34,16 @@ const installApp = async () => {
 
 const dismissInstall = () => {
     app.dismissInstallPrompt();
+};
+
+const openSurfacedNotification = async (item) => {
+    if (!item.is_read) {
+        await notifications.markAsRead(item.recipient_id).catch(() => {});
+    }
+
+    notifications.dismissSurfaced(item.notification_id);
+    const target = resolveFarmerTarget(item.action?.target_url ?? item.target_url);
+    await router.push(target ?? { name: 'notifications' });
 };
 
 watch(
@@ -72,17 +84,25 @@ onBeforeUnmount(() => {
 <template>
     <div class="pwa-shell farmer-app__shell farmer-app__shell--app">
         <div v-if="notifications.surfacedItems.length" class="farmer-app__shell-surfaces">
-            <article v-for="item in notifications.surfacedItems" :key="item.notification_id" class="farmer-app__shell-surface-card">
+            <article
+                v-for="item in notifications.surfacedItems"
+                :key="item.notification_id"
+                class="farmer-app__shell-surface-card"
+                role="button"
+                tabindex="0"
+                @click="openSurfacedNotification(item)"
+                @keydown.enter="openSurfacedNotification(item)"
+            >
                 <div class="farmer-app__shell-surface-copy">
                     <strong>{{ item.subject }}</strong>
                     <p>{{ item.message }}</p>
                 </div>
-                <div class="farmer-app__shell-surface-actions">
-                    <RouterLink :to="{ name: 'notifications' }" class="farmer-app__shell-surface-open">Open</RouterLink>
-                    <button type="button" class="farmer-app__shell-surface-dismiss" @click="notifications.dismissSurfaced(item.notification_id)">
-                        Dismiss
-                    </button>
-                </div>
+                <button
+                    type="button"
+                    class="farmer-app__shell-surface-dismiss"
+                    aria-label="Dismiss notification"
+                    @click.stop="notifications.dismissSurfaced(item.notification_id)"
+                >×</button>
             </article>
         </div>
 
@@ -166,3 +186,77 @@ onBeforeUnmount(() => {
         </nav>
     </div>
 </template>
+
+<style scoped>
+.farmer-app__shell-surfaces {
+    position: fixed;
+    z-index: 60;
+    top: 62px;
+    right: 10px;
+    left: 10px;
+    display: grid;
+    gap: 6px;
+    max-width: 420px;
+    margin-left: auto;
+    pointer-events: none;
+}
+
+.farmer-app__shell-surface-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 38px 10px 11px;
+    border: 1px solid var(--pwa-border);
+    border-left: 3px solid var(--pwa-green-800);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--pwa-shadow-soft);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.farmer-app__shell-surface-card:focus-visible {
+    outline: 2px solid var(--pwa-green-800);
+    outline-offset: 2px;
+}
+
+.farmer-app__shell-surface-copy {
+    min-width: 0;
+}
+
+.farmer-app__shell-surface-copy strong {
+    display: block;
+    color: var(--pwa-ink);
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.farmer-app__shell-surface-copy p {
+    display: -webkit-box;
+    margin: 3px 0 0;
+    overflow: hidden;
+    color: var(--pwa-muted);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.farmer-app__shell-surface-dismiss {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--pwa-muted);
+    font-size: 1rem;
+}
+</style>

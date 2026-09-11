@@ -38,12 +38,19 @@ const emit = defineEmits(['action']);
             </svg>
         </span>
         <div class="farmer-app__state-content">
-            <div>{{ message }}</div>
+            <div class="farmer-app__state-message">{{ message }}</div>
             <div v-if="actionLabel" class="farmer-app__actions farmer-app__state-actions">
-            <button type="button" class="farmer-app__btn farmer-app__btn--soft farmer-app__btn--tiny" @click="emit('action')">
-                {{ actionLabel }}
-            </button>
+                <button type="button" class="farmer-app__state-action" @click="emit('action')">{{ actionLabel }}</button>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.farmer-app__state { gap: 8px; padding: 10px; border-radius: 10px; box-shadow: none; }
+.farmer-app__state-icon { flex-basis: 28px; width: 28px; height: 28px; }
+.farmer-app__state-icon svg { width: 16px; height: 16px; }
+.farmer-app__state-message { padding-top: 4px; font-size: .75rem; line-height: 1.45; }
+.farmer-app__state-actions { margin-top: 6px; }
+.farmer-app__state-action { min-height: 36px; padding: 0 11px; border: 1px solid currentColor; border-radius: 8px; background: transparent; color: inherit; font-size: .7rem; font-weight: 800; }
+</style>

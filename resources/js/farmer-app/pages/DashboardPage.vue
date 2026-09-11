@@ -140,8 +140,6 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="farmer-app__dashboard-screen">
-        <div class="farmer-app__dashboard-backdrop"></div>
-
         <main class="farmer-app__dashboard-shell">
             <AppLoader v-if="loading && !advisories.length" />
             <AppState v-else-if="error && !advisories.length" type="error" :message="error" :action-label="t('common.retry')" @action="fetchFresh" />
@@ -204,34 +202,36 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.farmer-app__dashboard-screen { min-height: 100%; background: transparent; }
+.farmer-app__dashboard-shell { position: relative; width: 100%; max-width: 760px; margin: 0 auto; padding: 12px 12px 28px; }
+.farmer-app__dashboard-stack { display: grid; gap: 8px; }
 .farmer-app__dashboard-feed-card {
     display: grid;
-    gap: 14px;
-    padding: 18px;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(22, 63, 49, 0.08);
-    box-shadow: 0 14px 30px rgba(20, 48, 37, 0.06);
-    backdrop-filter: blur(10px);
+    gap: 9px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--pwa-border);
+    box-shadow: none;
     cursor: pointer;
 }
 
 .farmer-app__dashboard-feed-list {
     display: grid;
-    gap: 14px;
+    gap: 8px;
 }
 
 .farmer-app__dashboard-feed-publisher {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 9px;
 }
 
 .farmer-app__dashboard-feed-logo {
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     border-radius: 999px;
-    padding: 7px;
+    padding: 5px;
     background: #eff7f1;
     border: 1px solid rgba(22, 63, 49, 0.08);
 }
@@ -243,21 +243,21 @@ onBeforeUnmount(() => {
 
 .farmer-app__dashboard-feed-publisher-copy strong {
     color: #10231b;
-    font-size: 0.98rem;
+    font-size: 0.8rem;
 }
 
 .farmer-app__dashboard-feed-publisher-copy small {
     color: #737874;
-    font-size: 0.8rem;
+    font-size: 0.66rem;
 }
 
 .farmer-app__dashboard-feed-pill {
     display: inline-flex;
     align-items: center;
-    min-height: 28px;
-    padding: 0 10px;
+    min-height: 23px;
+    padding: 0 8px;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.62rem;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -279,26 +279,27 @@ onBeforeUnmount(() => {
 
 .farmer-app__dashboard-feed-card-body {
     display: grid;
-    gap: 10px;
+    gap: 6px;
 }
 
 .farmer-app__dashboard-feed-card-body strong {
     color: #10231b;
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     line-height: 1.35;
 }
 
 .farmer-app__dashboard-feed-card-body p {
     margin: 0;
     color: #737874;
-    line-height: 1.5;
+    font-size: 0.75rem;
+    line-height: 1.45;
 }
 
 .farmer-app__dashboard-feed-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding-top: 6px;
+    gap: 8px;
+    padding-top: 8px;
     border-top: 1px solid rgba(22, 63, 49, 0.08);
 }
 
@@ -306,13 +307,14 @@ onBeforeUnmount(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 42px;
+    gap: 5px;
+    min-height: 36px;
     border: 1px solid rgba(22, 63, 49, 0.08);
-    border-radius: 14px;
+    border-radius: 8px;
     background: #fff;
     color: #365247;
     font: inherit;
+    font-size: 0.7rem;
     font-weight: 700;
     cursor: pointer;
 }
@@ -322,4 +324,8 @@ onBeforeUnmount(() => {
     color: #1a6b4a;
     border-color: rgba(26, 107, 74, 0.18);
 }
+
+.farmer-app__dashboard-feed-action > span:first-child { display: none; }
+.farmer-app__dashboard-feed-action:first-child::before { content: 'Like'; }
+.farmer-app__dashboard-feed-action:last-child::before { content: 'Dislike'; }
 </style>
