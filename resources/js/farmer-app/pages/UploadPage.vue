@@ -502,18 +502,6 @@ onMounted(() => {
                         @action="router.push({ name: 'track-status', query: { application_no: lookup.application_no, birth_date: lookup.birth_date } })"
                     />
 
-                    <div class="farmer-app__upload-checklist">
-                        <article
-                            v-for="document in uploadChecklist"
-                            :key="document.type"
-                            class="farmer-app__upload-check"
-                            :class="{ 'is-flagged': document.needs_correction }"
-                        >
-                            <strong>{{ document.label }}</strong>
-                            <span>{{ document.statusLabel }}</span>
-                        </article>
-                    </div>
-
                     <div class="farmer-app__upload-list">
                         <article
                             v-for="document in uploadChecklist"
@@ -530,13 +518,12 @@ onMounted(() => {
                                     <p>{{ document.verification_status_label }}</p>
                                     <small v-if="document.remarks" class="farmer-app__upload-remark">{{ document.remarks }}</small>
                                 </div>
-                            </div>
-
-                            <div class="farmer-app__upload-item-actions">
                                 <span class="farmer-app__upload-badge" :class="statusBadgeClass(document)">
                                     {{ documentStatusLabel(document) }}
                                 </span>
+                            </div>
 
+                            <div class="farmer-app__upload-item-actions">
                                 <input
                                     :ref="(el) => cameraInputs[document.type] = el"
                                     type="file"
@@ -1158,7 +1145,7 @@ onMounted(() => {
 .farmer-app__upload-shell { width: min(100%, 760px); min-height: 100dvh; margin: 0 auto; padding: 16px; }
 .farmer-app__upload-hero { margin-bottom: 12px; padding: 0; text-align: left; }
 .farmer-app__upload-hero h1 { margin: 0; color: var(--pwa-ink); font-size: 1.2rem; line-height: 1.3; }
-.farmer-app__upload-hero p { margin: 3px 0 0; color: var(--pwa-muted); font-size: .78rem; line-height: 1.4; }
+.farmer-app__upload-hero p { min-height: 0; margin: 3px 0 0; color: var(--pwa-muted); font-size: .78rem; line-height: 1.4; position: static; overflow: visible; background: none; }
 .farmer-app__upload-card { width: 100%; padding: 14px; border: 1px solid var(--pwa-border); border-radius: 12px; background: #fff; box-shadow: var(--pwa-shadow-soft); }
 .farmer-app__upload-lookup, .farmer-app__upload-workflow { gap: 12px; }
 .farmer-app__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -1166,24 +1153,27 @@ onMounted(() => {
 .farmer-app__upload-field span { margin: 0; color: var(--pwa-ink); font-size: .75rem; }
 .farmer-app__upload-field input { min-height: 44px; padding: 9px 11px !important; border: 1px solid var(--pwa-border); border-radius: 9px; background: #fff; font-size: .82rem; box-shadow: none; }
 .farmer-app__upload-primary { min-height: 44px; padding: 9px 12px; border-radius: 9px; background: var(--pwa-green-800); box-shadow: none; font-size: .78rem; }
-.farmer-app__upload-progress { grid-template-columns: 1fr auto; gap: 10px; padding: 11px; border-radius: 9px; background: var(--pwa-surface-soft); }
+.farmer-app__upload-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 11px; border: 1px solid var(--pwa-border); border-radius: 9px; background: var(--pwa-surface-soft); color: var(--pwa-ink); }
 .farmer-app__upload-progress-main { gap: 9px; }
-.farmer-app__upload-progress-count { width: 42px; height: 42px; border-radius: 9px; font-size: .8rem; }
+.farmer-app__upload-progress-count { width: 42px; height: 42px; border: 2px solid #79cda5; border-radius: 9px; color: var(--pwa-green-800); font-size: .8rem; }
 .farmer-app__upload-progress-main strong { font-size: .8rem; }
 .farmer-app__upload-progress-main p, .farmer-app__upload-progress-meta p, .farmer-app__upload-progress-meta small { margin: 2px 0 0; font-size: .7rem; }
+.farmer-app__upload-progress-main p, .farmer-app__upload-progress-meta, .farmer-app__upload-progress-meta p, .farmer-app__upload-progress-meta small { color: var(--pwa-muted); }
+.farmer-app__upload-progress-main p span { color: var(--pwa-green-800); }
 .farmer-app__upload-checklist { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 7px; }
 .farmer-app__upload-check { padding: 8px 9px; border-radius: 8px; font-size: .7rem; }
 .farmer-app__upload-list { gap: 9px; }
-.farmer-app__upload-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 11px; border-radius: 10px; box-shadow: none; }
-.farmer-app__upload-item-head { gap: 8px; }
+.farmer-app__upload-item { grid-template-columns: 1fr; gap: 8px; padding: 10px; border-radius: 10px; box-shadow: none; }
+.farmer-app__upload-item-head { align-items: center; gap: 8px; }
+.farmer-app__upload-item-head > div:nth-child(2) { min-width: 0; flex: 1; }
 .farmer-app__upload-item-icon { width: 34px; height: 34px; border-radius: 8px; }
 .farmer-app__upload-item-icon img { width: 22px; height: 22px; }
 .farmer-app__upload-item-head h3 { margin: 0; font-size: .85rem; }
 .farmer-app__upload-item-head p, .farmer-app__upload-remark { margin: 2px 0 0; font-size: .68rem; }
-.farmer-app__upload-item-actions { align-items: flex-end; gap: 6px; }
+.farmer-app__upload-item-actions { display: block; }
 .farmer-app__upload-badge { min-height: 24px; padding: 4px 7px; border-radius: 999px; font-size: .62rem; }
-.farmer-app__upload-action-row { gap: 6px; }
-.farmer-app__upload-picker { min-width: 64px; min-height: 40px; padding: 7px 9px; border-radius: 8px; font-size: .7rem; }
+.farmer-app__upload-action-row { justify-content: flex-end; gap: 6px; width: 100%; }
+.farmer-app__upload-picker { flex: 0 0 auto; min-width: 76px; min-height: 36px; padding: 6px 10px; border-radius: 8px; font-size: .7rem; }
 .farmer-app__upload-selected { grid-column: 1 / -1; gap: 8px; padding: 9px; border-radius: 8px; }
 .farmer-app__upload-selected-head strong { font-size: .72rem; }
 .farmer-app__upload-link { min-height: 40px; padding: 7px 9px; font-size: .7rem; }
@@ -1197,9 +1187,9 @@ onMounted(() => {
     .farmer-app__upload-shell { width: 100%; padding: 10px; }
     .farmer-app__upload-grid { grid-template-columns: 1fr; }
     .farmer-app__upload-progress { grid-template-columns: 1fr; }
-    .farmer-app__upload-progress-meta { text-align: left; }
+    .farmer-app__upload-progress-meta { padding-top: 7px; border-top: 1px solid var(--pwa-border); text-align: left; }
     .farmer-app__upload-item { grid-template-columns: 1fr; }
-    .farmer-app__upload-item-actions { align-items: flex-start; }
+    .farmer-app__upload-item-icon { display: none; }
     .farmer-app__upload-actions { align-items: stretch; flex-direction: column; }
 }
 </style>
