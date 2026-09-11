@@ -18,15 +18,14 @@ const showPassword = ref(false);
 const showPasswordConfirmation = ref(false);
 const form = reactive({
     application_no: String(route.query.application_no ?? ''),
-    birth_date: String(route.query.birth_date ?? ''),
     email: '',
     password: '',
     password_confirmation: '',
 });
-const hasLockedLookup = computed(() => Boolean(String(route.query.application_no ?? '') && String(route.query.birth_date ?? '')));
+const hasLockedLookup = computed(() => Boolean(String(route.query.application_no ?? '')));
 
 const canSubmit = computed(() => {
-    return form.application_no && form.birth_date && form.email && form.password && form.password_confirmation;
+    return form.application_no && form.email && form.password && form.password_confirmation;
 });
 
 watch(
@@ -37,7 +36,6 @@ watch(
         }
 
         form.application_no = String(query.application_no ?? form.application_no ?? '');
-        form.birth_date = String(query.birth_date ?? form.birth_date ?? '');
     },
     { deep: true },
 );
@@ -75,7 +73,7 @@ const submit = async () => {
                 </div>
 
                 <form class="farmer-app__setup-form" @submit.prevent="submit">
-                    <div class="farmer-app__setup-grid">
+                    <div>
                         <div class="farmer-app__setup-field">
                             <label for="application_no">Application Number</label>
                             <div class="farmer-app__setup-input-wrap">
@@ -92,21 +90,6 @@ const submit = async () => {
                             </p>
                         </div>
 
-                        <div class="farmer-app__setup-field">
-                            <label for="birth_date">Birth Date</label>
-                            <div class="farmer-app__setup-input-wrap">
-                                <span class="farmer-app__setup-input-icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <rect x="5" y="6" width="14" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-                                        <path d="M8 4.5v3M16 4.5v3M5 10h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
-                                <input id="birth_date" v-model="form.birth_date" type="date" class="farmer-app__date-input" :readonly="hasLockedLookup" autocomplete="off" />
-                            </div>
-                            <p v-if="auth.validationErrors.value.birth_date" class="farmer-app__setup-error">
-                                {{ auth.validationErrors.value.birth_date }}
-                            </p>
-                        </div>
                     </div>
 
                     <div class="farmer-app__setup-field">

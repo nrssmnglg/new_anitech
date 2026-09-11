@@ -15,7 +15,6 @@ class SetupFarmerAccountRequest extends JsonFormRequest
     {
         return [
             'application_no' => ['required', 'string', 'max:255'],
-            'birth_date' => ['required', 'date'],
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];

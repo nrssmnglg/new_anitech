@@ -306,7 +306,6 @@ class MobileMembershipApplicationTest extends TestCase
 
         $response = $this->postJson(route('farmer.pwa.account.setup.store'), [
             'application_no' => $applicationNo,
-            'birth_date' => '1995-04-15',
             'email' => 'farmer.account@example.test',
             'password' => 'secret12345',
             'password_confirmation' => 'secret12345',
@@ -359,7 +358,6 @@ class MobileMembershipApplicationTest extends TestCase
 
         $this->postJson(route('farmer.pwa.account.setup.store'), [
             'application_no' => $applicationNo,
-            'birth_date' => '1995-04-15',
             'email' => 'farmer.login@example.test',
             'password' => 'secret12345',
             'password_confirmation' => 'secret12345',

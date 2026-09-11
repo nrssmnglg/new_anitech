@@ -216,7 +216,6 @@ const accountSetupTarget = computed(() => ({
     name: 'account-setup',
     query: {
         application_no: lookup.value.application_no,
-        birth_date: lookup.value.birth_date,
     },
 }));
 

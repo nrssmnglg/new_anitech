@@ -133,12 +133,11 @@ class AuthController extends Controller
         $application = MembershipApplication::query()
             ->with(['farmer.profile', 'farmer.users'])
             ->where('application_no', $validated['application_no'])
-            ->whereHas('farmer.profile', fn ($query) => $query->whereDate('birth_date', $validated['birth_date']))
             ->first();
 
         if (! $application) {
             throw ValidationException::withMessages([
-                'application_no' => 'No membership application matched the application number and birth date you entered.',
+                'application_no' => 'No membership application matched the application number you entered.',
             ]);
         }
 
