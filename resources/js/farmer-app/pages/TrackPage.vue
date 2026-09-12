@@ -167,6 +167,10 @@ const stageItems = computed(() => {
     })).filter((step) => step.visible);
 });
 
+const isApprovedOldRecord = computed(() => application.value?.source === 'walk_in'
+    && application.value?.status === 'approved'
+    && documentSummary.value.total === 0);
+
 const stageNote = computed(() => {
     if (!application.value) {
         return '';
@@ -526,12 +530,12 @@ watch(
                             <p>{{ submissionLabel }} {{ submissionTimestampLabel }}</p>
                         </div>
                     </div>
-                    <div class="farmer-app__track-note">
+                    <div v-if="!isApprovedOldRecord" class="farmer-app__track-note">
                         {{ stageNote }}
                     </div>
                 </article>
 
-                <article class="farmer-app__track-card">
+                <article v-if="!isApprovedOldRecord" class="farmer-app__track-card">
                     <div class="farmer-app__track-card-head">
                         <h3>Required Documents</h3>
                         <span>{{ documentSummary.uploaded }}/{{ documentSummary.total }} uploaded</span>

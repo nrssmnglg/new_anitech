@@ -147,7 +147,7 @@ function submitRejection() {
                 </div>
 
                 <div id="application-documents-section">
-                    <ReviewDocumentsPanel
+                    <ReviewDocumentsPanel v-if="!flow.isHistorical"
                         :application="application"
                         :flow="flow"
                         :documents="documents"

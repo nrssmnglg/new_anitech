@@ -274,10 +274,6 @@ function closeAttachmentPreview() {
                                 <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
                                 <p class="mt-0.5 text-[0.6rem] text-[#71808b]">{{ queryRecord.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
                             </div>
-                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
-                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Assigned Staff</p>
-                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.accountability?.assignedStaff || 'Unassigned' }}</p>
-                            </div>
                         </div>
                     </section>
                 </div>

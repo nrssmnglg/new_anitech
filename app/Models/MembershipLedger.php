@@ -74,7 +74,7 @@ class MembershipLedger extends Model
 
     public function getMemberTypeSnapshotAttribute(): ?string
     {
-        return $this->farmer?->memberType?->code;
+        return $this->feeSchedule?->memberType?->code ?? $this->farmer?->memberType?->code;
     }
 
     public function getMortuaryFeeAttribute(): float

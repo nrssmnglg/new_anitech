@@ -35,6 +35,7 @@ class ProfileController extends FarmerApiController
     {
         $farmer = $request->user('farmer_pwa')->farmer;
         $updated = $this->profileService->updateProfile($farmer, $request->only([
+            'birth_date',
             'civil_status',
             'mobile_number',
             'address',

@@ -170,7 +170,7 @@ function submitDocumentAction(document, action) {
             <section class="grid gap-5 lg:grid-cols-3">
                 <div class="space-y-5 lg:col-span-2">
                     <div v-if="hasActiveDocumentRequirements" id="renewal-documents-section">
-                        <ReviewDocumentsPanel
+                        <ReviewDocumentsPanel v-if="!flow.isHistorical"
                             :application="{ source: renewal.source }"
                             :flow="flow"
                             :documents="documents"

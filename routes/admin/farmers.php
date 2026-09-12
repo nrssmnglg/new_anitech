@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\InternalNoteController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
+Route::get('farmers/historical-lookup', [FarmerController::class, 'historicalLookup'])
+    ->name('farmers.historical-lookup');
+
 Route::get('farmers/duplicate-check', [FarmerController::class, 'duplicateCheck'])
     ->name('farmers.duplicate-check');
 

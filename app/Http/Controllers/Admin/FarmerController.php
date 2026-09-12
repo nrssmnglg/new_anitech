@@ -7,7 +7,7 @@ use App\Enums\MembershipStatus;
 use App\Enums\NotificationType;
 use App\Exports\FarmerRegistryExport;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\StoreFarmerRequest;
+use App\Http\Requests\Admin\EncodeOldRecordRequest;
 use App\Http\Requests\Admin\UpdateFarmerRequest;
 use App\Models\Association;
 use App\Models\AuditLog;
@@ -33,6 +33,7 @@ use App\Services\Notifications\NotificationDispatchService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -242,93 +243,87 @@ class FarmerController extends Controller
             'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
             'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
             'nextFarmerCode' => $this->registry->previewFarmerCode(),
-            'defaultRenewalYear' => now()->year,
+            'currentYear' => now()->year,
+            'lookupUrl' => route('admin.farmers.historical-lookup'),
             'storeUrl' => route('admin.farmers.store'),
             'indexUrl' => route('admin.farmers.index'),
             'duplicateMatches' => session('duplicate_matches', []),
         ]);
     }
 
-    public function store(StoreFarmerRequest $request): RedirectResponse
+    public function historicalLookup(Request $request): JsonResponse
+    {
+        $request->validate(['search' => ['required', 'string', 'min:2', 'max:100']]);
+        $search = trim($request->string('search')->toString());
+        $farmers = Farmer::query()->with(['profile', 'memberType',
+            'membershipTransactions' => fn ($query) => $query->whereIn('transaction_type', ['Application', 'Renewal'])->orderBy('year'),
+        ])
+            ->where(function (Builder $query) use ($search): void {
+                $query->where('farmer_code', 'like', '%' . $search . '%')
+                    ->orWhereHas('profile', fn (Builder $profile) => $profile
+                        ->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%'));
+            })->orderBy('farmer_code')->limit(20)->get();
+
+        return response()->json(['farmers' => $farmers->map(fn (Farmer $farmer): array => [
+            'id' => $farmer->id,
+            'farmerCode' => $farmer->farmer_code,
+            'fullName' => $farmer->full_name,
+            'memberType' => $farmer->memberType?->code,
+            'registeredAt' => $farmer->registered_at?->toDateString(),
+            'recordedYears' => $farmer->membershipTransactions->pluck('year'),
+        ])]);
+    }
+
+    public function store(EncodeOldRecordRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $registeredAt = filled($validated['registered_at'] ?? null)
-            ? \Carbon\Carbon::parse((string) $validated['registered_at'])
-            : now();
+        $existing = $validated['record_mode'] === 'existing';
+        $year = (int) $validated['historical_year'];
 
-        if (($validated['status'] ?? null) === FarmerStatus::PENDING->value) {
-            $validated['status'] = $registeredAt->lt(now()->subYears(5)->startOfDay())
-                ? FarmerStatus::INACTIVE->value
-                : FarmerStatus::ACTIVE->value;
+        if (! $existing) {
+            $duplicates = $this->registry->findPotentialDuplicates($validated);
+            if ($duplicates->isNotEmpty() && ! $request->boolean('confirm_duplicate_override')) {
+                return back()->withInput()
+                    ->withErrors(['duplicate_check' => 'Possible existing farmer found. Select that farmer to record another historical year, or confirm these are different people.'])
+                    ->with('duplicate_matches', $this->formatDuplicateMatches($duplicates));
+            }
         }
-
-        $duplicates = $this->registry->findPotentialDuplicates($validated);
-
-        if ($duplicates->isNotEmpty() && ! $request->boolean('confirm_duplicate_override')) {
-            return back()
-                ->withInput()
-                ->withErrors(['duplicate_check' => 'Potential duplicate farmer records were found. Review the matches below before saving, or confirm the override if these records are different people.'])
-                ->with('duplicate_matches', $this->formatDuplicateMatches($duplicates));
-        }
-
-        $renewalYear = $request->boolean('create_renewal_record') && filled($validated['renewal_year'] ?? null)
-            ? (int) $validated['renewal_year']
-            : null;
 
         try {
-            $farmer = DB::transaction(function () use ($validated, $renewalYear): Farmer {
-                $farmer = $this->registry->create([
-                    ...$validated,
-                    'record_origin' => 'Old Record',
-                ]);
+            $farmer = DB::transaction(function () use ($validated, $existing, $year, $request): Farmer {
+                $farmer = $existing
+                    ? Farmer::query()->when(filled($validated['farmer_id'] ?? null),
+                        fn (Builder $query) => $query->whereKey($validated['farmer_id']),
+                        fn (Builder $query) => $query->where('farmer_code', $validated['existing_farmer_code']))->lockForUpdate()->firstOrFail()
+                    : $this->registry->create([
+                        ...$validated,
+                        'registered_at' => sprintf('%d-02-14', $year),
+                        'record_origin' => 'Old Record',
+                    ]);
 
-                return $this->legacyMembershipRecorder->syncForOldRecord($farmer, $renewalYear);
+                $farmer = $this->legacyMembershipRecorder->syncForOldRecord(
+                    $farmer, $year, $existing, (int) $validated['member_type_id'],
+                );
+                $this->auditTrailService->recordChange(
+                    'farmers', $existing ? 'historical_renewal_encoded' : 'farmer_created',
+                    $existing ? 'Recorded a historical renewal for an existing farmer.' : 'Encoded an old farmer registry record.',
+                    $request->user(), $farmer, [],
+                    ['historical_year' => $year, 'member_type_id' => $validated['member_type_id'], 'record_origin' => $farmer->record_origin],
+                );
+                return $farmer;
             });
+        } catch (UniqueConstraintViolationException $exception) {
+            if (! str_contains($exception->getMessage(), 'renewal_year') && ! str_contains($exception->getMessage(), 'historical_year')) {
+                throw $exception;
+            }
+            throw ValidationException::withMessages(['historical_year' => 'This farmer already has a transaction for that year.']);
         } catch (DomainException $exception) {
-            $errorField = str_contains(strtolower($exception->getMessage()), 'renewal')
-                ? 'renewal_year'
-                : 'member_type_id';
-
-            throw ValidationException::withMessages([
-                $errorField => $exception->getMessage(),
-            ]);
+            throw ValidationException::withMessages(['historical_year' => $exception->getMessage()]);
         }
 
-        $successMessage = $renewalYear !== null
-            ? 'Old farmer record saved successfully and renewal for ' . $renewalYear . ' was recorded.'
-            : 'Old farmer record saved successfully.';
-
-        $this->auditTrailService->recordChange(
-            'farmers',
-            'farmer_created',
-            'Encoded an old farmer registry record.',
-            $request->user(),
-            $farmer,
-            [],
-            [
-                'first_name' => $farmer->profile?->first_name,
-                'middle_name' => $farmer->profile?->middle_name,
-                'last_name' => $farmer->profile?->last_name,
-                'barangay_id' => $farmer->barangay_id,
-                'association_id' => $farmer->association_id,
-                'member_type_id' => $farmer->member_type_id,
-                'status' => $validated['status'],
-                'mobile_number' => $farmer->profile?->mobile_number,
-                'record_origin' => $farmer->record_origin,
-            ],
-            $this->auditTrailService->activityMetadata(
-                AuditTrailService::ACTION_PROCESSED,
-                'Old record encoded',
-                [
-                    'farmer_id' => $farmer->id,
-                    'farmer_code' => $farmer->farmer_code,
-                ]
-            )
-        );
-
-        return redirect()
-            ->route('admin.farmers.show', $farmer)
-            ->with('success', $successMessage);
+        return redirect()->route('admin.farmers.show', $farmer)
+            ->with('success', 'Historical record for ' . $year . ' saved with its linked transaction, paid assessment, payment, and membership ledger.');
     }
 
     public function show(Farmer $farmer): InertiaResponse
@@ -1509,10 +1504,10 @@ class FarmerController extends Controller
                 $transactionLabel = 'Payment record';
 
                 if ($transaction?->transaction_type === 'Application') {
-                    $href = route('admin.membership-applications.show', $transaction);
+                    $href = route('admin.membership-applications.show', $transaction->application_no ?: $transaction->id);
                     $transactionLabel = 'Application payment';
                 } elseif ($transaction?->transaction_type === 'Renewal') {
-                    $href = route('admin.renewals.show', $transaction);
+                    $href = route('admin.renewals.show', $transaction->id);
                     $transactionLabel = 'Renewal payment';
                 }
 

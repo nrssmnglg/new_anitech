@@ -447,6 +447,7 @@ class RenewalRequestService
         return DB::transaction(function () use ($attributes, $skipApplicationCoverageCheck, $assessmentContext): RenewalRequest {
             $year = (int) ($attributes['year'] ?? now()->year);
             $farmerId = (int) $attributes['farmer_id'];
+            \App\Models\Farmer::query()->lockForUpdate()->findOrFail($farmerId);
             $submittedAt = filled($attributes['submitted_at'] ?? null)
                 ? CarbonImmutable::parse((string) $attributes['submitted_at'])
                 : CarbonImmutable::now();

@@ -590,7 +590,6 @@ function toggleSort(key) {
                                         <p class="mt-1 text-xs text-[#71808b]">{{ formatSubmitted(query.submittedAt).secondary }}</p>
                                         <div class="mt-2 space-y-1 text-[0.72rem] text-[#6c7772]">
                                             <p><span class="font-semibold">Last updated by:</span> {{ query.accountability?.lastUpdatedBy || 'System' }}</p>
-                                            <p><span class="font-semibold">Assigned staff:</span> {{ query.accountability?.assignedStaff || 'Unassigned' }}</p>
                                         </div>
                                     </div>
                                 </td>

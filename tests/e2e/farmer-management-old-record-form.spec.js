@@ -30,6 +30,9 @@ test.describe('Farmer Management — encode old record', () => {
         // Navigate explicitly after authentication instead of depending on the login page's redirect timing.
         await page.goto('/admin/farmers/create', { waitUntil: 'domcontentloaded' });
         await expect(page).toHaveURL(/\/admin\/farmers\/create$/);
+        await page.getByLabel('Farmer code or name').fill('Playwright New ' + Date.now());
+        await page.getByRole('button', { name: 'Search', exact: true }).click();
+        await page.getByRole('button', { name: 'This is a new farmer record' }).click();
     });
 
     test('opens the old-record encoding form', async ({ page }) => {
@@ -66,8 +69,8 @@ test.describe('Farmer Management — encode old record', () => {
         await expect(association.locator('option').nth(1)).toBeAttached();
         await association.selectOption({ index: 1 });
 
-        // This test covers encoding only. Renewal and payment are tested by their dedicated flow.
-        await page.getByLabel('Create a renewal payment record for the registered year.').uncheck();
+        const year = process.env.E2E_HISTORICAL_YEAR || String(new Date().getFullYear());
+        await page.getByLabel('Year to record').fill(year);
         await page.getByLabel('Remarks').fill(`Playwright test sample ${identifier}.`);
 
         const [storeResponse] = await Promise.all([

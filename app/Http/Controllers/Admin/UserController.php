@@ -46,7 +46,8 @@ class UserController extends Controller
                     default => null,
                 };
             })
-            ->latest('id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
 

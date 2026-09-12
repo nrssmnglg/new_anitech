@@ -2,15 +2,12 @@
 
 namespace App\Services\Farmers;
 
-use App\Enums\ApplicationStatus;
-use App\Enums\AssessmentStatus;
-use App\Enums\MembershipStatus;
 use App\Models\Farmer;
 use App\Models\MemberType;
 use App\Models\MembershipApplication;
 use App\Models\MembershipLedger;
-use App\Services\Membership\RenewalRequestService;
-use App\Services\Membership\MemberTypeResolverService;
+use App\Models\MembershipTransaction;
+use App\Models\RenewalRequest;
 use App\Services\Membership\MembershipLedgerService;
 use App\Services\Payments\PaymentAssessmentService;
 use App\Services\Payments\PaymentPostingService;
@@ -22,179 +19,78 @@ use Illuminate\Support\Str;
 class LegacyMembershipRecorderService
 {
     public function __construct(
-        private readonly MemberTypeResolverService $memberTypeResolver,
         private readonly PaymentAssessmentService $paymentAssessmentService,
         private readonly PaymentPostingService $paymentPostingService,
         private readonly MembershipLedgerService $membershipLedgerService,
-        private readonly RenewalRequestService $renewalRequestService,
     ) {
     }
 
-    public function syncForOldRecord(Farmer $farmer, ?int $renewalYear = null): Farmer
+    public function syncForOldRecord(Farmer $farmer, ?int $year = null, bool $existingFarmer = false, ?int $memberTypeId = null): Farmer
     {
-        return DB::transaction(function () use ($farmer, $renewalYear): Farmer {
-            $farmer->loadMissing(['profile', 'memberType']);
+        return DB::transaction(function () use ($farmer, $year, $existingFarmer, $memberTypeId): Farmer {
+            // Serialize historical submissions for this farmer before checking coverage.
+            $farmer = Farmer::query()->lockForUpdate()->findOrFail($farmer->id);
+            $registeredAt = CarbonImmutable::parse($farmer->registered_at ?? $farmer->created_at);
+            $year ??= $registeredAt->year;
+            if ($year < $registeredAt->year || $year > now()->year || $year < 1900) {
+                throw new DomainException('Historical year must be the registration year or later, up to the current year.');
+            }
 
-            $registeredAt = $farmer->registered_at
-                ? CarbonImmutable::parse($farmer->registered_at)
-                : CarbonImmutable::now();
-            $registryState = [
-                'membership_status' => $farmer->membership_status,
-                'activated_at' => $farmer->activated_at,
-                'inactive_at' => $farmer->inactive_at,
-                'inactive_reason' => $farmer->inactive_reason,
+            $memberType = MemberType::query()->findOrFail($memberTypeId ?? $farmer->member_type_id);
+            if (! in_array($memberType->code, ['OM', 'OSC', 'NM', 'NSC'], true)) {
+                throw new DomainException('Select OM, OSC, NM, or NSC for historical encoding.');
+            }
+            if ($existingFarmer && ! in_array($memberType->code, ['OM', 'OSC'], true)) {
+                throw new DomainException('An existing farmer renewal must use OM or OSC for the selected year.');
+            }
+
+            if (MembershipTransaction::query()->where('farmer_id', $farmer->id)
+                ->where('year', $year)->whereIn('transaction_type', ['Application', 'Renewal'])->exists()) {
+                throw new DomainException('An Application or Renewal already exists for this farmer and historical year. No duplicate was recorded.');
+            }
+
+            $isRenewal = $existingFarmer || in_array($memberType->code, ['OM', 'OSC'], true);
+            $model = $isRenewal ? RenewalRequest::class : MembershipApplication::class;
+            $recordedAt = CarbonImmutable::create($year, 2, 14)->startOfDay();
+            $transaction = $model::query()->create([
+                'farmer_id' => $farmer->id,
+                'year' => $year,
+                'source' => 'legacy',
+                'application_no' => ($isRenewal ? 'REN-' : 'APP-') . $year . '-' . Str::upper(Str::random(8)),
+                'status' => 'approved',
+                'submitted_at' => $recordedAt,
+                'reviewed_at' => $recordedAt,
+                'is_late' => false,
+            ]);
+            $context = [
+                'member_type_code' => $memberType->code,
+                'member_type_id' => $memberType->id,
+                'year' => $year,
+                'require_exact_year' => true,
             ];
-            $memberTypeCode = $farmer->memberType?->code ?: $this->resolveHistoricalMemberTypeCode($farmer, $registeredAt);
-            $memberType = MemberType::query()
-                ->where('code', $memberTypeCode)
-                ->first();
+            $assessment = $isRenewal
+                ? $this->paymentAssessmentService->createForRenewal($transaction, $context)
+                : $this->paymentAssessmentService->createForApplication($transaction, $context);
+            $summary = $this->paymentPostingService->record($assessment, [
+                'payment_method' => 'cash',
+                'amount_paid' => (float) $assessment->total_amount_due,
+                'paid_at' => $recordedAt->toDateTimeString(),
+                'reference_no' => 'LEGACY-' . ($isRenewal ? 'REN-' : 'APP-') . $farmer->farmer_code . '-' . $year,
+            ])['summary'];
 
-            if (! $memberType) {
-                throw new DomainException('The required member type for legacy record encoding is missing.');
-            }
-
-            if ((int) $farmer->member_type_id !== (int) $memberType->id) {
-                $farmer->forceFill([
-                    'member_type_id' => $memberType->id,
-                ])->save();
-            }
-
-            $application = MembershipApplication::query()->firstOrCreate(
+            MembershipLedger::query()->create($this->membershipLedgerService->buildFromSource(
+                $isRenewal ? 'renewal' : 'application',
+                ['id' => $transaction->id, 'status' => 'Active', 'year' => $year],
                 [
-                    'farmer_id' => $farmer->id,
-                    'transaction_type' => 'Application',
-                    'year' => $registeredAt->year,
-                    'source' => 'walk_in',
+                    'fee_schedule_id' => $assessment->fee_schedule_id,
+                    'member_type' => $memberType->code,
+                    'mortuary_eligible' => ! in_array($memberType->code, ['NSC', 'OSC'], true),
                 ],
-                [
-                    'application_no' => $this->generateLegacyApplicationNumber($registeredAt),
-                    'status' => ApplicationStatus::APPROVED,
-                    'submitted_at' => $registeredAt->toDateTimeString(),
-                    'reviewed_at' => $registeredAt->toDateTimeString(),
-                    'is_late' => false,
-                ],
-            );
+                $summary,
+            ));
 
-            $renewalCoversRegistrationYear = $renewalYear !== null
-                && $renewalYear === $registeredAt->year;
-
-            if (! $renewalCoversRegistrationYear) {
-                $assessment = $this->paymentAssessmentService->createForApplication($application, [
-                    'member_type_code' => $memberTypeCode,
-                    'member_type_id' => $memberType->id,
-                    'year' => $registeredAt->year,
-                ]);
-
-                $hasPayment = $assessment->payments()
-                    ->whereDate('paid_at', $registeredAt->toDateString())
-                    ->exists();
-
-                if (! $hasPayment) {
-                    $paymentResult = $this->paymentPostingService->record($assessment, [
-                        'payment_method' => 'cash',
-                        'amount_paid' => (float) $assessment->total_amount_due,
-                        'paid_at' => $registeredAt->toDateTimeString(),
-                        'reference_no' => 'LEGACY-APP-' . $farmer->farmer_code . '-' . $registeredAt->format('Y'),
-                    ]);
-
-                    $summary = $paymentResult['summary'];
-                } else {
-                    $summary = $this->paymentPostingService->postPayments($assessment, $assessment->payments()->get());
-                    $assessment->forceFill([
-                        'status' => $summary['assessment_status'],
-                    ])->save();
-                }
-
-                MembershipLedger::query()->updateOrCreate(
-                    [
-                        'membership_transaction_id' => $application->id,
-                        'year' => $registeredAt->year,
-                    ],
-                    $this->membershipLedgerService->buildFromSource(
-                        'application',
-                        [
-                            'id' => $application->id,
-                            'status' => in_array($summary['assessment_status'], [AssessmentStatus::PAID, AssessmentStatus::OVERPAID, AssessmentStatus::WAIVED], true)
-                                ? 'Active'
-                                : 'Inactive',
-                            'member_type' => $memberTypeCode,
-                            'year' => $registeredAt->year,
-                        ],
-                        [
-                            'fee_schedule_id' => $assessment->fee_schedule_id,
-                            'member_type' => $memberTypeCode,
-                            'mortuary_eligible' => ! in_array($memberTypeCode, ['NSC', 'OSC'], true),
-                        ],
-                        $summary,
-                    ),
-                );
-            }
-
-            if ($renewalYear !== null) {
-                if ($renewalYear < $registeredAt->year) {
-                    throw new DomainException('Renewal year must be the registered year or later.');
-                }
-
-                $renewalRecordedAt = $this->renewalRecordedAt($registeredAt, $renewalYear);
-                $renewalAssessmentContext = [
-                    'member_type_code' => $memberTypeCode,
-                    'member_type_id' => $memberType->id,
-                    'year' => $renewalYear,
-                    'include_membership_fee' => $renewalCoversRegistrationYear,
-                ];
-                $renewal = $this->renewalRequestService->createForLegacyRecord([
-                    'farmer_id' => $farmer->id,
-                    'year' => $renewalYear,
-                    'source' => 'walk_in',
-                    'submitted_at' => $renewalRecordedAt->toDateTimeString(),
-                    'reviewed_at' => $renewalRecordedAt->toDateTimeString(),
-                ], $renewalAssessmentContext);
-
-                $assessment = $renewal->paymentAssessments->sortByDesc('id')->first()
-                    ?? $this->paymentAssessmentService->createForRenewal($renewal, $renewalAssessmentContext);
-
-                $this->renewalRequestService->recordPayment($renewal, [
-                    'payment_method' => 'cash',
-                    'amount_paid' => (float) $assessment->total_amount_due,
-                    'paid_at' => $renewalRecordedAt->toDateTimeString(),
-                    'reference_no' => 'LEGACY-REN-' . $farmer->farmer_code . '-' . $renewalYear,
-                ], null, $renewalAssessmentContext);
-
-                $farmer->refresh()->forceFill($registryState)->save();
-            }
-
-            if ($farmer->inactive_at === null) {
-                $farmer->forceFill([
-                    'membership_status' => MembershipStatus::ACTIVE,
-                    'activated_at' => $farmer->activated_at ?? $registeredAt->toDateTimeString(),
-                ])->save();
-            }
-
+            // Historical coverage must not overwrite today's registry status or profile.
             return $farmer->fresh(['profile', 'memberType']);
         });
-    }
-
-    private function resolveHistoricalMemberTypeCode(Farmer $farmer, CarbonImmutable $registeredAt): string
-    {
-        return $this->memberTypeResolver->resolve([
-            'birth_date' => optional($farmer->profile)->birth_date?->toDateString(),
-            'has_existing_membership' => false,
-        ], $registeredAt);
-    }
-
-    private function generateLegacyApplicationNumber(CarbonImmutable $registeredAt): string
-    {
-        return 'APP-' . $registeredAt->format('Y') . '-' . Str::upper(Str::random(6));
-    }
-
-    private function renewalRecordedAt(CarbonImmutable $registeredAt, int $renewalYear): CarbonImmutable
-    {
-        $lastDayOfMonth = CarbonImmutable::create($renewalYear, $registeredAt->month, 1)->daysInMonth;
-
-        return $registeredAt->setDate(
-            $renewalYear,
-            $registeredAt->month,
-            min($registeredAt->day, $lastDayOfMonth),
-        );
     }
 }

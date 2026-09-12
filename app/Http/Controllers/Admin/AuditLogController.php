@@ -62,7 +62,8 @@ class AuditLogController extends Controller
             });
 
         $logs = (clone $logsQuery)
-            ->latest('id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
@@ -150,10 +151,14 @@ class AuditLogController extends Controller
             ],
             'changeSummary' => collect($log->change_summary ?? [])
                 ->take(3)
-                ->map(fn (array $change): array => [
+                ->map(fn (mixed $change): array => is_array($change) ? [
                     'field' => $change['field'] ?? 'Field',
                     'from' => $change['from'] ?? 'None',
                     'to' => $change['to'] ?? 'None',
+                ] : [
+                    'field' => 'Change',
+                    'from' => 'None',
+                    'to' => $this->stringifyMetadataValue($change),
                 ])
                 ->values()
                 ->all(),

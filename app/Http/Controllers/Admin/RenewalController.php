@@ -585,7 +585,7 @@ class RenewalController extends Controller
                 ->values();
         }
 
-        $documents = $this->farmerDocumentService->ensureRenewalChecklist($renewal)
+        $documents = ($renewal->source === 'legacy' ? $renewal->documents : $this->farmerDocumentService->ensureRenewalChecklist($renewal))
             ->map(function (FarmerDocument $document): FarmerDocument {
                 $document->setAttribute('ready_for_verification', $this->farmerDocumentService->readyForVerification($document));
                 $document->setAttribute('upload_present', $this->farmerDocumentService->uploadPresent($document));
@@ -717,6 +717,10 @@ class RenewalController extends Controller
             ]
         );
 
+        $recordMemberType = $renewal->source === 'legacy'
+            ? ($assessment?->feeSchedule?->memberType ?? $renewal->farmer?->memberType)
+            : $renewal->farmer?->memberType;
+
         return Inertia::render('Admin/Renewals/Show', [
             'renewal' => [
                 'id' => $renewal->id,
@@ -736,9 +740,9 @@ class RenewalController extends Controller
                 'id' => $renewal->farmer?->id,
                 'fullName' => $renewal->farmer?->full_name,
                 'farmerCode' => $renewal->farmer?->farmer_code,
-                'memberType' => $renewal->farmer?->memberType ? [
-                    'code' => $renewal->farmer->memberType->code,
-                    'name' => $renewal->farmer->memberType->name,
+                'memberType' => $recordMemberType ? [
+                    'code' => $recordMemberType->code,
+                    'name' => $recordMemberType->name,
                 ] : null,
                 'barangay' => $renewal->farmer?->barangay?->name,
                 'association' => $renewal->farmer?->association?->name,
@@ -820,6 +824,7 @@ class RenewalController extends Controller
                 ],
             ])->values()->all(),
             'flow' => [
+                'isHistorical' => $renewal->source === 'legacy',
                 'documentsComplete' => $documentsComplete,
                 'requiredCount' => $requiredDocuments->count(),
                 'verifiedCount' => $verifiedRequiredCount,

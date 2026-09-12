@@ -102,4 +102,3 @@ class StoreFarmerRequest extends FormRequest
         ];
     }
 }
-

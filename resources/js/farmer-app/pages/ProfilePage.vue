@@ -22,6 +22,7 @@ const formError = ref('');
 const formSuccess = ref('');
 const validationErrors = ref({});
 const form = reactive({
+    birth_date: '',
     civil_status: '',
     mobile_number: '',
     address: '',
@@ -35,6 +36,7 @@ const { error, loading, run } = useApiPage(async () => {
 });
 
 const hydrateForm = () => {
+    form.birth_date = profile.value?.profile?.birth_date ?? '';
     form.civil_status = profile.value?.profile?.civil_status ?? '';
     form.mobile_number = profile.value?.profile?.mobile_number ?? '';
     form.address = profile.value?.profile?.address ?? '';
@@ -114,17 +116,14 @@ const localWarnings = computed(() => {
     const warnings = [];
     const normalizedMobile = String(form.mobile_number || '').replace(/[\s-]/g, '');
 
-    if (!form.address || form.address.trim().split(/\s+/).length < 2) {
+    if (form.address && form.address.trim().split(/\s+/).length < 2) {
         warnings.push('Address is incomplete.');
     }
 
-    if (!form.mobile_number || /^(09|\+639)\d{9}$/.test(normalizedMobile) !== true) {
+    if (form.mobile_number && /^(09|\+639)\d{9}$/.test(normalizedMobile) !== true) {
         warnings.push('Mobile number format is invalid.');
     }
 
-    if (!profile.value?.profile?.birth_date) {
-        warnings.push('Birth date is missing.');
-    }
 
     return warnings;
 });
@@ -137,6 +136,7 @@ const submit = async () => {
 
     try {
         const response = await apiPut('/profile', {
+            birth_date: form.birth_date || null,
             civil_status: form.civil_status,
             mobile_number: form.mobile_number,
             address: form.address,
@@ -250,7 +250,13 @@ onMounted(() => run());
                     <AppState v-if="formError" type="error" :message="formError" />
                     <form class="farmer-app__profile-edit-form" @submit.prevent="submit">
                         <label class="farmer-app__profile-field">
-                            <span>Civil Status</span>
+                            <span>Birth Date (optional)</span>
+                            <input v-model="form.birth_date" type="date" class="farmer-app__date-input">
+                            <small v-if="validationErrors.birth_date" class="farmer-app__field-error">{{ validationErrors.birth_date[0] || validationErrors.birth_date }}</small>
+                        </label>
+
+                        <label class="farmer-app__profile-field">
+                            <span>Civil Status (optional)</span>
                             <select v-model="form.civil_status">
                                 <option value="">Select civil status</option>
                                 <option v-for="status in options.civil_statuses" :key="status" :value="status">{{ status }}</option>
@@ -259,13 +265,13 @@ onMounted(() => run());
                         </label>
 
                         <label class="farmer-app__profile-field">
-                            <span>Mobile Number</span>
+                            <span>Mobile Number (optional)</span>
                             <input v-model="form.mobile_number" type="tel" placeholder="09171234567">
                             <small v-if="validationErrors.mobile_number" class="farmer-app__field-error">{{ validationErrors.mobile_number[0] || validationErrors.mobile_number }}</small>
                         </label>
 
                         <label class="farmer-app__profile-field">
-                            <span>Address</span>
+                            <span>Address (optional)</span>
                             <textarea v-model="form.address" rows="3" placeholder="House number / sitio / purok / street"></textarea>
                             <small v-if="validationErrors.address" class="farmer-app__field-error">{{ validationErrors.address[0] || validationErrors.address }}</small>
                         </label>

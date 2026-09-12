@@ -40,27 +40,24 @@ class FarmerProfileService
     public function updateProfile(Farmer $farmer, array $payload): Farmer
     {
         $validated = Validator::make($payload, [
-            'civil_status' => ['required', 'string', 'max:50'],
-            'mobile_number' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string', 'max:255'],
+            'birth_date' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'civil_status' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'mobile_number' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'address' => ['sometimes', 'nullable', 'string', 'max:255'],
         ])->after(function ($validator) use ($payload): void {
             $mobile = preg_replace('/[\s-]/', '', (string) ($payload['mobile_number'] ?? ''));
 
-            if ($mobile === '' || preg_match('/^(09|\+639)\d{9}$/', $mobile) !== 1) {
+            if ($mobile !== '' && preg_match('/^(09|\+639)\d{9}$/', $mobile) !== 1) {
                 $validator->errors()->add('mobile_number', 'Use a valid mobile number such as 09171234567 or +639171234567.');
             }
 
-            if (str_word_count(trim((string) ($payload['address'] ?? ''))) < 2) {
+            if (filled($payload['address'] ?? null) && str_word_count(trim((string) $payload['address'])) < 2) {
                 $validator->errors()->add('address', 'Enter a more complete address so staff can review it properly.');
             }
         })->validate();
 
         $profile = $farmer->profile ?? new FarmerProfile(['farmer_id' => $farmer->id]);
-        $profile->fill([
-            'civil_status' => $validated['civil_status'],
-            'mobile_number' => $validated['mobile_number'],
-            'address' => $validated['address'],
-        ]);
+        $profile->fill($validated);
         $profile->save();
 
         return $this->hydrateFarmer($farmer->fresh()->load([

@@ -17,8 +17,8 @@ defineProps({
         </article>
         <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
             <p class="text-[0.64rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Checklist</p>
-            <p class="mt-1.5 text-lg font-semibold leading-none text-[#191c1c]">{{ flow.verifiedCount }}/{{ flow.requiredCount }}</p>
-            <p class="mt-1 text-xs text-[#6b7873]">Required documents cleared</p>
+            <p class="mt-1.5 text-lg font-semibold leading-none text-[#191c1c]">{{ flow.isHistorical ? 'Not required' : `${flow.verifiedCount}/${flow.requiredCount}` }}</p>
+            <p class="mt-1 text-xs text-[#6b7873]">{{ flow.isHistorical ? 'Historical record' : 'Required documents cleared' }}</p>
         </article>
         <article class="rounded-lg border border-[#dbe2de] bg-white p-3">
             <p class="text-[0.64rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Payment</p>

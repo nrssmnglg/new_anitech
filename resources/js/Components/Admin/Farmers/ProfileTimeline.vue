@@ -28,7 +28,7 @@ const filteredTimeline = computed(() => {
     return props.timeline.filter((item) => item.type === activeFilter.value);
 });
 
-const visibleFilters = computed(() => filters.filter((filter) => filter.value === 'all' || filterCount(filter.value) > 0));
+const visibleFilters = computed(() => filters.filter((filter) => ['all', 'registration', 'application', 'renewal', 'payment'].includes(filter.value) || filterCount(filter.value) > 0));
 
 function filterCount(value) {
     if (value === 'all') {

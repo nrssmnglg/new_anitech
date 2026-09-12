@@ -28,7 +28,7 @@ class PaymentAssessmentService
             throw new DomainException('Member type is required before creating a payment assessment.');
         }
 
-        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year);
+        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year, (bool) ($context['require_exact_year'] ?? false));
 
         $calculation = $this->feeCalculator->calculateApplication([
             'member_type' => $memberTypeCode,
@@ -61,7 +61,7 @@ class PaymentAssessmentService
             throw new DomainException('Member type is required before creating a renewal payment assessment.');
         }
 
-        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year);
+        $feeSchedule = $this->resolveFeeSchedule($memberTypeId, $year, (bool) ($context['require_exact_year'] ?? false));
 
         $calculation = $this->calculateRenewalFees(
             $memberTypeCode,
@@ -84,7 +84,7 @@ class PaymentAssessmentService
         );
     }
 
-    public function resolveFeeSchedule(?int $memberTypeId = null, ?int $year = null): FeeSchedule
+    public function resolveFeeSchedule(?int $memberTypeId = null, ?int $year = null, bool $requireExactYear = false): FeeSchedule
     {
         $baseQuery = FeeSchedule::query()
             ->when($memberTypeId, fn ($query) => $query->where('member_type_id', $memberTypeId));
@@ -98,6 +98,10 @@ class PaymentAssessmentService
 
             if ($exactYear !== null) {
                 return $exactYear;
+            }
+
+            if ($requireExactYear) {
+                throw new DomainException('No fee schedule exists for the selected member type and historical year (' . $year . ').');
             }
 
             $closestPastYear = (clone $baseQuery)

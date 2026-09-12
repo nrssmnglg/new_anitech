@@ -567,6 +567,7 @@ class MembershipApplicationController extends Controller
                 'address' => $profile?->address,
             ],
             'flow' => [
+                'isHistorical' => $membershipApplication->source === 'legacy',
                 'isWalkIn' => $membershipApplication->source === 'walk_in',
                 'isMobile' => $membershipApplication->source === 'mobile',
                 'checklistInitialized' => $checklistInitialized,
@@ -883,6 +884,7 @@ class MembershipApplicationController extends Controller
         ];
 
         return MembershipApplication::query()
+            ->where(fn (Builder $query) => $query->whereNull('source')->orWhere('source', '!=', 'legacy'))
             ->when(! ($filters['status'] ?? null), function (Builder $query): void {
                 $query->where(function (Builder $activeQueue): void {
                     $activeQueue->where('status', '!=', $this->databaseStatusValue(ApplicationStatus::REJECTED))
