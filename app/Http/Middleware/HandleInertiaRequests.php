@@ -64,7 +64,7 @@ class HandleInertiaRequests extends Middleware
                 'roleLabel' => $isAdmin ? 'Admin Officer' : 'Staff Officer',
                 'regionLabel' => $user->officeProfile?->job_title ?: 'Region IV-A',
                 'searchUrl' => route('admin.search.index'),
-                'notificationsUrl' => Route::has('admin.notifications.index') ? route('admin.notifications.index') : null,
+                'notificationsUrl' => $isAdmin && Route::has('admin.notifications.index') ? route('admin.notifications.index') : null,
                 'notificationsFeedUrl' => Route::has('admin.notifications.feed') ? route('admin.notifications.feed') : null,
                 'notificationsReadAllUrl' => Route::has('admin.notifications.read-all') ? route('admin.notifications.read-all') : null,
                 'queriesUrl' => route('admin.queries.index'),
@@ -259,12 +259,6 @@ class HandleInertiaRequests extends Middleware
                             'icon' => 'communication',
                             'href' => route('admin.queries.index'),
                             'activePatterns' => ['admin.queries.index', 'admin.queries.show'],
-                        ],
-                        [
-                            'label' => 'Notifications',
-                            'icon' => 'communication',
-                            'href' => route('admin.notifications.index'),
-                            'activePatterns' => ['admin.notifications.index', 'admin.notifications.show'],
                         ],
                         [
                             'label' => 'Advisories',
