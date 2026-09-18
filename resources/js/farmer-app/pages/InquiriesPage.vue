@@ -503,6 +503,7 @@ onMounted(async () => {
 
 .farmer-app__inquiries-card {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
@@ -513,9 +514,15 @@ onMounted(async () => {
     border: 1px solid var(--pwa-border);
     border-radius: 12px;
     box-shadow: none;
+    text-align: left;
 }
 
 .farmer-app__inquiries-card-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+    gap: 0;
     min-width: 0;
 }
 

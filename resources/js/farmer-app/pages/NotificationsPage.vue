@@ -181,6 +181,10 @@ onMounted(() => notifications.fetchNotifications(20));
     background: #fbfefc;
 }
 
+.farmer-app__notifications-card.is-unread::after {
+    content: none;
+}
+
 .farmer-app__notifications-card.is-urgent {
     border-left-color: #c2413d;
 }
@@ -191,12 +195,14 @@ onMounted(() => notifications.fetchNotifications(20));
 
 .farmer-app__notifications-card-head {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
 }
 
 .farmer-app__notifications-card-meta {
+    flex: 1;
     min-width: 0;
 }
 

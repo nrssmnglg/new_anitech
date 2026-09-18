@@ -89,7 +89,9 @@ const uploadStatusLabel = computed(() => {
     return application.value.status_label || 'Submitted';
 });
 
-const formattedValidationErrors = computed(() => Object.entries(validationErrors.value).map(([key, message]) => {
+const formattedValidationErrors = computed(() => Object.entries(validationErrors.value)
+    .filter(([key]) => !['application_no', 'birth_date'].includes(key))
+    .map(([key, message]) => {
     const normalizedKey = String(key ?? '').replace(/^documents\./, '').replace(/^document$/, 'uploaded file');
     const label = normalizedKey
         .split('.')
@@ -273,8 +275,8 @@ const trackApplication = async () => {
         await restoreDraftFiles();
     } catch (err) {
         application.value = null;
-        error.value = extractApiMessage(err, t('upload.load_failed'));
         validationErrors.value = extractValidationErrors(err);
+        error.value = Object.keys(validationErrors.value).length ? '' : extractApiMessage(err, t('upload.load_failed'));
     } finally {
         loading.value = false;
     }
@@ -412,8 +414,8 @@ const submitDocuments = async () => {
             }, 700);
         }
     } catch (err) {
-        error.value = extractApiMessage(err, t('upload.upload_failed'));
         validationErrors.value = extractValidationErrors(err);
+        error.value = Object.keys(validationErrors.value).length ? '' : extractApiMessage(err, t('upload.upload_failed'));
     } finally {
         uploading.value = false;
     }
@@ -471,7 +473,6 @@ onMounted(() => {
                 <AppState v-if="error" type="error" :message="error" />
                 <AppState v-if="success" type="success" :message="success" />
                 <div v-if="formattedValidationErrors.length" class="farmer-app__upload-error-list">
-                    <strong>Exact error details</strong>
                     <ul>
                         <li v-for="item in formattedValidationErrors" :key="item.key">
                             {{ item.label }}: {{ item.message }}

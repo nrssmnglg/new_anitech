@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Farmer;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,8 +20,8 @@ class NotificationResource extends JsonResource
             'status' => $this->recipient_status,
             'is_read' => $this->is_read,
             'is_priority' => (bool) ($this->is_priority ?? false),
-            'read_at' => optional($this->read_at)->toIso8601String(),
-            'created_at' => optional($this->created_at)->toIso8601String(),
+            'read_at' => $this->read_at ? Carbon::parse($this->read_at)->toIso8601String() : null,
+            'created_at' => $this->created_at ? Carbon::parse($this->created_at)->toIso8601String() : null,
             'payload' => $this->payload_data ?? [],
             'target_url' => $this->target_url ?? null,
             'module' => $this->module ?? 'account_alerts',
