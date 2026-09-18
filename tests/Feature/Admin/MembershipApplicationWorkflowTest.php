@@ -374,34 +374,6 @@ class MembershipApplicationWorkflowTest extends TestCase
         ]);
     }
 
-    public function test_application_approver_is_read_from_approval_event_not_a_later_edit(): void
-    {
-        $user = $this->makeAdminUser();
-        $farmer = $this->makeFarmer($this->makeLookups());
-        $application = MembershipApplication::query()->create([
-            'farmer_id' => $farmer->id, 'application_no' => 'APP-APPROVAL-AUDIT',
-            'source' => 'mobile', 'status' => ApplicationStatus::APPROVED,
-        ]);
-        $audit = app(\App\Services\Audit\AuditTrailService::class);
-        $approval = $audit->record('membership_applications', 'application_approved', 'Approved application', $user, $application);
-        $user->update(['name' => 'Renamed Admin']);
-        $this->travel(1)->hours();
-        $audit->record('membership_applications', 'application_edited', 'Edited application', $user->fresh(), $application);
-        $controller = app(\App\Http\Controllers\Admin\MembershipApplicationController::class);
-        $method = new \ReflectionMethod($controller, 'accountability');
-        $details = $method->invoke($controller, $application);
-        $this->assertSame('Office Admin', $details['approvedBy']);
-        $this->assertSame($approval->created_at->format('F d, Y h:i A'), $details['approvedAt']);
-        $this->assertSame('Renamed Admin', $details['lastUpdatedBy']);
-        $this->travel(1)->hours();
-        $audit->record('membership_applications', 'application_approved', 'Automatic approval', null, $application);
-        $this->assertSame('System (automatic)', $method->invoke($controller, $application)['approvedBy']);
-        \App\Models\AuditLog::query()->where('event', 'application_approved')->delete();
-        $this->assertNull($method->invoke($controller, $application)['approvedBy']);
-        $application->update(['reviewed_by' => $user->id]);
-        $this->assertSame('Renamed Admin', $method->invoke($controller, $application->fresh())['approvedBy']);
-    }
-
     public function test_rejected_summary_includes_applications_rejected_for_no_follow_up(): void
     {
         DB::connection()->getPdo()->sqliteCreateFunction('year', fn ($date) => $date ? (int) substr($date, 0, 4) : null);

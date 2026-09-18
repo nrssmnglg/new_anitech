@@ -956,26 +956,11 @@ class MembershipApplicationController extends Controller
             ->latest('created_at')
             ->first(['actor_user_id', 'actor_name', 'created_at']);
 
-        $approval = AuditLog::query()
-            ->with('actor:id,name')
-            ->where('subject_type', $application->getMorphClass())
-            ->where('subject_id', $application->getKey())
-            ->where('event', 'application_approved')
-            ->latest('created_at')
-            ->latest('id')
-            ->first();
-
-        $approvedBy = $approval
-            ? ($approval->actor_name ?: $approval->actor?->name ?: ($approval->actor_user_id ? 'Approver not recorded' : 'System (automatic)'))
-            : $application->reviewer?->name;
-
         return [
             'lastUpdatedBy' => $latestActivity?->actor?->name ?? $latestActivity?->actor_name ?? $application->reviewer?->name,
             'lastUpdatedAt' => optional($latestActivity?->created_at ?? $application->updated_at)->format('M d, Y h:i A'),
             'assignedStaff' => $application->reviewer?->name,
             'reviewedBy' => $application->reviewer?->name,
-            'approvedBy' => $approvedBy,
-            'approvedAt' => optional($approval?->created_at ?? $application->reviewed_at)->format('F d, Y h:i A'),
         ];
     }
 
