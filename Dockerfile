@@ -46,6 +46,7 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
     && chown -R www-data:www-data /var/www/html
 
 COPY render/nginx.conf /etc/nginx/templates/default.conf.template
+COPY render/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY render/supervisord.conf /etc/supervisord.conf
 COPY render/start-web.sh /usr/local/bin/start-web.sh
 COPY render/run-scheduler.sh /usr/local/bin/run-scheduler.sh
