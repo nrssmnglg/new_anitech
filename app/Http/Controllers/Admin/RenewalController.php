@@ -25,6 +25,7 @@ use App\Services\Documents\FarmerDocumentService;
 use App\Services\Farmers\FarmerRegistryService;
 use App\Services\Membership\FeeCalculatorService;
 use App\Services\Membership\RenewalRequestService;
+use App\Services\Membership\ApplicationAnnualCoverageService;
 use App\Services\Notifications\RenewalReminderService;
 use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Payments\PaymentAssessmentService;
@@ -119,6 +120,7 @@ class RenewalController extends Controller
                 ->distinct()
                 ->orderByDesc('year')
                 ->pluck('year');
+            $availableYears = $availableYears->merge(app(ApplicationAnnualCoverageService::class)->query()->pluck('year'))->unique()->sortDesc()->values();
             $availableBarangays = Barangay::query()->orderBy('name')->get(['id', 'name']);
             $sourceOptions = [
                 'walk_in' => 'Walk-In',
@@ -1170,29 +1172,44 @@ class RenewalController extends Controller
                         ->latest('year')
                         ->latest('id');
                 },
+                'membershipLedgers' => function ($query): void {
+                    $query->where(fn (Builder $ledger) => app(ApplicationAnnualCoverageService::class)->constrain($ledger))
+                        ->with(['membershipTransaction.paymentAssessments.payments', 'membershipTransaction.reviewer']);
+                },
             ])
-            ->whereHas('renewalRequests', function (Builder $query) use ($recordFilters): void {
-                $query
-                    ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
-                        $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
-                    })
-                    ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
-                    ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
-                    ->when(
-                        $recordFilters['record_status'] ?? null,
-                        function (Builder $query, string $status): void {
-                            if ($status === 'pending') {
-                                $query->whereIn('status', [
-                                    RenewalStatus::SUBMITTED->value,
-                                    RenewalStatus::UNDER_REVIEW->value,
-                                ]);
+            ->where(function (Builder $records) use ($recordFilters): void {
+                $records->whereHas('renewalRequests', function (Builder $query) use ($recordFilters): void {
+                    $query
+                        ->whereHas('paymentAssessments', function (Builder $assessmentQuery): void {
+                            $assessmentQuery->whereIn('status', $this->settledAssessmentStatuses());
+                        })
+                        ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
+                        ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
+                        ->when(
+                            $recordFilters['record_status'] ?? null,
+                            function (Builder $query, string $status): void {
+                                if ($status === 'pending') {
+                                    $query->whereIn('status', [
+                                        RenewalStatus::SUBMITTED->value,
+                                        RenewalStatus::UNDER_REVIEW->value,
+                                    ]);
 
-                                return;
+                                    return;
+                                }
+
+                                $query->where('status', $status);
                             }
-
-                            $query->where('status', $status);
-                        }
-                    );
+                        );
+                })->orWhereHas('membershipLedgers', function (Builder $ledger) use ($recordFilters): void {
+                    app(ApplicationAnnualCoverageService::class)->constrain($ledger)
+                        ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('membership_ledgers.year', (int) $year))
+                        ->whereHas('membershipTransaction', function (Builder $transaction) use ($recordFilters): void {
+                            $transaction->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source));
+                        });
+                    if (filled($recordFilters['record_status'] ?? null) && $recordFilters['record_status'] !== 'approved') {
+                        $ledger->whereRaw('1 = 0');
+                    }
+                });
             })
             ->when($recordFilters['record_search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $farmerQuery) use ($search): void {
@@ -1501,6 +1518,39 @@ class RenewalController extends Controller
             (int) $renewal->id
         ))->first();
 
+        $coverage = $farmer->membershipLedgers->sortByDesc('year')->unique('year')->values();
+        $latestCoverage = $coverage->first();
+        $years = $renewals->pluck('year')->merge($coverage->pluck('year'))->map(fn ($year): int => (int) $year)->unique()->sortDesc()->values();
+        $coverageAmount = (float) $coverage->sum(fn (MembershipLedger $ledger): float => (float) ($ledger->membershipTransaction->paymentAssessments->sortByDesc('id')->first()?->annual_due ?? 0));
+
+        if ($latestCoverage && (! $latestRenewal || $latestCoverage->year > $latestRenewal->year)) {
+            $transaction = $latestCoverage->membershipTransaction;
+            $assessment = $transaction->paymentAssessments->sortByDesc('id')->first();
+            $payment = $assessment?->payments->sortByDesc('id')->first();
+            return [
+                'id' => $farmer->id,
+                'recordKey' => '',
+                'farmer' => [
+                    'fullName' => $farmer->full_name,
+                    'farmerCode' => $farmer->farmer_code,
+                    'memberType' => $farmer->memberType ? ['code' => $farmer->memberType->code, 'name' => $farmer->memberType->name] : null,
+                ],
+                'years' => $years->all(),
+                'yearRangeLabel' => $years->implode(', '),
+                'renewalYearsCount' => $years->count(),
+                'sourceLabel' => strtoupper(str_replace('_', ' ', (string) $transaction->source)) . ' · Application annual dues',
+                'status' => ['value' => 'approved', 'label' => 'Completed'],
+                'amountToPay' => 0.0,
+                'amountPaid' => round($coverageAmount + (float) $renewals->sum(fn ($renewal) => $renewal->getAttribute('queue_amount_paid') ?? 0), 2),
+                'submittedAt' => optional($latestCoverage->paid_at ?? $transaction->submitted_at)?->format('M d, Y h:i A'),
+                'paymentReference' => $payment?->reference_no,
+                'actions' => ['showUrl' => route('admin.membership-applications.show', $transaction->application_no)],
+                'accountability' => ['reviewedBy' => $transaction->reviewer?->name ?? 'Not recorded', 'lastUpdatedBy' => $transaction->reviewer?->name ?? 'Not recorded'],
+                'quickActions' => [],
+                'record' => ['renewalCount' => $renewals->count() + $coverage->count(), 'renewalYearsCount' => $years->count()],
+            ];
+        }
+
         if (! $latestRenewal) {
             return [
                 'id' => $farmer->id,
@@ -1533,17 +1583,18 @@ class RenewalController extends Controller
         return array_merge($baseRow, [
             'id' => $farmer->id,
             'recordKey' => $baseRow['recordKey'],
-            'years' => $renewals->pluck('year')->map(fn ($year): int => (int) $year)->unique()->sortDesc()->values()->all(),
-            'yearRangeLabel' => $renewals->pluck('year')->unique()->sortDesc()->values()->implode(', '),
-            'renewalYearsCount' => $renewals->pluck('year')->unique()->count(),
+            'years' => $years->all(),
+            'yearRangeLabel' => $years->implode(', '),
+            'renewalYearsCount' => $years->count(),
             'sourceLabel' => $renewals
                 ->pluck('source')
+                ->merge($coverage->map(fn (MembershipLedger $ledger) => $ledger->membershipTransaction->source))
                 ->filter()
                 ->map(fn (string $source): string => strtoupper(str_replace('_', ' ', $source)))
                 ->unique()
                 ->values()
                 ->implode(', '),
-            'amountPaid' => round((float) $renewals->sum(fn (RenewalRequest $renewal): float => (float) ($renewal->getAttribute('queue_amount_paid') ?? 0)), 2),
+            'amountPaid' => round($coverageAmount + (float) $renewals->sum(fn (RenewalRequest $renewal): float => (float) ($renewal->getAttribute('queue_amount_paid') ?? 0)), 2),
             'paymentReference' => $baseRow['paymentReference'],
             'actions' => [
                 'showUrl' => route('admin.renewals.show', $latestRenewal),
@@ -1552,8 +1603,8 @@ class RenewalController extends Controller
             'record' => [
                 'submittedAt' => $baseRow['submittedAt'],
                 'paymentReference' => $baseRow['paymentReference'],
-                'renewalCount' => $renewals->count(),
-                'renewalYearsCount' => $baseRow['renewalYearsCount'],
+                'renewalCount' => $renewals->count() + $coverage->count(),
+                'renewalYearsCount' => $years->count(),
             ],
         ]);
     }

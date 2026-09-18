@@ -490,6 +490,30 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame((string) now()->year, $history[0]['meta']['Year']);
         $this->assertDatabaseCount('payment_assessments', 1);
 
+        $controller = app(\App\Http\Controllers\Admin\RenewalController::class);
+        $recordsQuery = new \ReflectionMethod($controller, 'renewalFarmersQuery');
+        $matching = ['record_year' => (string) now()->year, 'record_source' => 'mobile', 'record_status' => 'approved'];
+        $recordFarmer = $recordsQuery->invoke($controller, $matching)->firstOrFail();
+        $serialize = new \ReflectionMethod($controller, 'serializeRenewalFarmerRow');
+        $row = $serialize->invoke($controller, $recordFarmer);
+        $this->assertSame([now()->year], $row['years']);
+        $this->assertSame(100.0, $row['amountPaid']);
+        $this->assertStringContainsString('Application annual dues', $row['sourceLabel']);
+        $this->assertSame(route('admin.membership-applications.show', $application->application_no), $row['actions']['showUrl']);
+        $response = $this->actingAs($this->makeAdminUser())->get(route('admin.renewals.index', [
+            'section' => 'records', 'queue_year' => now()->year + 1,
+            'record_year' => now()->year, 'record_source' => 'mobile', 'record_status' => 'approved',
+        ]));
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('summary.recordsCount', 1)
+            ->where('renewalRecords.total', 1)
+            ->where('renewalRecords.data.0.amountPaid', 100)
+            ->where('filterOptions.years.0.value', (string) now()->year));
+        foreach ([['record_year' => (string) (now()->year + 1)], ['record_source' => 'walk_in'], ['record_status' => 'pending'], ['record_search' => 'no-match']] as $excluded) {
+            $this->assertSame(0, $recordsQuery->invoke($controller, array_merge($matching, $excluded))->count());
+        }
+
         try {
             $service->startOrResume($farmer);
             $this->fail('A covered year must not create another renewal.');
@@ -497,6 +521,7 @@ class MembershipApplicationWorkflowTest extends TestCase
             $this->assertStringContainsString('already paid', $exception->getMessage());
         }
         $ledger->update(['payment_status' => 'unpaid']);
+        $this->assertSame(0, $recordsQuery->invoke($controller, $matching)->count());
         $this->assertTrue($service->eligibility($farmer)['can_start']);
         $this->assertCount(0, $method->invoke(app(\App\Http\Controllers\Admin\FarmerController::class), $farmer));
     }

@@ -8,14 +8,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ApplicationAnnualCoverageService
 {
-    public function query(Farmer $farmer): Builder
+    public function query(?Farmer $farmer = null): Builder
     {
-        return MembershipLedger::query()
+        return $this->constrain(MembershipLedger::query())
             ->with('membershipTransaction')
-            ->whereIn('payment_status', ['Paid', 'Overpaid', 'Waived'])
-            ->whereHas('membershipTransaction', function (Builder $query) use ($farmer): void {
-                $query->where('farmer_id', $farmer->id)
-                    ->where('transaction_type', 'Application')
+            ->when($farmer, fn (Builder $query) => $query->whereHas('membershipTransaction', fn (Builder $transaction) => $transaction->where('farmer_id', $farmer->id)));
+    }
+
+    public function constrain(Builder $query): Builder
+    {
+        return $query->whereIn($query->qualifyColumn('payment_status'), ['Paid', 'Overpaid', 'Waived'])
+            ->whereHas('membershipTransaction', function (Builder $query): void {
+                $query->where('transaction_type', 'Application')
                     ->where('status', 'Approved')
                     ->whereHas('paymentAssessments', fn (Builder $assessment) => $assessment->where('annual_due', '>', 0));
             });
