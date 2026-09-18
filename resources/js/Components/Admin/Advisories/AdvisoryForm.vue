@@ -13,6 +13,13 @@ const props = defineProps({
 
 const showBarangay = computed(() => props.form.audience_type === 'barangay');
 const showMemberType = computed(() => props.form.audience_type === 'group');
+const attachmentErrors = computed(() => Object.entries(props.form.errors)
+    .filter(([key]) => key === 'attachments' || key.startsWith('attachments.'))
+    .map(([, message]) => message));
+const generalErrors = computed(() => Object.entries(props.form.errors)
+    .filter(([key]) => !['title', 'content', 'audience_type', 'barangay_id', 'member_type_id'].includes(key)
+        && key !== 'attachments' && !key.startsWith('attachments.'))
+    .map(([, message]) => message));
 
 const audienceCards = computed(() => ([
     {
@@ -53,6 +60,9 @@ function updateAttachments(event) {
         </div>
 
         <form class="space-y-6 p-5 sm:p-6" @submit.prevent="$emit('submit')">
+            <div v-if="generalErrors.length" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <p v-for="message in generalErrors" :key="message">{{ message }}</p>
+            </div>
             <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
                 <div class="space-y-5">
                     <section class="rounded-[1.6rem] border border-[#dbe4de] bg-white p-5 shadow-[0_10px_25px_rgba(15,91,70,0.04)]">
@@ -135,8 +145,7 @@ function updateAttachments(event) {
                                 </div>
                             </label>
 
-                            <p v-if="form.errors.attachments" class="text-sm font-medium text-red-600">{{ form.errors.attachments }}</p>
-                            <p v-if="form.errors['attachments.0']" class="text-sm font-medium text-red-600">{{ form.errors['attachments.0'] }}</p>
+                            <p v-for="(message, index) in attachmentErrors" :key="index" role="alert" class="text-sm font-medium text-red-600">{{ message }}</p>
 
                             <div v-if="form.attachments.length" class="rounded-2xl border border-[#dce4de] bg-[#f8fbf9] p-4">
                                 <p class="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[#71808b]">Queued Uploads</p>

@@ -29,7 +29,8 @@ class AdvisoryManagementTest extends TestCase
             'name' => 'Admin User',
             'email' => 'admin.advisory@example.test',
             'password' => 'secret123',
-            'status' => 'active',
+            'status' => User::STATUS_ACTIVE,
+            'role' => User::ROLE_ADMIN,
         ]);
         $admin->assignRole(User::ROLE_ADMIN);
 
@@ -41,6 +42,9 @@ class AdvisoryManagementTest extends TestCase
             'audience_type' => 'all',
             'attachments' => [$attachment],
         ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
 
         $advisory = Advisory::query()->where('title', 'Weather Advisory')->firstOrFail();
         $attachmentRecord = $advisory->attachments()->firstOrFail();

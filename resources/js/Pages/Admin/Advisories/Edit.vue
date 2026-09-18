@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import AdvisoryForm from '../../../Components/Admin/Advisories/AdvisoryForm.vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
@@ -36,6 +36,11 @@ function submit() {
     })).post(props.urls.update, {
         preserveScroll: true,
         forceFormData: true,
+        onError: async () => {
+            await nextTick();
+            document.querySelector('.advisory-form .text-red-600, .advisory-form [role="alert"]')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
         onFinish: () => {
             submitting.value = false;
         },
