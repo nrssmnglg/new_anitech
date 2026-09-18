@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import AppLoader from '../components/ui/AppLoader.vue';
 import AppState from '../components/ui/AppState.vue';
@@ -22,6 +22,24 @@ const props = defineProps({
 
 const { t } = useLocale();
 const inquiry = ref(null);
+const composer = ref(null);
+const navigationHeight = ref(88);
+const composerHeight = ref(100);
+let composerObserver;
+onMounted(() => {
+    composerObserver = new ResizeObserver(() => {
+        navigationHeight.value = document.querySelector('.farmer-app__nav')?.getBoundingClientRect().height ?? 88;
+        composerHeight.value = composer.value?.getBoundingClientRect().height ?? 0;
+    });
+    const navigation = document.querySelector('.farmer-app__nav');
+    if (navigation) composerObserver.observe(navigation);
+    if (composer.value) composerObserver.observe(composer.value);
+});
+watch(composer, (element, previous) => {
+    if (previous) composerObserver?.unobserve(previous);
+    if (element) composerObserver?.observe(element);
+});
+onBeforeUnmount(() => composerObserver?.disconnect());
 const replyError = ref('');
 const replyValidationErrors = ref({});
 const attachmentError = ref('');
@@ -236,7 +254,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="farmer-app__inquiry-detail-screen">
+    <div class="farmer-app__inquiry-detail-screen" :style="{ '--inquiry-nav-height': `${navigationHeight}px`, '--inquiry-composer-height': `${composerHeight}px` }">
         <main class="farmer-app__inquiry-detail-shell">
             <AppLoader v-if="loading && !detail" />
             <AppState v-else-if="error && !detail" type="error" :message="error" :action-label="t('common.retry')" @action="fetchFresh" />
@@ -311,7 +329,7 @@ onBeforeUnmount(() => {
                     <p>This inquiry is closed. Contact the office to reopen it if you need to add more information.</p>
                 </section>
 
-                <section v-else class="farmer-app__inquiry-detail-reply-card">
+                <section v-else ref="composer" class="farmer-app__inquiry-detail-reply-card farmer-app__inquiry-detail-composer">
                     <div class="farmer-app__inquiry-detail-reply-compose">
                         <div ref="attachmentPickerRef" class="farmer-app__inquiry-detail-attach-wrap">
                             <button
@@ -390,6 +408,19 @@ onBeforeUnmount(() => {
 .farmer-app__inquiry-detail-screen {
     min-height: 100%;
     background: transparent;
+    padding-bottom: calc(var(--inquiry-composer-height) + 20px);
+}
+
+.farmer-app__inquiry-detail-composer {
+    position: fixed;
+    z-index: 35;
+    bottom: calc(var(--inquiry-nav-height) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 736px;
+    max-height: 40dvh;
+    overflow-y: auto;
 }
 
 .farmer-app__inquiry-detail-shell {
