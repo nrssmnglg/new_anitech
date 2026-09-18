@@ -15,6 +15,7 @@ const props = defineProps({
 });
 
 const advisory = ref(null);
+const failedImages = ref({});
 const reacting = ref(false);
 const { error, loading, run } = useApiPage(async () => {
     const response = await apiGet(`/advisories/${props.advisoryId}`);
@@ -153,11 +154,16 @@ onMounted(() => run());
                             :key="attachment.id"
                         >
                             <img
-                                v-if="attachment.is_image"
+                                v-if="attachment.is_image && !failedImages[attachment.id]"
                                 :src="attachment.url"
                                 :alt="attachment.name"
                                 class="farmer-app__advisory-detail-image"
+                                @error="failedImages[attachment.id] = true"
                             >
+                            <div v-else-if="attachment.is_image" role="status">
+                                <p>Unable to load this advisory image.</p>
+                                <a :href="attachment.url" target="_blank" rel="noopener noreferrer" class="farmer-app__advisory-detail-file-link">Open {{ attachment.name || 'image' }}</a>
+                            </div>
                             <a
                                 v-else
                                 :href="attachment.url"
