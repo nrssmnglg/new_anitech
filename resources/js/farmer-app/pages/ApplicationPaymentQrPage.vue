@@ -65,7 +65,7 @@ onBeforeUnmount(clearPoll);
     <div class="farmer-payment-qr">
         <main class="farmer-payment-qr__shell">
             <header class="farmer-payment-qr__header">
-                <div><h1>Scan to Pay</h1><p>Use a QR Ph-supported bank or e-wallet.</p></div>
+                <div><h1>{{ qrPayment?.is_test ? 'Test Payment' : 'Scan to Pay' }}</h1><p>{{ qrPayment?.is_test ? 'Simulate payment through PayMongo. No wallet payment is needed.' : 'Use a QR Ph-supported bank or e-wallet.' }}</p></div>
                 <RouterLink :to="trackStatusTarget">Back</RouterLink>
             </header>
             <AppState v-if="error" type="error" :message="error" />
@@ -80,9 +80,14 @@ onBeforeUnmount(clearPoll);
                     <div v-for="item in paymentBreakdown" :key="item.label" class="farmer-payment-qr__row"><span>{{ item.label }}</span><strong>PHP {{ Number(item.amount).toFixed(2) }}</strong></div>
                 </section>
                 <section class="farmer-payment-qr__code" :class="{ 'is-expired': qrPayment.is_expired }">
-                    <img :src="qrPayment.qr_image_url" :alt="`QR Ph payment code for ${qrPayment.reference_no}`" class="farmer-payment-qr__image">
+                    <template v-if="qrPayment.is_test">
+                        <p>Test mode — do not scan or pay using a bank or e-wallet.</p>
+                        <a v-if="qrPayment.test_url && !qrPayment.is_expired" :href="qrPayment.test_url" target="_blank" rel="noopener noreferrer" class="farmer-payment-qr__primary">Open PayMongo Test Simulator</a>
+                        <p v-else-if="!qrPayment.is_expired">PayMongo did not provide a test simulation link. Return to the payment page and generate a new session.</p>
+                    </template>
+                    <img v-else :src="qrPayment.qr_image_url" :alt="`QR Ph payment code for ${qrPayment.reference_no}`" class="farmer-payment-qr__image">
                     <div class="farmer-payment-qr__expiry"><span>Expires</span><strong>{{ qrPayment.expires_at ? new Date(qrPayment.expires_at).toLocaleString() : '30 minutes after generation' }}</strong></div>
-                    <p>{{ qrPayment.is_expired ? 'This QR code has expired. Return to the payment page to generate a new code.' : 'Scan the code and confirm the exact amount, then check the payment status.' }}</p>
+                    <p>{{ qrPayment.is_expired ? 'This payment session has expired. Return to the payment page to generate a new one.' : qrPayment.is_test ? 'Complete the simulation, then check the payment status.' : 'Scan the code and confirm the exact amount, then check the payment status.' }}</p>
                 </section>
                 <RouterLink :to="trackStatusTarget" class="farmer-payment-qr__primary">Check Payment Status</RouterLink>
             </template>

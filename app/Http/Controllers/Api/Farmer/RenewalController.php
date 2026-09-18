@@ -156,7 +156,8 @@ class RenewalController extends FarmerApiController
         $qrPayment = $request->session()->get($this->renewalQrSessionKey($renewal))
             ?? Cache::get($this->renewalQrCacheKey($renewal, $farmer->id));
 
-        if (! is_array($qrPayment) || ! filled($qrPayment['qr_image_url'] ?? null)) {
+        if (! is_array($qrPayment) || ! filled($qrPayment['qr_image_url'] ?? null)
+            || ! $this->paymentGatewayService->qrModeMatches($qrPayment)) {
             try {
                 $qrPayment = $this->createRenewalQrPayment($renewal, $assessment, (string) $renewal->application_no);
             } catch (DomainException $exception) {
@@ -198,6 +199,8 @@ class RenewalController extends FarmerApiController
                 'amount_due' => (float) ($assessment?->total_amount_due ?? ($qrPayment['amount'] ?? 0)),
                 'expires_at' => $expiresAt?->toIso8601String(),
                 'is_expired' => $expiresAt?->isPast() ?? false,
+                'is_test' => $qrPayment['is_test'],
+                'test_url' => $qrPayment['is_test'] ? ($qrPayment['test_url'] ?? null) : null,
                 'qr_image_url' => $qrPayment['qr_image_url'],
                 'breakdown' => [
                     'membership_fee' => $assessment?->membership_fee !== null ? (float) $assessment->membership_fee : null,

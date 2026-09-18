@@ -12,6 +12,16 @@ use Illuminate\Http\Client\ConnectionException;
 
 class PaymentGatewayService
 {
+    public function isTestMode(): bool
+    {
+        return str_starts_with((string) config('services.paymongo.secret_key'), 'sk_test_');
+    }
+
+    public function qrModeMatches(array $payment): bool
+    {
+        return isset($payment['is_test']) && $payment['is_test'] === $this->isTestMode();
+    }
+
     public function usesHostedCheckout(): bool
     {
         return filled(config('services.paymongo.secret_key'));
@@ -161,11 +171,23 @@ class PaymentGatewayService
             throw new DomainException('PayMongo did not return a QR Ph image.');
         }
 
+        $isTest = data_get($attachResponse, 'data.attributes.livemode') === false
+            || $this->isTestMode();
+        $testUrl = data_get($attachResponse, 'data.attributes.next_action.code.test_url')
+            ?? data_get($attachResponse, 'data.attributes.next_action.test_url')
+            ?? data_get($attachResponse, 'data.attributes.test_url');
+        $testHost = is_string($testUrl) ? parse_url($testUrl, PHP_URL_HOST) : null;
+        $safeTestUrl = $isTest && is_string($testHost)
+            && (strtolower($testHost) === 'paymongo.com' || str_ends_with(strtolower($testHost), '.paymongo.com'))
+            && parse_url($testUrl, PHP_URL_SCHEME) === 'https';
+
         return [
             'reference_no' => $reference,
             'provider' => 'paymongo',
             'payment_intent_id' => (string) $paymentIntentId,
             'payment_method_id' => (string) $paymentMethodId,
+            'is_test' => $isTest,
+            'test_url' => $safeTestUrl ? $testUrl : null,
             'amount' => $amount,
             'currency' => $data['currency'] ?? 'PHP',
             'payment_status' => PaymentStatus::PENDING->value,

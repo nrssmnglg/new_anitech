@@ -265,12 +265,13 @@ class MembershipApplicationController extends Controller
             abort(404);
         }
 
-        if (! $this->qrAmountMatchesAssessment($qrPayment, $assessment?->total_amount_due)) {
+        if (! $this->paymentGatewayService->qrModeMatches($qrPayment)
+            || ! $this->qrAmountMatchesAssessment($qrPayment, $assessment?->total_amount_due)) {
             $request->session()->forget($this->applicationQrSessionKey($applicationNo, (string) $validated['birth_date']));
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'The previous QR code no longer matches the current payment amount. Generate a new QR code before paying.',
+                    'message' => 'The payment amount or mode has changed. Generate a new payment session.',
                     'data' => [
                         'redirect_url' => $this->trackStatusAppUrl($applicationNo, (string) $validated['birth_date']),
                     ],
@@ -281,7 +282,7 @@ class MembershipApplicationController extends Controller
                 'application_no' => $applicationNo,
                 'birth_date' => $validated['birth_date'],
             ])->withErrors([
-                'payment' => 'The previous QR code no longer matches the current payment amount. Generate a new QR code before paying.',
+                'payment' => 'The payment amount or mode has changed. Generate a new payment session.',
             ]);
         }
 
@@ -299,6 +300,8 @@ class MembershipApplicationController extends Controller
                     'reference_no' => $qrPayment['reference_no'] ?? $application->application_no,
                     'expires_at' => $expiresAt?->toIso8601String(),
                     'is_expired' => $expiresAt?->isPast() ?? false,
+                    'is_test' => $qrPayment['is_test'],
+                    'test_url' => $qrPayment['is_test'] ? ($qrPayment['test_url'] ?? null) : null,
                     'qr_image_url' => $qrPayment['qr_image_url'],
                     'breakdown' => [
                         'membership_fee' => $assessment?->membership_fee !== null ? (float) $assessment->membership_fee : null,
