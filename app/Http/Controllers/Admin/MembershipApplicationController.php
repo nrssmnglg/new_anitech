@@ -542,6 +542,7 @@ class MembershipApplicationController extends Controller
                     'label' => $membershipApplication->status?->label() ?? 'Pending',
                 ],
                 'submittedAt' => optional($membershipApplication->submitted_at)->format('F d, Y h:i A'),
+                'createdAt' => optional($membershipApplication->created_at)->format('F d, Y h:i A'),
                 'reviewedAt' => optional($membershipApplication->reviewed_at)->format('F d, Y h:i A'),
                 'reviewerName' => $membershipApplication->reviewer?->name,
                 'rejectionReasonLabel' => $membershipApplication->rejection_reason_label,
