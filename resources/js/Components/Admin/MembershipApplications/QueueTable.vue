@@ -125,7 +125,7 @@ const sortedApplications = computed(() => {
             return (checklistPercent(left) - checklistPercent(right)) * direction;
         }
 
-        return String(left.submittedAt || '').localeCompare(String(right.submittedAt || '')) * direction;
+        return String(left.submittedAt || left.createdAt || '').localeCompare(String(right.submittedAt || right.createdAt || '')) * direction;
     });
 
     return items;
@@ -179,7 +179,7 @@ function densityToggleLabel() {
                         <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
                             <div class="font-semibold text-[#003629]">{{ application.applicationNo }}</div>
                             <div class="text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#7a8781]">{{ application.sourceLabel }}</div>
-                            <div class="mt-0.5 text-[0.68rem] text-[#86918c]">{{ application.submittedAt || (application.status?.value === 'approved' ? 'Submission date not recorded' : 'Not submitted yet') }}</div>
+                            <div class="mt-0.5 text-[0.68rem] text-[#86918c]">{{ application.submittedAt || application.createdAt || 'Date not recorded' }}</div>
                         </td>
                         <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
                             <div class="flex items-start gap-2">
