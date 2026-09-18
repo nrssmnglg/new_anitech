@@ -12,6 +12,7 @@ const loading = ref(false);
 const error = ref('');
 const qrPayment = ref(null);
 let pollTimer = null;
+let disposed = false;
 const query = computed(() => ({ transaction: String(route.query.transaction ?? 'application'), application_no: String(route.query.application_no ?? ''), birth_date: String(route.query.birth_date ?? ''), renewal_id: String(route.query.renewal_id ?? '') }));
 const isRenewal = computed(() => query.value.transaction === 'renewal');
 const hasLookup = computed(() => isRenewal.value ? Boolean(query.value.renewal_id) : Boolean(query.value.application_no && query.value.birth_date));
@@ -23,7 +24,7 @@ const trackStatusTarget = computed(() => isRenewal.value ? { name: 'payments' } 
 
 function clearPoll() { if (pollTimer) { window.clearTimeout(pollTimer); pollTimer = null; } }
 async function handleRedirect(target) {
-    if (!target) return;
+    if (disposed || !target) return;
     const url = new URL(target, window.location.origin);
     const base = resolveFarmerAppBasePath();
     if (url.pathname.startsWith(`${base}/`) || url.pathname === base) {
@@ -33,6 +34,7 @@ async function handleRedirect(target) {
     window.location.href = target;
 }
 async function loadQrPayment() {
+    if (disposed) return;
     if (!hasLookup.value) {
         await router.replace(isRenewal.value ? { name: 'payments' } : { name: 'track' });
         return;
@@ -43,9 +45,11 @@ async function loadQrPayment() {
         const response = isRenewal.value
             ? await apiGet(`/renewals/${encodeURIComponent(query.value.renewal_id)}/payment/qr`)
             : await apiGet(`/application/${encodeURIComponent(query.value.application_no)}/payment/qr`, { params: { birth_date: query.value.birth_date } });
+        if (disposed) return;
         if (response?.data?.redirect_url) { await handleRedirect(response.data.redirect_url); return; }
         qrPayment.value = response?.data ?? null;
     } catch (err) {
+        if (disposed) return;
         const redirectUrl = err?.response?.data?.data?.redirect_url;
         if (redirectUrl) { await handleRedirect(redirectUrl); return; }
         error.value = err?.apiMessage || 'Unable to load the QR payment screen.';
@@ -54,11 +58,14 @@ async function loadQrPayment() {
 }
 function schedulePoll() {
     clearPoll();
-    if (!qrPayment.value || qrPayment.value.is_expired) return;
+    if (disposed || !qrPayment.value || qrPayment.value.is_expired) return;
     pollTimer = window.setTimeout(async () => { await loadQrPayment(); schedulePoll(); }, 5000);
 }
 onMounted(async () => { await loadQrPayment(); schedulePoll(); });
-onBeforeUnmount(clearPoll);
+onBeforeUnmount(() => {
+    disposed = true;
+    clearPoll();
+});
 </script>
 
 <template>
