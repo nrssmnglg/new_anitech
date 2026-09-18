@@ -1468,7 +1468,7 @@ class FarmerController extends Controller
 
     private function renewalTimeline(Farmer $farmer): array
     {
-        return RenewalRequest::query()
+        $renewals = RenewalRequest::query()
             ->where('farmer_id', $farmer->id)
             ->latest('submitted_at')
             ->latest('id')
@@ -1488,6 +1488,22 @@ class FarmerController extends Controller
                 ],
             ])
             ->all();
+
+        $coverage = app(\App\Services\Membership\ApplicationAnnualCoverageService::class)->query($farmer)
+            ->latest('year')->get()->unique('year')
+            ->map(fn (MembershipLedger $ledger): array => [
+                'key' => 'application-annual-dues-' . $ledger->id,
+                'type' => 'renewal',
+                'title' => 'Annual dues covered by membership application',
+                'subtitle' => $ledger->membershipTransaction->application_no . ' for ' . $ledger->year,
+                'status' => 'Completed',
+                'occurredAt' => optional($ledger->paid_at ?? $ledger->created_at)?->format('M d, Y h:i A'),
+                'occurredAtRaw' => optional($ledger->paid_at ?? $ledger->created_at)?->toDateTimeString(),
+                'href' => route('admin.membership-applications.show', $ledger->membershipTransaction->application_no),
+                'meta' => ['Year' => (string) $ledger->year, 'Source' => 'Membership application'],
+            ])->all();
+
+        return array_merge($renewals, $coverage);
     }
 
     private function paymentTimeline(Farmer $farmer): array

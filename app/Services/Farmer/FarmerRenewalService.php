@@ -8,6 +8,7 @@ use App\Models\FeeSchedule;
 use App\Models\RenewalRequest;
 use App\Services\Documents\FarmerDocumentService;
 use App\Services\Membership\RenewalRequestService;
+use App\Services\Membership\ApplicationAnnualCoverageService;
 use App\Services\Payments\PaymentAssessmentService;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -38,6 +39,25 @@ class FarmerRenewalService
         $deadline = $schedule?->renewal_deadline
             ? CarbonImmutable::parse($schedule->renewal_deadline)
             : CarbonImmutable::create($targetYear, 12, 31, 23, 59, 59);
+
+        $coverage = app(ApplicationAnnualCoverageService::class)->query($farmer)->where('year', $targetYear)->first();
+        if ($coverage) {
+            return [
+                'year' => $targetYear,
+                'deadline' => $deadline->toIso8601String(),
+                'deadline_soon' => false,
+                'state' => 'already_renewed',
+                'covered_by_application' => true,
+                'message' => 'Your annual dues for ' . $targetYear . ' were paid with your membership application. Renewal will be available next year.',
+                'can_start' => false,
+                'can_resume' => false,
+                'renewal_id' => null,
+                'application_no' => $coverage->membershipTransaction->application_no,
+                'checklist' => [],
+                'fees' => [],
+                'phase' => 'Completed',
+            ];
+        }
 
         $renewal = $farmer->renewalRequests()
             ->with(['documents.documentType', 'paymentAssessments.payments', 'paymentAssessments.feeSchedule'])
@@ -87,6 +107,10 @@ class FarmerRenewalService
     public function startOrResume(Farmer $farmer, ?int $year = null): RenewalRequest
     {
         $targetYear = $year ?: now()->year;
+
+        if (app(ApplicationAnnualCoverageService::class)->query($farmer)->where('year', $targetYear)->exists()) {
+            throw new DomainException('Your annual dues for ' . $targetYear . ' were already paid with your membership application.');
+        }
 
         $existing = $farmer->renewalRequests()
             ->with(['documents.documentType', 'paymentAssessments.payments', 'paymentAssessments.feeSchedule'])

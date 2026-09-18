@@ -318,6 +318,7 @@ onBeforeUnmount(() => {
                 <AppState v-if="actionSuccess" type="success" :message="actionSuccess" />
 
                 <section v-if="eligibility && !currentYearRenewal" class="farmer-app__renewals-eligibility">
+                    <p v-if="eligibility.covered_by_application" role="status">{{ eligibility.message }}</p>
                     <div class="farmer-app__renewals-card-stats">
                         <div>
                             <span>{{ t('renewals.total_due') }}</span>
@@ -325,7 +326,7 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div class="farmer-app__renewals-checklist-grid">
+                    <div v-if="!eligibility.covered_by_application" class="farmer-app__renewals-checklist-grid">
                         <article v-if="hasRenewalChecklist" class="farmer-app__renewals-checklist-card">
                             <strong>Required documents</strong>
                             <ul>
@@ -343,7 +344,7 @@ onBeforeUnmount(() => {
                         </article>
                     </div>
 
-                    <div class="farmer-app__renewals-actions">
+                    <div v-if="!eligibility.covered_by_application" class="farmer-app__renewals-actions">
                         <button type="button" class="farmer-app__btn farmer-app__upload-primary" :disabled="starting" @click="startOrResumeRenewal">
                             {{
                                 starting

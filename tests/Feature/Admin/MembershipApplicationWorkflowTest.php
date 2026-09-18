@@ -433,6 +433,51 @@ class MembershipApplicationWorkflowTest extends TestCase
         $approvedResponse->assertDontSee($pendingApplication->application_no);
     }
 
+    public function test_paid_application_annual_dues_appear_in_renewal_history_and_cover_only_the_paid_year(): void
+    {
+        $lookups = $this->makeLookups();
+        $this->makeFeeSchedule();
+        $farmer = $this->makeFarmer($lookups);
+        $application = MembershipApplication::query()->create([
+            'farmer_id' => $farmer->id, 'application_no' => 'APP-ANNUAL-COVERAGE',
+            'source' => 'mobile', 'status' => ApplicationStatus::APPROVED, 'submitted_at' => now(),
+        ]);
+        $assessment = PaymentAssessment::query()->create([
+            'membership_transaction_id' => $application->id,
+            'fee_schedule_id' => FeeSchedule::query()->value('id'),
+            'annual_due' => 100, 'membership_fee' => 100, 'mortuary_fee' => 150,
+            'total_amount_due' => 350, 'status' => AssessmentStatus::PAID,
+        ]);
+        $ledger = \App\Models\MembershipLedger::query()->create([
+            'membership_transaction_id' => $application->id,
+            'fee_schedule_id' => $assessment->fee_schedule_id, 'year' => now()->year,
+            'amount_paid' => 350, 'payment_status' => 'paid', 'paid_at' => now(),
+        ]);
+        $service = app(\App\Services\Farmer\FarmerRenewalService::class);
+        $eligibility = $service->eligibility($farmer);
+        $this->assertSame('already_renewed', $eligibility['state']);
+        $this->assertFalse($eligibility['can_start']);
+        $this->assertTrue($service->eligibility($farmer, now()->year + 1)['can_start']);
+
+        $method = new \ReflectionMethod(\App\Http\Controllers\Admin\FarmerController::class, 'renewalTimeline');
+        $history = $method->invoke(app(\App\Http\Controllers\Admin\FarmerController::class), $farmer);
+        $this->assertCount(1, $history);
+        $this->assertSame('renewal', $history[0]['type']);
+        $this->assertSame('Completed', $history[0]['status']);
+        $this->assertSame((string) now()->year, $history[0]['meta']['Year']);
+        $this->assertDatabaseCount('payment_assessments', 1);
+
+        try {
+            $service->startOrResume($farmer);
+            $this->fail('A covered year must not create another renewal.');
+        } catch (\DomainException $exception) {
+            $this->assertStringContainsString('already paid', $exception->getMessage());
+        }
+        $ledger->update(['payment_status' => 'unpaid']);
+        $this->assertTrue($service->eligibility($farmer)['can_start']);
+        $this->assertCount(0, $method->invoke(app(\App\Http\Controllers\Admin\FarmerController::class), $farmer));
+    }
+
     public function test_walk_in_manual_approval_is_blocked_and_payment_is_the_approval_step(): void
     {
         $user = $this->makeAdminUser();
