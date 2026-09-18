@@ -135,7 +135,7 @@ class AdvisoryController extends FarmerApiController
                 $query->where('slug', $advisory);
 
                 if ($decodedId !== null) {
-                    $query->orWhereKey($decodedId);
+                    $query->orWhere('advisories.id', $decodedId);
                 }
             })
             ->firstOrFail();

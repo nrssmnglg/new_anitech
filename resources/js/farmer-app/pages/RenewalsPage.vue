@@ -52,6 +52,18 @@ const currentYearRenewalSettled = computed(() => {
     return settledStatuses.includes(String(currentYearRenewal.value?.assessment?.status || '').toLowerCase())
         || settledStatuses.includes(String(currentYearPayment.value?.status || '').toLowerCase());
 });
+const currentRenewalBadge = computed(() => {
+    const renewal = currentYearRenewal.value;
+    if (!renewal) return { status: 'pending', label: 'Pending' };
+    const status = String(renewal.status || '').toLowerCase();
+    if (status === 'approved' && !currentYearRenewalSettled.value) {
+        return { status: 'pending', label: 'Payment Pending' };
+    }
+    return {
+        status: currentYearPayment.value?.status || renewal.status,
+        label: currentYearPayment.value?.status_label || renewal.status_label || 'Recorded',
+    };
+});
 const renewalBlocker = computed(() => {
     if (!eligibility.value) {
         return '';
@@ -304,8 +316,6 @@ onBeforeUnmount(() => {
                 </header>
                 <AppState v-if="actionError" type="error" :message="actionError" />
                 <AppState v-if="actionSuccess" type="success" :message="actionSuccess" />
-                <AppState v-if="renewalBlocker" type="error" :message="`${t('renewals.blocked_title')}: ${renewalBlocker}`" />
-                <AppState v-if="renewalWaiting" :message="`${t('renewals.waiting_title')}: ${renewalWaiting}`" />
 
                 <section v-if="eligibility && !currentYearRenewal" class="farmer-app__renewals-eligibility">
                     <div class="farmer-app__renewals-card-stats">
@@ -362,8 +372,8 @@ onBeforeUnmount(() => {
                         <div class="farmer-app__renewals-card-main">
                             <div class="farmer-app__renewals-card-head">
                                 <span class="farmer-app__renewals-app-no">{{ currentYearPayment?.reference_no || currentYearRenewal.application_no }}</span>
-                                <span class="farmer-app__renewals-badge" :class="badgeClass(currentYearPayment?.status || currentYearRenewal.status)">
-                                    {{ currentYearPayment?.status_label || currentYearRenewal.status_label || 'Recorded' }}
+                                <span class="farmer-app__renewals-badge" :class="badgeClass(currentRenewalBadge.status)">
+                                    {{ currentRenewalBadge.label }}
                                 </span>
                             </div>
 
