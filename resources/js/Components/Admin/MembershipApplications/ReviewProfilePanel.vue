@@ -18,7 +18,7 @@ defineProps({
             </div>
             <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-3">
                 <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Submitted</p>
-                <p class="mt-2 text-sm font-semibold text-[#191c1c]">{{ application.submittedAt || 'Not submitted' }}</p>
+                <p class="mt-2 text-sm font-semibold text-[#191c1c]">{{ application.submittedAt || (application.status?.value === 'approved' ? 'Submission date not recorded' : 'Not submitted') }}</p>
             </div>
             <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-3">
                 <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Source</p>

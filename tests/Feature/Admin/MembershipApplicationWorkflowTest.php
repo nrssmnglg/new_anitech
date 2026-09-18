@@ -374,6 +374,23 @@ class MembershipApplicationWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_first_mobile_upload_records_submission_date_even_when_draft_reads_as_pending(): void
+    {
+        Storage::fake('public');
+        $this->makeAdminUser();
+        $farmer = $this->makeFarmer($this->makeLookups());
+        $service = app(MembershipApplicationService::class);
+        $application = $service->create(['farmer_id' => $farmer->id, 'source' => 'mobile']);
+        $this->assertNull($application->fresh()->submitted_at);
+        $this->assertSame(ApplicationStatus::SUBMITTED, $application->fresh()->status);
+        $service->uploadMobileDocument($application->fresh(), 'cedula', UploadedFile::fake()->create('cedula.pdf', 120, 'application/pdf'));
+        $submittedAt = $application->fresh()->submitted_at;
+        $this->assertNotNull($submittedAt);
+        $this->travel(1)->hours();
+        $service->uploadMobileDocument($application->fresh(), 'cedula', UploadedFile::fake()->create('updated-cedula.pdf', 120, 'application/pdf'));
+        $this->assertTrue($submittedAt->equalTo($application->fresh()->submitted_at));
+    }
+
     public function test_paid_and_approved_mobile_application_remains_in_approved_queue(): void
     {
         // The queue's year options use MySQL's YEAR function.

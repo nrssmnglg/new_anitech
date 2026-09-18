@@ -390,7 +390,7 @@ class MembershipApplicationService
 
             $document->forceFill($payload)->save();
 
-            if (($application->status?->value ?? (string) $application->status) === ApplicationStatus::DRAFT->value) {
+            if (! $application->submitted_at && in_array($application->status, [ApplicationStatus::DRAFT, ApplicationStatus::SUBMITTED], true)) {
                 $application->forceFill([
                     'status' => $this->workflow->submit(ApplicationStatus::DRAFT),
                     'submitted_at' => $application->submitted_at ?? CarbonImmutable::now(),
@@ -477,6 +477,7 @@ class MembershipApplicationService
 
         $application->forceFill([
             'status' => $this->workflow->approve($currentStatus),
+            'submitted_at' => $application->submitted_at ?? CarbonImmutable::now(),
             'reviewed_by' => $reviewerId,
             'reviewed_at' => CarbonImmutable::now(),
             'rejection_reason' => null,
