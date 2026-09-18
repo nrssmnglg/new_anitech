@@ -72,7 +72,7 @@ class MembershipApplicationController extends Controller
         $summaryFilters['status'] = null;
 
         $applicationsQuery = $this->requestQueueQuery($filters);
-        $summaryQuery = $this->requestQueueQuery($summaryFilters);
+        $summaryQuery = $this->requestQueueQuery($summaryFilters, includeArchivedRejected: true);
 
             $applications = (clone $applicationsQuery)
             ->with([
@@ -870,7 +870,7 @@ class MembershipApplicationController extends Controller
         };
     }
 
-    private function requestQueueQuery(array $filters): Builder
+    private function requestQueueQuery(array $filters, bool $includeArchivedRejected = false): Builder
     {
         $queueStatuses = [
             ...$this->databaseStatusesForPendingQueue(),
@@ -885,7 +885,7 @@ class MembershipApplicationController extends Controller
 
         return MembershipApplication::query()
             ->where(fn (Builder $query) => $query->whereNull('source')->orWhere('source', '!=', 'legacy'))
-            ->when(! ($filters['status'] ?? null), function (Builder $query): void {
+            ->when(! $includeArchivedRejected && ! ($filters['status'] ?? null), function (Builder $query): void {
                 $query->where(function (Builder $activeQueue): void {
                     $activeQueue->where('status', '!=', $this->databaseStatusValue(ApplicationStatus::REJECTED))
                         ->orWhereNull('rejection_reason')

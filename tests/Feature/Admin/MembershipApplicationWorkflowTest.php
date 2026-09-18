@@ -374,6 +374,36 @@ class MembershipApplicationWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_rejected_summary_includes_applications_rejected_for_no_follow_up(): void
+    {
+        DB::connection()->getPdo()->sqliteCreateFunction('year', fn ($date) => $date ? (int) substr($date, 0, 4) : null);
+        $user = $this->makeAdminUser();
+        $farmer = $this->makeFarmer($this->makeLookups());
+        $rejected = MembershipApplication::query()->create([
+            'farmer_id' => $farmer->id, 'application_no' => 'APP-NO-FOLLOW-UP', 'source' => 'mobile',
+            'status' => ApplicationStatus::REJECTED, 'submitted_at' => now(),
+            'rejection_reason' => MembershipApplicationRejectionReason::UNABLE_TO_FOLLOW_UP->value,
+        ]);
+        MembershipApplication::query()->create([
+            'farmer_id' => $farmer->id, 'application_no' => 'APP-STILL-PENDING', 'source' => 'mobile',
+            'status' => ApplicationStatus::SUBMITTED, 'submitted_at' => now(),
+        ]);
+        foreach (['pending', 'rejected'] as $status) {
+            $response = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'mobile', 'status' => $status]));
+            $response->assertOk();
+            $response->assertInertia(fn ($page) => $page
+                ->where('summary.total', 2)->where('summary.pending', 1)
+                ->where('summary.rejected', 1)->where('summary.approved', 0));
+            if ($status === 'rejected') {
+                $response->assertSee($rejected->application_no);
+            } else {
+                $response->assertDontSee($rejected->application_no);
+            }
+        }
+        $response = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'walk_in']));
+        $response->assertInertia(fn ($page) => $page->where('summary.total', 0)->where('summary.rejected', 0));
+    }
+
     public function test_first_mobile_upload_records_submission_date_even_when_draft_reads_as_pending(): void
     {
         Storage::fake('public');
