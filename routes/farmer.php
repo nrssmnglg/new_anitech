@@ -5,12 +5,19 @@ use App\Http\Controllers\Api\FarmerPasswordResetController;
 use App\Http\Controllers\Api\MembershipApplicationController;
 use App\Models\Association;
 use App\Models\Barangay;
+use App\Services\Documents\DocumentRequirementService;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('farmer')->name('farmer.pwa.')->group(function (): void {
     Route::get('/', fn () => redirect()->route('farmer.pwa.app'));
+
+    Route::get('/application/requirements', function (DocumentRequirementService $requirements) {
+        return response()->json([
+            'data' => $requirements->requiredLabelsFor('application', ['source' => 'mobile']),
+        ])->header('Cache-Control', 'no-store');
+    })->name('application.requirements');
 
     Route::post('/application', [MembershipApplicationController::class, 'store'])
         ->withoutMiddleware([VerifyCsrfToken::class])
@@ -92,6 +99,8 @@ Route::prefix('farmer')->name('farmer.pwa.')->group(function (): void {
                 'appBase' => url('/farmer/app'),
                 'logoUrl' => asset('figures/anitech-mark-official.svg'),
                 'publicData' => [
+                    'applicationDocumentChecklist' => app(DocumentRequirementService::class)
+                        ->requiredLabelsFor('application', ['source' => 'mobile']),
                     'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
                     'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
                 ],

@@ -16,6 +16,21 @@ use Illuminate\Support\Facades\Schema;
 
 class DocumentRequirementService
 {
+    public function requiredLabelsFor(string $workflow, array|object $context = []): array
+    {
+        $query = DocumentRequirement::query()->where('transaction_type', ucfirst(strtolower($workflow)));
+
+        if ($query->exists()) {
+            return $query->where('is_active', true)->where('is_required', true)
+                ->with('documentType')->orderBy('id')->get()
+                ->map(fn (DocumentRequirement $requirement) => $requirement->documentType?->name
+                    ?: $requirement->documentType?->code)
+                ->filter()->values()->all();
+        }
+
+        return array_map(fn (DocumentType $type) => $type->label(), $this->requiredFor($workflow, $context));
+    }
+
     public function requiredFor(string $workflow, array|object $context = []): array
     {
         $source = $this->resolveSource($context);

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, ref } from 'vue';
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import AppState from '../components/ui/AppState.vue';
 import { useDraft } from '../composables/useDraft';
@@ -57,9 +57,21 @@ const filteredAssociations = computed(() => {
     return associations.value.filter((association) => String(association.barangay_id) === String(form.barangay_id));
 });
 
-const requiredDocumentChecklist = computed(() => (
-    shell.publicData?.applicationDocumentChecklist ?? ['2x2 Picture', 'Birth Certificate', 'Cedula']
-));
+const requiredDocumentChecklist = ref(shell.publicData?.applicationDocumentChecklist ?? []);
+const refreshRequirements = async () => {
+    try {
+        const response = await farmerApi.get(farmerPublicUrl('/farmer/application/requirements'));
+        requiredDocumentChecklist.value = response.data.data;
+    } catch {
+        // Keep the last server-provided checklist when the connection is unavailable.
+    }
+};
+
+onMounted(() => {
+    refreshRequirements();
+    window.addEventListener('focus', refreshRequirements);
+});
+onUnmounted(() => window.removeEventListener('focus', refreshRequirements));
 
 const currentStep = computed({
     get: () => Number(form.step || 1),
