@@ -24,6 +24,11 @@ defineProps({
                 <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Source</p>
                 <p class="mt-2 text-sm font-semibold text-[#191c1c]">{{ application.sourceLabel }}</p>
             </div>
+            <div v-if="application.status?.value === 'approved'" class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-3">
+                <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Approved By</p>
+                <p class="mt-2 text-sm font-semibold text-[#191c1c]">{{ application.reviewerName || 'Approver not recorded' }}</p>
+                <p v-if="application.reviewedAt" class="mt-1 text-xs text-[#65736d]">{{ application.reviewedAt }}</p>
+            </div>
             <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-3">
                 <p class="text-xs font-black uppercase tracking-[0.2em] text-[#7a8781]">Birth Date</p>
                 <p class="mt-2 text-sm font-semibold text-[#191c1c]">{{ farmer.birthDate || 'Not set' }}</p>
