@@ -1,4 +1,5 @@
 <script setup>
+import DocumentPreview from '../../../Components/Admin/DocumentPreview.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
@@ -351,8 +352,7 @@ function openPreviewInNewTab() {
                     </div>
 
                     <div class="min-h-[65vh] overflow-auto bg-[#f5f7f6] p-4">
-                        <img v-if="previewIsImage" :src="previewUrl" :alt="previewDocument.documentLabel" class="mx-auto max-h-[70vh] w-auto max-w-full rounded-[20px] bg-white object-contain shadow-[0_12px_32px_rgba(15,23,42,0.08)]">
-                        <iframe v-else-if="previewIsPdf" :src="previewUrl" class="h-[70vh] w-full rounded-[20px] border border-[#d7e0db] bg-white" title="Document preview"></iframe>
+                        <DocumentPreview v-if="previewIsImage || previewIsPdf" :key="previewDocument.id" :src="previewUrl" :label="previewDocument.documentLabel" :is-pdf="previewIsPdf" />
                         <div v-else class="flex h-[70vh] items-center justify-center rounded-[20px] border border-[#d7e0db] bg-white px-6 text-center">
                             <div class="max-w-md space-y-3">
                                 <h4 class="text-lg font-bold text-[#1a2420]">Preview not available</h4>

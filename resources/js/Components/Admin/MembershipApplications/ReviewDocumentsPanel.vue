@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
+import DocumentPreview from '../DocumentPreview.vue';
 
 defineProps({
     application: { type: Object, required: true },
@@ -273,21 +274,14 @@ function visibleValidationNotes(document) {
                             <p class="text-xs font-semibold">Loading preview...</p>
                         </div>
                     </div>
-                    <img
-                        v-if="previewIsImage && !previewFailed"
+                    <DocumentPreview
+                        v-if="previewCanInline && !previewFailed"
                         :src="previewUrl"
-                        :alt="previewDocument.label"
-                        class="mx-auto max-h-[72vh] w-auto max-w-full rounded-md bg-white object-contain"
+                        :label="previewDocument.label"
+                        :is-pdf="previewIsPdf"
                         @load="markPreviewLoaded"
                         @error="markPreviewFailed"
-                    >
-                    <iframe
-                        v-else-if="previewIsPdf && !previewFailed"
-                        :src="previewUrl"
-                        class="h-[72vh] min-h-[420px] w-full rounded-md border border-[#d7e0db] bg-white"
-                        title="Uploaded file preview"
-                        @load="markPreviewLoaded"
-                    ></iframe>
+                    />
                     <div
                         v-else
                         class="flex min-h-[360px] items-center justify-center rounded-md border border-[#d7e0db] bg-white px-5 text-center"
