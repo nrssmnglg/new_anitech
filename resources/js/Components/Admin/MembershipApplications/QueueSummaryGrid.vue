@@ -6,7 +6,7 @@ defineProps({
 const cards = [
     {
         key: 'total',
-        label: 'Total In Queue',
+        label: 'Total',
         iconWrap: 'bg-[#1b4d3e]/10 text-[#003629]',
         valueClass: 'text-[#003629]',
     },

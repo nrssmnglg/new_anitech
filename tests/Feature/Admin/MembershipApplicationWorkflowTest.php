@@ -415,7 +415,13 @@ class MembershipApplicationWorkflowTest extends TestCase
             'submitted_at' => now(),
         ]);
 
-        $response = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'mobile']));
+        $defaultResponse = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'mobile']));
+        $defaultResponse->assertOk();
+        $defaultResponse->assertSee($pendingApplication->application_no);
+        $defaultResponse->assertDontSee($paidApplication->application_no);
+        $defaultResponse->assertInertia(fn ($page) => $page->where('filters.status', 'pending')->where('summary.total', 2));
+
+        $response = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'mobile', 'status' => '']));
 
         $response->assertOk();
         $response->assertSee($paidApplication->application_no);

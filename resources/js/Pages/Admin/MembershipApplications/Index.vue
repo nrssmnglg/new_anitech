@@ -6,7 +6,7 @@ import QueueFilters from '../../../Components/Admin/MembershipApplications/Queue
 import QueueHero from '../../../Components/Admin/MembershipApplications/QueueHero.vue';
 import QueueSummaryGrid from '../../../Components/Admin/MembershipApplications/QueueSummaryGrid.vue';
 import QueueTable from '../../../Components/Admin/MembershipApplications/QueueTable.vue';
-import { usePersistentObject, readStoredValue, persistValue } from '../../../Composables/usePersistentUiState';
+import { readStoredValue, persistValue } from '../../../Composables/usePersistentUiState';
 
 const props = defineProps({
     applications: { type: Object, required: true },
@@ -28,7 +28,6 @@ const form = reactive({
 });
 const compactMode = ref(Boolean(readStoredValue('staff.membership-applications.compact-mode', false)));
 
-usePersistentObject('staff.membership-applications.filters', form);
 persistValue('staff.membership-applications.compact-mode', compactMode);
 
 function applyFilters() {
@@ -41,7 +40,7 @@ function applyFilters() {
 
 function resetFilters() {
     form.source = '';
-    form.status = '';
+    form.status = 'pending';
     form.year = '';
     form.barangay_id = '';
     applyFilters();

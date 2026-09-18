@@ -60,7 +60,7 @@ class MembershipApplicationController extends Controller
 
     public function index(Request $request): InertiaResponse
     {
-        $requestedStatus = $request->query('status');
+        $requestedStatus = $request->query->has('status') ? $request->query('status') : 'pending';
 
         $filters = [
             'source' => $request->query('source'),
