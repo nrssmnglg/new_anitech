@@ -917,8 +917,11 @@ class MembershipApplicationController extends Controller
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
             ->whereIn('status', $queueStatuses)
-            ->whereDoesntHave('paymentAssessments', function (Builder $assessmentQuery) use ($settledAssessmentStatuses): void {
-                $assessmentQuery->whereIn('status', $settledAssessmentStatuses);
+            ->where(function (Builder $query) use ($settledAssessmentStatuses): void {
+                $query->where('status', $this->databaseStatusValue(ApplicationStatus::APPROVED))
+                    ->orWhereDoesntHave('paymentAssessments', function (Builder $assessmentQuery) use ($settledAssessmentStatuses): void {
+                        $assessmentQuery->whereIn('status', $settledAssessmentStatuses);
+                    });
             });
     }
 
@@ -991,4 +994,3 @@ class MembershipApplicationController extends Controller
         return Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false;
     }
 }
-

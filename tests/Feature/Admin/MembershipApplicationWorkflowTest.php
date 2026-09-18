@@ -374,8 +374,10 @@ class MembershipApplicationWorkflowTest extends TestCase
         ]);
     }
 
-    public function test_paid_and_approved_mobile_application_is_hidden_from_membership_application_requests(): void
+    public function test_paid_and_approved_mobile_application_remains_in_approved_queue(): void
     {
+        // The queue's year options use MySQL's YEAR function.
+        DB::connection()->getPdo()->sqliteCreateFunction('year', fn ($date) => $date ? (int) substr($date, 0, 4) : null);
         $user = $this->makeAdminUser();
         $lookups = $this->makeLookups();
         $this->makeFeeSchedule();
@@ -393,7 +395,7 @@ class MembershipApplicationWorkflowTest extends TestCase
 
         PaymentAssessment::query()->create([
             'farmer_id' => $paidFarmer->id,
-            'membership_application_id' => $paidApplication->id,
+            'membership_transaction_id' => $paidApplication->id,
             'fee_schedule_id' => FeeSchedule::query()->value('id'),
             'member_type_snapshot' => MemberTypeCode::NM->value,
             'membership_fee' => 100,
@@ -416,8 +418,19 @@ class MembershipApplicationWorkflowTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.membership-applications.index', ['source' => 'mobile']));
 
         $response->assertOk();
-        $response->assertDontSee($paidApplication->application_no);
+        $response->assertSee($paidApplication->application_no);
         $response->assertSee($pendingApplication->application_no);
+        $response->assertInertia(fn ($page) => $page
+            ->where('summary.total', 2)
+            ->where('summary.approved', 1)
+            ->where('summary.pending', 1));
+
+        $approvedResponse = $this->actingAs($user)->get(route('admin.membership-applications.index', [
+            'source' => 'mobile', 'status' => 'approved',
+        ]));
+        $approvedResponse->assertOk();
+        $approvedResponse->assertSee($paidApplication->application_no);
+        $approvedResponse->assertDontSee($pendingApplication->application_no);
     }
 
     public function test_walk_in_manual_approval_is_blocked_and_payment_is_the_approval_step(): void
@@ -637,7 +650,8 @@ class MembershipApplicationWorkflowTest extends TestCase
             'name' => 'Office Admin',
             'email' => 'admin' . uniqid() . '@example.test',
             'password' => 'secret123',
-            'status' => 'active',
+            'status' => User::STATUS_ACTIVE,
+            'role' => User::ROLE_ADMIN,
         ]);
 
         $user->assignRole(User::ROLE_ADMIN);
@@ -654,7 +668,8 @@ class MembershipApplicationWorkflowTest extends TestCase
             'name' => 'Office Staff',
             'email' => 'staff' . uniqid() . '@example.test',
             'password' => 'secret123',
-            'status' => 'active',
+            'status' => User::STATUS_ACTIVE,
+            'role' => User::ROLE_STAFF,
         ]);
 
         $user->assignRole(User::ROLE_STAFF);
@@ -676,14 +691,14 @@ class MembershipApplicationWorkflowTest extends TestCase
         $barangay = Barangay::query()->create([
             'name' => 'San Roque',
             'code' => 'BRGY-' . uniqid(),
-            'status' => 'active',
+            'status' => 'Active',
         ]);
 
         $association = Association::query()->create([
             'barangay_id' => $barangay->id,
             'name' => 'San Roque Association',
             'code' => 'ASSOC-' . uniqid(),
-            'status' => 'active',
+            'status' => 'Active',
         ]);
 
         return compact('memberType', 'barangay', 'association');
@@ -729,6 +744,7 @@ class MembershipApplicationWorkflowTest extends TestCase
     private function makeFeeSchedule(): void
     {
         FeeSchedule::query()->create([
+            'member_type_id' => MemberType::query()->value('id'),
             'year' => now()->year,
             'membership_fee' => 100,
             'annual_due' => 100,
