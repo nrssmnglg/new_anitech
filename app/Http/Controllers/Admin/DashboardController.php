@@ -1207,6 +1207,7 @@ class DashboardController extends Controller
     {
         return MemberType::query()
             ->withCount(['farmers as filtered_farmers_count' => function (Builder $query) use ($year, $barangayId): void {
+                $query->where('membership_status', MembershipStatus::ACTIVE->value);
                 $this->applyFarmerYearFilter($query, $year);
 
                 if ($barangayId !== null) {
