@@ -182,6 +182,9 @@ function visibleValidationNotes(document) {
                                 {{ alertBadge(document).label }}
                             </span>
                         </div>
+                        <p v-if="document.verificationStatus.value === 'verified'" class="mt-1 text-[0.62rem] text-[#65736d]">
+                            Verified by {{ document.verifierName || 'staff member not recorded' }}<span v-if="document.verifiedAt"> · {{ document.verifiedAt }}</span>
+                        </p>
                         <div v-if="document.remarks || visibleValidationNotes(document).length" class="mt-1 space-y-0.5">
                             <p v-if="document.remarks" class="text-[0.62rem] text-[#78857f]">{{ document.remarks }}</p>
                             <ul v-if="visibleValidationNotes(document).length" class="space-y-0.5 text-[0.62rem] text-[#5f6c67]">

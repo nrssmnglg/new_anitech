@@ -599,6 +599,8 @@ class RenewalController extends Controller
                 return $document;
             })->values();
 
+        $verifierAttribution = app(\App\Services\Documents\DocumentVerifierAttributionService::class)->forTransaction($renewal);
+
         $assessment = $renewal->paymentAssessments->sortByDesc('id')->first();
 
         if (
@@ -809,6 +811,8 @@ class RenewalController extends Controller
                     'value' => $document->verification_status?->value,
                     'label' => $document->verification_status?->label() ?? 'Pending',
                 ],
+                'verifierName' => $document->verifier?->name ?? $verifierAttribution->get($document->id)['name'] ?? null,
+                'verifiedAt' => optional($document->verified_at ?? $verifierAttribution->get($document->id)['verified_at'] ?? null)->format('M d, Y h:i A'),
                 'remarks' => $document->remarks,
                 'previewMimeType' => $document->getAttribute('upload_present')
                     ? $this->previewMimeTypeForDocument($document)

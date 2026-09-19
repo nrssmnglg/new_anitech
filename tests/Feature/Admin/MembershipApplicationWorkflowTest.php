@@ -190,6 +190,7 @@ class MembershipApplicationWorkflowTest extends TestCase
 
     public function test_mobile_application_cannot_be_approved_until_uploaded_documents_are_verified(): void
     {
+        Storage::fake('public');
         $user = $this->makeAdminUser();
         $lookups = $this->makeLookups();
         $this->makeFeeSchedule();
@@ -218,9 +219,10 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame(MembershipStatus::PENDING_DOCUMENTS, $farmer->fresh()->membership_status);
 
         foreach ($application->documents as $document) {
+            $path = 'documents/' . $document->document_type->value . '.pdf';
+            Storage::disk('public')->put($path, 'test document');
             $document->update([
-                'disk' => 'public',
-                'path' => 'documents/' . $document->document_type->value . '.pdf',
+                'file_path' => $path,
                 'original_name' => $document->document_type->value . '.pdf',
                 'mime_type' => 'application/pdf',
                 'file_size' => 1024,
@@ -232,6 +234,14 @@ class MembershipApplicationWorkflowTest extends TestCase
                 ]);
 
             $verifyResponse->assertRedirect(route('admin.membership-applications.show', $application));
+            $verifyResponse->assertSessionHasNoErrors();
+            $this->assertSame($user->id, $document->fresh()->verified_by);
+            $this->assertSame($user->name, $document->fresh()->verifier?->name);
+        }
+
+        $attributions = app(\App\Services\Documents\DocumentVerifierAttributionService::class)->forTransaction($application);
+        foreach ($application->documents as $document) {
+            $this->assertSame($user->name, $attributions->get($document->id)['name']);
         }
 
         $this->assertSame(MembershipStatus::PENDING_VERIFICATION, $farmer->fresh()->membership_status);
@@ -879,9 +889,6 @@ class MembershipApplicationWorkflowTest extends TestCase
         ]);
     }
 }
-
-
-
 
 
 

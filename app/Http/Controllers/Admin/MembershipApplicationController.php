@@ -437,6 +437,7 @@ class MembershipApplicationController extends Controller
             return $document;
         });
         $checklistInitialized = $membershipApplication->source !== 'walk_in' || $documents->isNotEmpty();
+        $verifierAttribution = app(\App\Services\Documents\DocumentVerifierAttributionService::class)->forTransaction($membershipApplication);
 
         $assessment = $membershipApplication->paymentAssessments->sortByDesc('id')->first();
         $paymentPreview = null;
@@ -602,6 +603,8 @@ class MembershipApplicationController extends Controller
                     'value' => $document->verification_status?->value,
                     'label' => $document->verification_status?->label() ?? 'Pending',
                 ],
+                'verifierName' => $document->verifier?->name ?? $verifierAttribution->get($document->id)['name'] ?? null,
+                'verifiedAt' => optional($document->verified_at ?? $verifierAttribution->get($document->id)['verified_at'] ?? null)->format('M d, Y h:i A'),
                 'remarks' => $document->remarks,
                 'previewMimeType' => $document->getAttribute('upload_present')
                     ? $this->previewMimeTypeForDocument($document)
