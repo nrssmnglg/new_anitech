@@ -494,20 +494,6 @@ const linePoints = computed(() => {
                     </Link>
                 </div>
 
-                <div class="mt-2 grid gap-2 sm:grid-cols-3">
-                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
-                            <span class="text-[#65736d]">Pending review</span>
-                            <strong class="text-[#a66a00]">{{ formatNumber(renewalStatistics.pendingRequests) }}</strong>
-                        </div>
-                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
-                            <span class="text-[#65736d]">Late renewals</span>
-                            <strong class="text-[#9b5f00]">{{ formatNumber(renewalStatistics.lateRenewals) }}</strong>
-                        </div>
-                        <div class="flex items-center justify-between rounded-md border border-[#e6ebe8] bg-[#fafcfb] px-3 py-2 text-xs">
-                            <span class="text-[#65736d]">Rejected</span>
-                            <strong class="text-[#b53d50]">{{ formatNumber(renewalStatistics.rejectedRequests) }}</strong>
-                        </div>
-                </div>
             </article>
 
             <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">

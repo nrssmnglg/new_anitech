@@ -8,6 +8,7 @@ use App\Models\MembershipApplication;
 use App\Models\Query;
 use App\Models\RenewalRequest;
 use App\Services\Notifications\NotificationDispatchService;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ class NotificationController extends Controller
 {
     public function __construct(
         private readonly NotificationDispatchService $notificationDispatchService,
+        private readonly PublicRouteKeyService $publicRouteKeyService,
     ) {
     }
 
@@ -77,10 +79,12 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function show(int $notification): InertiaResponse
+    public function show(string $notification): InertiaResponse
     {
+        $notificationId = $this->decodeNotificationRouteKey($notification);
+
         $dispatch = $this->dispatchHistoryQuery()
-            ->where('notifications.id', $notification)
+            ->where('notifications.id', $notificationId)
             ->firstOrFail();
 
         $dispatch = $this->transformDispatch($dispatch);
@@ -88,7 +92,7 @@ class NotificationController extends Controller
         $recipients = DB::table('notification_recipients as recipients')
             ->leftJoin('users', 'users.id', '=', 'recipients.user_id')
             ->leftJoin('farmers', 'farmers.id', '=', 'recipients.farmer_id')
-            ->where('recipients.notification_id', $notification)
+            ->where('recipients.notification_id', $notificationId)
             ->select([
                 'recipients.id',
                 'recipients.user_id',
@@ -193,16 +197,18 @@ class NotificationController extends Controller
             ->with('success', 'Notification marked as read.');
     }
 
-    public function resend(int $notification): RedirectResponse
+    public function resend(string $notification): RedirectResponse
     {
+        $notificationId = $this->decodeNotificationRouteKey($notification);
+
         $record = DB::table('notifications')
-            ->where('id', $notification)
+            ->where('id', $notificationId)
             ->first();
 
         abort_unless($record !== null, 404);
 
         $recipients = DB::table('notification_recipients')
-            ->where('notification_id', $notification)
+            ->where('notification_id', $notificationId)
             ->get()
             ->map(fn (object $recipient): array => [
                 'user_id' => $recipient->user_id,
@@ -504,10 +510,28 @@ class NotificationController extends Controller
             (string) ($dispatch->status ?? '') === 'queued' => 'Queued',
             default => ucfirst((string) ($dispatch->status ?? 'queued')),
         };
-        $dispatch->show_url = route('admin.notifications.show', $dispatch->id);
-        $dispatch->resend_url = route('admin.notifications.resend', $dispatch->id);
+        $dispatch->show_url = route('admin.notifications.show', $this->notificationRouteKey($dispatch->id));
+        $dispatch->resend_url = route('admin.notifications.resend', $this->notificationRouteKey($dispatch->id));
 
         return $dispatch;
+    }
+
+    private function notificationRouteKey(int|string $notificationId): string
+    {
+        return $this->publicRouteKeyService->encode($notificationId);
+    }
+
+    private function decodeNotificationRouteKey(string $notification): int
+    {
+        if (is_numeric($notification)) {
+            return (int) $notification;
+        }
+
+        $decodedId = $this->publicRouteKeyService->decode($notification);
+
+        abort_if($decodedId === null, 404);
+
+        return $decodedId;
     }
 
     private function transformFailedRecipient(object $failure): object

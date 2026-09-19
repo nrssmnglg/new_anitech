@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasEncryptedPublicRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Attachment extends Model
 {
+    use HasEncryptedPublicRouteKey;
     use HasFactory;
 
     public $timestamps = false;

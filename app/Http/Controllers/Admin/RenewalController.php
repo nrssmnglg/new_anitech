@@ -31,6 +31,7 @@ use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Payments\PaymentAssessmentService;
 use App\Services\Reports\Pdf\RenewalSummaryPdfService;
 use App\Services\Reports\Pdf\StoredPdfExportService;
+use App\Services\Routing\PublicRouteKeyService;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -413,7 +414,7 @@ class RenewalController extends Controller
 
     public function create(Request $request): InertiaResponse
     {
-        $farmerId = $request->integer('farmer_id');
+        $farmerId = $this->decodeQueryRouteKey((string) $request->query('farmer_id', ''));
         abort_unless($farmerId, 404);
         $year = (int) $request->integer('year', now()->year);
 
@@ -1652,10 +1653,28 @@ class RenewalController extends Controller
                 'emailAvailable' => $farmer->users->contains(fn (User $account): bool => filled($account->email)),
             ],
             'actions' => [
-                'createUrl' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $year]),
+                'createUrl' => route('admin.renewals.create', ['farmer_id' => $this->queryRouteKey($farmer->id), 'year' => $year]),
                 'sendReminderEmailUrl' => route('admin.renewals.reminders.email', $farmer),
             ],
         ];
+    }
+
+    private function queryRouteKey(int|string|null $id): ?string
+    {
+        return $id === null ? null : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 
     private function accountability(RenewalRequest $renewal): array

@@ -241,7 +241,9 @@ class AuditLogController extends Controller
             $subject instanceof MembershipApplication => route('admin.membership-applications.show', $subject),
             $subject instanceof RenewalRequest => route('admin.renewals.show', $subject),
             $subject instanceof Query => route('admin.queries.show', $subject),
-            $subject instanceof QueryResponse => $subject->query_id ? route('admin.queries.show', $subject->query_id) : null,
+            $subject instanceof QueryResponse => $subject->query_id
+                ? optional(Query::query()->find($subject->query_id), fn (Query $query): string => route('admin.queries.show', $query))
+                : null,
             $subject instanceof Barangay => route('admin.barangays.show', $subject),
             $subject instanceof Association => route('admin.associations.show', $subject),
             $subject instanceof Advisory => route('admin.advisories.show', $subject),

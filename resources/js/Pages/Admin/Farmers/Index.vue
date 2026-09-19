@@ -35,11 +35,19 @@ const page = usePage();
 const flashSuccess = computed(() => page.props.flash?.success || '');
 const flashError = computed(() => page.props.flash?.error || '');
 
+const optionValueForId = (options, id) => {
+    if (!id) {
+        return '';
+    }
+
+    return String((options || []).find((option) => String(option.id) === String(id))?.key || id);
+};
+
 const form = reactive({
     search: props.filters.search || '',
     status: props.filters.status || '',
-    barangay_id: props.filters.barangay_id || '',
-    member_type_id: props.filters.member_type_id || '',
+    barangay_id: optionValueForId(props.filterOptions.barangays, props.filters.barangay_id),
+    member_type_id: optionValueForId(props.filterOptions.memberTypes, props.filters.member_type_id),
     quality: props.filters.quality || '',
 });
 
@@ -96,7 +104,7 @@ const assignmentAssociations = computed(() => {
         return props.filterOptions.associations || [];
     }
 
-    return (props.filterOptions.associations || []).filter((association) => String(association.barangay_id) === String(assignmentForm.barangay_id));
+    return (props.filterOptions.associations || []).filter((association) => String(association.barangay_key || association.barangay_id) === String(assignmentForm.barangay_id));
 });
 
 function toggleSelection(id) {
@@ -389,21 +397,21 @@ function submitBulkArchive() {
                         <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Barangay</span>
                         <select v-model="assignmentForm.barangay_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#1a2420] outline-none">
                             <option value="">Keep current</option>
-                            <option v-for="barangay in filterOptions.barangays" :key="barangay.id" :value="String(barangay.id)">{{ barangay.name }}</option>
+                            <option v-for="barangay in filterOptions.barangays" :key="barangay.key || barangay.id" :value="String(barangay.key || barangay.id)">{{ barangay.name }}</option>
                         </select>
                     </label>
                     <label class="space-y-2">
                         <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Association</span>
                         <select v-model="assignmentForm.association_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#1a2420] outline-none">
                             <option value="">Keep current</option>
-                            <option v-for="association in assignmentAssociations" :key="association.id" :value="String(association.id)">{{ association.name }}</option>
+                            <option v-for="association in assignmentAssociations" :key="association.key || association.id" :value="String(association.key || association.id)">{{ association.name }}</option>
                         </select>
                     </label>
                     <label class="space-y-2">
                         <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Member Type</span>
                         <select v-model="assignmentForm.member_type_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#1a2420] outline-none">
                             <option value="">Keep current</option>
-                            <option v-for="memberType in filterOptions.memberTypes" :key="memberType.id" :value="String(memberType.id)">{{ memberType.code }} - {{ memberType.name }}</option>
+                            <option v-for="memberType in filterOptions.memberTypes" :key="memberType.key || memberType.id" :value="String(memberType.key || memberType.id)">{{ memberType.code }} - {{ memberType.name }}</option>
                         </select>
                     </label>
                 </div>

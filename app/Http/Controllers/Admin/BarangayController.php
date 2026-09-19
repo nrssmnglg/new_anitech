@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreBarangayRequest;
 use App\Http\Requests\Admin\UpdateBarangayRequest;
 use App\Models\Barangay;
 use App\Models\User;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -130,7 +131,7 @@ class BarangayController extends Controller
             'urls' => [
                 'index' => route('admin.barangays.index'),
                 'edit' => route('admin.barangays.edit', $barangay),
-                'farmers' => route('admin.farmers.index', ['barangay_id' => $barangay->id]),
+                'farmers' => route('admin.farmers.index', ['barangay_id' => app(PublicRouteKeyService::class)->encode($barangay->id)]),
             ],
         ]);
     }

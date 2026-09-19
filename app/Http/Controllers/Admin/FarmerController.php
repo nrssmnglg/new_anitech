@@ -30,6 +30,7 @@ use App\Services\Farmers\FarmerRegistryService;
 use App\Services\Farmers\LegacyMembershipRecorderService;
 use App\Services\Farmers\FarmerStatusWorkflowService;
 use App\Services\Notifications\NotificationDispatchService;
+use App\Services\Routing\PublicRouteKeyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
@@ -113,7 +114,7 @@ class FarmerController extends Controller
                         ? route('admin.farmers.edit', $farmer)
                         : null,
                     'renewalUrl' => $this->renewalEligibility($farmer)['isAvailable']
-                        ? route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)])
+                        ? route('admin.renewals.create', ['farmer_id' => $this->queryRouteKey($farmer->id), 'year' => $this->preferredRenewalYear($farmer)])
                         : null,
                 ],
                 'accountability' => $this->accountability($farmer),
@@ -121,9 +122,39 @@ class FarmerController extends Controller
             'filters' => $filters,
             'filterOptions' => [
                 'statuses' => $this->registryStatusOptions(),
-                'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
-                'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
-                'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
+                'barangays' => Barangay::query()
+                    ->orderBy('name')
+                    ->get(['id', 'name'])
+                    ->map(fn (Barangay $barangay): array => [
+                        'id' => $barangay->id,
+                        'key' => $this->queryRouteKey($barangay->id),
+                        'name' => $barangay->name,
+                    ])
+                    ->values()
+                    ->all(),
+                'associations' => Association::query()
+                    ->orderBy('name')
+                    ->get(['id', 'barangay_id', 'name'])
+                    ->map(fn (Association $association): array => [
+                        'id' => $association->id,
+                        'key' => $this->queryRouteKey($association->id),
+                        'barangay_id' => $association->barangay_id,
+                        'barangay_key' => $this->queryRouteKey($association->barangay_id),
+                        'name' => $association->name,
+                    ])
+                    ->values()
+                    ->all(),
+                'memberTypes' => MemberType::query()
+                    ->orderBy('code')
+                    ->get(['id', 'code', 'name'])
+                    ->map(fn (MemberType $memberType): array => [
+                        'id' => $memberType->id,
+                        'key' => $this->queryRouteKey($memberType->id),
+                        'code' => $memberType->code,
+                        'name' => $memberType->name,
+                    ])
+                    ->values()
+                    ->all(),
             ],
             'summary' => [
                 'total' => (clone $summaryQuery)->count(),
@@ -415,7 +446,7 @@ class FarmerController extends Controller
                     ? route('admin.farmers.edit', $farmer)
                     : null,
                 'createApplication' => route('admin.membership-applications.create'),
-                'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $farmer->id, 'year' => $this->preferredRenewalYear($farmer)]),
+                'renewalCreate' => route('admin.renewals.create', ['farmer_id' => $this->queryRouteKey($farmer->id), 'year' => $this->preferredRenewalYear($farmer)]),
                 'reactivate' => route('admin.farmers.reactivate', $farmer),
                 'recover' => route('admin.backups.farmers.recover', $farmer),
                 'storeInternalNote' => route('admin.farmers.internal-notes.store', $farmer),
@@ -754,6 +785,8 @@ class FarmerController extends Controller
 
     public function bulkAssign(Request $request): RedirectResponse
     {
+        $this->decodeRequestRouteKeys($request, ['barangay_id', 'association_id', 'member_type_id']);
+
         $validated = $request->validate([
             'scope' => ['required', 'in:selected,filtered'],
             'selected_ids' => ['array'],
@@ -975,8 +1008,8 @@ class FarmerController extends Controller
         return [
             'search' => trim((string) $request->string('search')),
             'status' => $request->filled('status') ? (string) $request->input('status') : null,
-            'barangay_id' => $request->filled('barangay_id') ? (string) $request->input('barangay_id') : null,
-            'member_type_id' => $request->filled('member_type_id') ? (string) $request->input('member_type_id') : null,
+            'barangay_id' => $this->decodeFilterRouteKey((string) $request->input('barangay_id', '')),
+            'member_type_id' => $this->decodeFilterRouteKey((string) $request->input('member_type_id', '')),
             'quality' => $request->filled('quality') ? (string) $request->input('quality') : null,
         ];
     }
@@ -1523,7 +1556,8 @@ class FarmerController extends Controller
                     $href = route('admin.membership-applications.show', $transaction->application_no ?: $transaction->id);
                     $transactionLabel = 'Application payment';
                 } elseif ($transaction?->transaction_type === 'Renewal') {
-                    $href = route('admin.renewals.show', $transaction->id);
+                    $renewal = RenewalRequest::query()->find($transaction->id);
+                    $href = $renewal ? route('admin.renewals.show', $renewal) : null;
                     $transactionLabel = 'Renewal payment';
                 }
 
@@ -1771,5 +1805,40 @@ class FarmerController extends Controller
             ->with(['profile', 'barangay', 'association', 'memberType'])
             ->whereIn('id', $ids)
             ->get();
+    }
+
+    private function queryRouteKey(int|string|null $id): ?string
+    {
+        return $id === null ? null : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeFilterRouteKey(string $key): ?string
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return $key;
+        }
+
+        $decodedId = app(PublicRouteKeyService::class)->decode($key);
+
+        return $decodedId === null ? null : (string) $decodedId;
+    }
+
+    private function decodeRequestRouteKeys(Request $request, array $keys): void
+    {
+        foreach ($keys as $key) {
+            if (! $request->filled($key)) {
+                continue;
+            }
+
+            $decodedId = $this->decodeFilterRouteKey((string) $request->input($key));
+
+            if ($decodedId !== null) {
+                $request->merge([$key => $decodedId]);
+            }
+        }
     }
 }

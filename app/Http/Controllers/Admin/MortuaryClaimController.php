@@ -16,6 +16,7 @@ use App\Models\Farmer;
 use App\Models\MembershipLedger;
 use App\Models\MortuaryClaim;
 use App\Services\Mortuary\MortuaryClaimService;
+use App\Services\Routing\PublicRouteKeyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
@@ -242,7 +243,7 @@ class MortuaryClaimController extends Controller
                 $farmer->farmer_code ?? ''
             ))
             ->values();
-        $selectedLedgerId = (int) $request->integer('membership_ledger_id');
+        $selectedLedgerId = $this->decodeQueryRouteKey((string) $request->query('membership_ledger_id', ''));
         $selectedFarmer = $eligibleFarmers->first(function (Farmer $farmer) use ($selectedLedgerId): bool {
             return (int) ($this->representativeMortuaryLedger($farmer)?->id) === $selectedLedgerId;
         }) ?: $eligibleFarmers->first();
@@ -572,7 +573,7 @@ class MortuaryClaimController extends Controller
             ],
             'actions' => [
                 'createUrl' => $representativeLedger
-                    ? route('admin.mortuary-claims.create', ['membership_ledger_id' => $representativeLedger->id])
+                    ? route('admin.mortuary-claims.create', ['membership_ledger_id' => $this->queryRouteKey($representativeLedger->id)])
                     : null,
             ],
         ];
@@ -893,5 +894,23 @@ class MortuaryClaimController extends Controller
                 'filed_by' => $row['filedBy'] ?? '',
             ];
         })->values();
+    }
+
+    private function queryRouteKey(int|string|null $id): ?string
+    {
+        return $id === null ? null : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }

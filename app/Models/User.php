@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\HasEncryptedPublicRouteKey;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
@@ -18,7 +19,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements CanResetPasswordContract
 {
     /** @use HasFactory<UserFactory> */
-    use CanResetPassword, HasFactory, HasRoles, Notifiable {
+    use CanResetPassword, HasEncryptedPublicRouteKey, HasFactory, HasRoles, Notifiable {
         HasRoles::hasRole as private hasSpatieRole;
     }
 

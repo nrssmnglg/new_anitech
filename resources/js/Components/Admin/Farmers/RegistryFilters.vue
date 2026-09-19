@@ -52,7 +52,7 @@ defineEmits(['apply', 'reset', 'open-export']);
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Barangay</span>
                     <select v-model="form.barangay_id" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                         <option value="">All barangays</option>
-                        <option v-for="barangay in filterOptions.barangays" :key="barangay.id" :value="String(barangay.id)">{{ barangay.name }}</option>
+                        <option v-for="barangay in filterOptions.barangays" :key="barangay.key || barangay.id" :value="String(barangay.key || barangay.id)">{{ barangay.name }}</option>
                     </select>
                 </label>
 
@@ -60,7 +60,7 @@ defineEmits(['apply', 'reset', 'open-export']);
                     <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Member Type</span>
                     <select v-model="form.member_type_id" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                         <option value="">All member types</option>
-                        <option v-for="memberType in filterOptions.memberTypes" :key="memberType.id" :value="String(memberType.id)">
+                        <option v-for="memberType in filterOptions.memberTypes" :key="memberType.key || memberType.id" :value="String(memberType.key || memberType.id)">
                             {{ memberType.code }} - {{ memberType.name }}
                         </option>
                     </select>

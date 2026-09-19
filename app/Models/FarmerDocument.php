@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DocumentType as DocumentTypeEnum;
 use App\Enums\DocumentVerificationStatus;
+use App\Models\Concerns\HasEncryptedPublicRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FarmerDocument extends Model
 {
+    use HasEncryptedPublicRouteKey;
     use HasFactory;
 
     protected $fillable = [

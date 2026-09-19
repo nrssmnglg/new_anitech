@@ -222,7 +222,7 @@
                                 <div style="font-weight: 800; color: #1d4ed8;">{{ $reminder->type_label }}</div>
                                 <div style="margin-top: 6px; color: #475569;">{{ $reminder->subject }}</div>
                             </div>
-                            <form method="POST" action="{{ route('admin.notifications.resend', $reminder->id) }}">
+                            <form method="POST" action="{{ $reminder->resend_url }}">
                                 @csrf
                                 <button type="submit" class="ghost-btn">Resend</button>
                             </form>
