@@ -20,6 +20,7 @@ use App\Models\Barangay;
 use App\Models\FarmerDocument;
 use App\Models\MemberType;
 use App\Models\MembershipApplication;
+use App\Models\PayMongoWebhookEvent;
 use App\Models\User;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Documents\DocumentRequirementService;
@@ -30,6 +31,7 @@ use App\Services\Membership\FeeCalculatorService;
 use App\Services\Membership\MemberTypeResolverService;
 use App\Services\Membership\MembershipApplicationService;
 use App\Services\Payments\PaymentAssessmentService;
+use App\Services\Payments\PayMongoPaidAt;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -472,6 +474,12 @@ class MembershipApplicationController extends Controller
         $expiredDocumentCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('is_expired'))->count();
         $resubmissionCount = $requiredDocuments->filter(fn (FarmerDocument $document) => (bool) $document->getAttribute('needs_resubmission'))->count();
         $payments = $assessment?->payments?->sortByDesc('paid_at') ?? collect();
+        $paymentEvents = PayMongoWebhookEvent::query()
+            ->whereIn('payment_id', $payments->pluck('id'))
+            ->where('status', 'processed')
+            ->orderBy('id')
+            ->get()
+            ->keyBy('payment_id');
         $settledStatuses = [AssessmentStatus::PAID, AssessmentStatus::OVERPAID, AssessmentStatus::WAIVED];
         $paymentSettled = in_array($assessment?->status, $settledStatuses, true);
         $paymentRecorded = $payments->isNotEmpty();
@@ -636,7 +644,11 @@ class MembershipApplicationController extends Controller
             ],
             'payments' => $payments->map(fn ($payment): array => [
                 'id' => $payment->id,
-                'paidAt' => optional($payment->paid_at)->format('M d, Y h:i A'),
+                'paidAt' => optional(
+                    ($paymentEvents->get($payment->id)?->payload
+                        ? app(PayMongoPaidAt::class)->fromPayload($paymentEvents->get($payment->id)->payload)
+                        : null) ?? $payment->paid_at
+                )->format('M d, Y h:i A'),
                 'method' => strtoupper((string) ($payment->payment_method ?? $payment->paymentMethod?->code ?? '')),
                 'referenceNo' => $payment->reference_no,
                 'statusLabel' => $payment->status?->label() ?? 'Verified',

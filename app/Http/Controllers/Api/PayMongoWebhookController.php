@@ -577,20 +577,9 @@ class PayMongoWebhookController extends Controller
 
     private function resolvePaidAt(string $eventType, array $resource): string
     {
-        $payment = $this->extractPaymentResource($eventType, $resource);
-        $timestamp = data_get($payment, 'attributes.paid_at')
-            ?? data_get($resource, 'attributes.paid_at')
-            ?? data_get($resource, 'attributes.updated_at');
-
-        if (is_numeric($timestamp)) {
-            return CarbonImmutable::createFromTimestamp((int) $timestamp)->toDateTimeString();
-        }
-
-        if (filled($timestamp)) {
-            return CarbonImmutable::parse((string) $timestamp)->toDateTimeString();
-        }
-
-        return CarbonImmutable::now()->toDateTimeString();
+        return app(\App\Services\Payments\PayMongoPaidAt::class)
+            ->fromResource($eventType, $resource)
+            ->toDateTimeString();
     }
 
     private function resolveReceiptNumber(string $eventType, array $resource): ?string
