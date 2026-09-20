@@ -250,6 +250,22 @@ class HandleInertiaRequests extends Middleware
                             'activePatterns' => ['admin.renewals.index', 'admin.renewals.show', 'admin.renewals.create'],
                         ],
                         [
+                            'label' => 'Mortuary Monitoring',
+                            'icon' => 'mortuary',
+                            'children' => [
+                                [
+                                    'label' => 'Mortuary Queue',
+                                    'href' => route('admin.mortuary-claims.index'),
+                                    'activePatterns' => ['admin.mortuary-claims.index', 'admin.mortuary-claims.show', 'admin.mortuary-claims.create'],
+                                ],
+                                [
+                                    'label' => 'Mortuary Records',
+                                    'href' => route('admin.mortuary-claims.index', ['section' => 'records']),
+                                    'activePatterns' => ['admin.mortuary-claims.index', 'admin.mortuary-claims.show', 'admin.mortuary-claims.create'],
+                                ],
+                            ],
+                        ],
+                        [
                             'label' => 'Inquiries',
                             'icon' => 'communication',
                             'href' => route('admin.queries.index'),
