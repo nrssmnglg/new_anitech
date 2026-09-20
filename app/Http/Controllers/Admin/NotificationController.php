@@ -61,20 +61,15 @@ class NotificationController extends Controller
 
     public function feed(Request $request): JsonResponse
     {
-        $filters = $this->filtersFromRequest($request);
-        $summary = $this->summary($filters);
-        $notifications = $this->orderedNotificationQuery($filters)
+        $notifications = $this->drawerNotificationQuery()
             ->limit(15)
             ->get()
             ->map(fn (object $notification): object => $this->transformNotification($notification));
 
         return response()->json([
-            'summary' => $summary,
+            'summary' => $this->summary(),
             'unread_count' => $this->globalUnreadCount(),
             'notifications' => $notifications->map(fn (object $notification): array => $this->serializeNotification($notification))->values()->all(),
-            'notifications_html' => view('admin.notifications._rows', [
-                'notifications' => $notifications,
-            ])->render(),
             'latest_notification' => $this->latestUnreadNotification(),
         ]);
     }
@@ -337,6 +332,29 @@ class NotificationController extends Controller
                 'notifications.payload',
                 'notifications.created_at',
             ]);
+    }
+
+    private function drawerNotificationQuery()
+    {
+        return DB::table('notifications')
+            ->leftJoin('notification_recipients as recipients', function ($join): void {
+                $join->on('notifications.id', '=', 'recipients.notification_id')
+                    ->where('recipients.user_id', auth()->id());
+            })
+            ->select([
+                'recipients.id as recipient_id',
+                'recipients.status as recipient_status',
+                'recipients.read_at',
+                'recipients.created_at as recipient_created_at',
+                'notifications.id as notification_id',
+                'notifications.type',
+                'notifications.subject',
+                'notifications.message',
+                'notifications.payload',
+                'notifications.created_at',
+            ])
+            ->orderByRaw('CASE WHEN recipients.id IS NOT NULL AND recipients.read_at IS NULL THEN 0 ELSE 1 END')
+            ->orderByDesc('notifications.created_at');
     }
 
     private function summary(array $filters = []): array
@@ -674,8 +692,10 @@ class NotificationController extends Controller
 
     private function serializeNotification(object $notification): array
     {
+        $recipientId = $notification->recipient_id ?? null;
+
         return [
-            'recipientId' => $notification->recipient_id,
+            'recipientId' => $recipientId,
             'notificationId' => $notification->notification_id,
             'typeLabel' => $notification->type_label,
             'moduleLabel' => $notification->module_label,
@@ -684,10 +704,10 @@ class NotificationController extends Controller
             'message' => $notification->message,
             'createdAt' => \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A'),
             'isRead' => $notification->read_at !== null,
+            'hasRecipient' => $recipientId !== null,
             'targetUrl' => $notification->target_url,
-            'readUrl' => route('admin.notifications.read', $this->notificationRouteKey($notification->recipient_id)),
-            'openUrl' => route('admin.notifications.open', $this->notificationRouteKey($notification->recipient_id)),
+            'readUrl' => $recipientId !== null ? route('admin.notifications.read', $this->notificationRouteKey($recipientId)) : null,
+            'openUrl' => $recipientId !== null ? route('admin.notifications.open', $this->notificationRouteKey($recipientId)) : null,
         ];
     }
 }
-

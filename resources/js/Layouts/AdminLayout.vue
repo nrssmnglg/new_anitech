@@ -164,11 +164,13 @@ async function markAllNotificationsRead() {
 }
 
 async function openNotification(notification) {
-    if (!notification?.openUrl) {
+    if (!notification?.openUrl && !notification?.targetUrl) {
         return;
     }
 
-    await window.axios.post(notification.openUrl);
+    if (notification.openUrl) {
+        await window.axios.post(notification.openUrl);
+    }
 
     if (notification.targetUrl) {
         window.location.assign(notification.targetUrl);
@@ -355,7 +357,7 @@ onBeforeUnmount(() => {
                     <div v-else-if="notifications.length" class="space-y-2">
                         <article
                             v-for="notification in notifications"
-                            :key="notification.recipientId"
+                            :key="notification.recipientId || `history-${notification.notificationId}`"
                             role="button"
                             tabindex="0"
                             class="cursor-pointer rounded-lg border border-[#e4ebe7] bg-white p-3 transition hover:border-[#b9cec4] hover:bg-[#f8fbf9] focus:outline-none focus:ring-2 focus:ring-[#0f5b46]/20"
@@ -372,8 +374,8 @@ onBeforeUnmount(() => {
                                         <span v-if="notification.sourceLabel" class="rounded-md bg-[#f4f6f5] px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em] text-stone-500">
                                             {{ notification.sourceLabel }}
                                         </span>
-                                        <span :class="notification.isRead ? 'bg-stone-200 text-stone-600' : 'bg-[#ccefe1] text-[#0f5b46]'" class="rounded-md px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em]">
-                                            {{ notification.isRead ? 'Read' : 'Unread' }}
+                                        <span :class="notification.hasRecipient && !notification.isRead ? 'bg-[#ccefe1] text-[#0f5b46]' : 'bg-stone-200 text-stone-600'" class="rounded-md px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em]">
+                                            {{ notification.hasRecipient ? (notification.isRead ? 'Read' : 'Unread') : 'History' }}
                                         </span>
                                     </div>
                                     <h3 class="mt-2 text-xs font-semibold leading-4 text-stone-900">{{ notification.subject }}</h3>

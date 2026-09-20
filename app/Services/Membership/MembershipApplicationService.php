@@ -72,6 +72,8 @@ class MembershipApplicationService
                 ]
             );
 
+            $this->queueApplicationSubmittedNotification($application->refresh()->load('farmer'));
+
             return $application->refresh()->load(['farmer', 'documents']);
         });
     }
@@ -577,6 +579,31 @@ class MembershipApplicationService
                 'is_new_application' => $isNewApplicationNotification,
             ],
             $existingNotificationId,
+        );
+    }
+
+    private function queueApplicationSubmittedNotification(MembershipApplication $application): void
+    {
+        $application->loadMissing('farmer');
+
+        $farmerName = trim((string) ($application->farmer?->full_name ?? '')) ?: 'A farmer';
+
+        $this->persistAdminApplicationNotification(
+            $application,
+            NotificationType::MEMBERSHIP_APPLICATION_SUBMITTED,
+            [
+                'subject' => 'New membership application',
+                'message' => $farmerName . ' submitted a new membership application ' . ($application->application_no ?: 'N/A') . '.',
+                'application_id' => $application->id,
+                'application_no' => $application->application_no,
+                'farmer_id' => $application->farmer_id,
+                'source' => $application->source,
+                'submitted_at' => optional($application->submitted_at ?? $application->created_at)->toDateTimeString(),
+                'is_new_application' => true,
+            ],
+            $application->source === 'mobile'
+                ? $this->existingMobileApplicationNotificationId($application, $this->adminRecipients())
+                : null,
         );
     }
 
