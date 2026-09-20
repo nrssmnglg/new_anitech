@@ -85,7 +85,7 @@ class MortuaryClaimController extends Controller
                     ['value' => 'rejected', 'label' => 'Rejected'],
                 ],
                 'years' => $years->map(fn ($year): array => ['value' => (string) $year, 'label' => (string) $year])->values()->all(),
-                'barangays' => $barangays->map(fn (Barangay $barangay): array => ['id' => $barangay->id, 'name' => $barangay->name])->values()->all(),
+                'barangays' => $barangays->map(fn (Barangay $barangay): array => ['id' => $this->queryRouteKey($barangay->id), 'name' => $barangay->name])->values()->all(),
             ],
             'summary' => [
                 'queueCount' => (clone $queueQuery)->count(),
@@ -112,8 +112,8 @@ class MortuaryClaimController extends Controller
         $activeSection = $request->query('section') === 'records' ? 'records' : 'queue';
         $filters = $this->filters($request);
         $format = strtolower((string) $request->query('format', 'html'));
-        $selectedBarangay = filled($filters['barangay_id'] ?? null)
-            ? Barangay::query()->find($filters['barangay_id'], ['id', 'name'])
+        $selectedBarangay = filled($filters['barangay_value'] ?? null)
+            ? Barangay::query()->find($filters['barangay_value'], ['id', 'name'])
             : null;
 
         if ($activeSection === 'records') {
@@ -226,7 +226,7 @@ class MortuaryClaimController extends Controller
                 $query->where('status', $this->databaseStatusValue($status));
             })
             ->when($filters['year'] ?? null, fn (Builder $query, string $year) => $query->whereYear('claim_date', (int) $year))
-            ->when($filters['barangay_id'] ?? null, function (Builder $query, string $barangayId): void {
+            ->when($filters['barangay_value'] ?? null, function (Builder $query, string $barangayId): void {
                 $query->whereHas('membershipLedger.membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             });
     }
@@ -251,7 +251,7 @@ class MortuaryClaimController extends Controller
 
         return Inertia::render('Admin/MortuaryClaims/Create', [
             'eligibleLedgers' => $eligibleFarmers->map(fn (Farmer $farmer): array => $this->serializeEligibleFarmerForCreate($farmer))->values()->all(),
-            'selectedLedgerId' => $this->representativeMortuaryLedger($selectedFarmer)?->id,
+            'selectedLedgerId' => $this->queryRouteKey($this->representativeMortuaryLedger($selectedFarmer)?->id),
             'requirements' => $requirements->map(fn (DocumentRequirement $requirement): array => [
                 'id' => $requirement->id,
                 'code' => strtolower((string) $requirement->documentType?->code),
@@ -498,7 +498,7 @@ class MortuaryClaimController extends Controller
                         ]);
                 });
             })
-            ->when($filters['barangay_id'] ?? null, fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId));
+            ->when($filters['barangay_value'] ?? null, fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId));
     }
 
     private function serializeClaimRow(MortuaryClaim $claim): array
@@ -586,7 +586,7 @@ class MortuaryClaimController extends Controller
         $expectedClaim = round((float) $settledLedgers->sum(fn (MembershipLedger $item): float => (float) $item->mortuary_fee), 2);
 
         return [
-            'id' => $representativeLedger?->id,
+            'id' => $this->queryRouteKey($representativeLedger?->id),
             'label' => trim(($farmer?->full_name ?? 'Unknown Farmer') . ' - ' . ($farmer?->farmer_code ?? 'No code')),
             'year' => $representativeLedger?->year,
             'expectedClaimAmount' => $expectedClaim,
@@ -829,6 +829,7 @@ class MortuaryClaimController extends Controller
             'status' => $request->filled('status') ? (string) $request->input('status') : '',
             'year' => $request->filled('year') ? (string) $request->input('year') : '',
             'barangay_id' => $request->filled('barangay_id') ? (string) $request->input('barangay_id') : '',
+            'barangay_value' => $this->decodeQueryRouteKey((string) $request->input('barangay_id', '')),
         ];
     }
 

@@ -270,9 +270,9 @@ class FarmerController extends Controller
                     'value' => $status->value,
                     'label' => $status->label(),
                 ])->values()->all(),
-            'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
-            'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
-            'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'barangays' => $this->barangayOptions(),
+            'associations' => $this->associationOptions(),
+            'memberTypes' => $this->memberTypeOptions(),
             'nextFarmerCode' => $this->registry->previewFarmerCode(),
             'currentYear' => now()->year,
             'lookupUrl' => route('admin.farmers.historical-lookup'),
@@ -297,7 +297,7 @@ class FarmerController extends Controller
             })->orderBy('farmer_code')->limit(20)->get();
 
         return response()->json(['farmers' => $farmers->map(fn (Farmer $farmer): array => [
-            'id' => $farmer->id,
+            'id' => $this->queryRouteKey($farmer->id),
             'farmerCode' => $farmer->farmer_code,
             'fullName' => $farmer->full_name,
             'memberType' => $farmer->memberType?->code,
@@ -486,9 +486,9 @@ class FarmerController extends Controller
                     'value' => $status->value,
                     'label' => $status->label(),
                 ])->values()->all(),
-            'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
-            'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
-            'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'barangays' => $this->barangayOptions(),
+            'associations' => $this->associationOptions(),
+            'memberTypes' => $this->memberTypeOptions(),
             'updateUrl' => route('admin.farmers.update', $farmer),
             'indexUrl' => route('admin.farmers.index'),
             'showUrl' => route('admin.farmers.show', $farmer),
@@ -1226,15 +1226,18 @@ class FarmerController extends Controller
             'recordOrigin' => $farmer->record_origin,
             'memberType' => $farmer->memberType ? [
                 'id' => $farmer->memberType->id,
+                'key' => $this->queryRouteKey($farmer->memberType->id),
                 'code' => $farmer->memberType->code,
                 'name' => $farmer->memberType->name,
             ] : null,
             'barangay' => $farmer->barangay ? [
                 'id' => $farmer->barangay->id,
+                'key' => $this->queryRouteKey($farmer->barangay->id),
                 'name' => $farmer->barangay->name,
             ] : null,
             'association' => $farmer->association ? [
                 'id' => $farmer->association->id,
+                'key' => $this->queryRouteKey($farmer->association->id),
                 'name' => $farmer->association->name,
             ] : null,
             'profile' => [
@@ -1761,9 +1764,9 @@ class FarmerController extends Controller
         return [
             'farmer' => $farmer,
             'statuses' => FarmerStatus::options(),
-            'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
-            'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
-            'memberTypes' => MemberType::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'barangays' => $this->barangayOptions(),
+            'associations' => $this->associationOptions(),
+            'memberTypes' => $this->memberTypeOptions(),
             'nextFarmerCode' => $farmer?->farmer_code ?? $this->registry->previewFarmerCode(),
         ];
     }
@@ -1805,6 +1808,51 @@ class FarmerController extends Controller
             ->with(['profile', 'barangay', 'association', 'memberType'])
             ->whereIn('id', $ids)
             ->get();
+    }
+
+    private function barangayOptions(): array
+    {
+        return Barangay::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Barangay $barangay): array => [
+                'id' => $barangay->id,
+                'key' => $this->queryRouteKey($barangay->id),
+                'name' => $barangay->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function associationOptions(): array
+    {
+        return Association::query()
+            ->orderBy('name')
+            ->get(['id', 'barangay_id', 'name'])
+            ->map(fn (Association $association): array => [
+                'id' => $association->id,
+                'key' => $this->queryRouteKey($association->id),
+                'barangay_id' => $association->barangay_id,
+                'barangay_key' => $this->queryRouteKey($association->barangay_id),
+                'name' => $association->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function memberTypeOptions(): array
+    {
+        return MemberType::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name'])
+            ->map(fn (MemberType $memberType): array => [
+                'id' => $memberType->id,
+                'key' => $this->queryRouteKey($memberType->id),
+                'code' => $memberType->code,
+                'name' => $memberType->name,
+            ])
+            ->values()
+            ->all();
     }
 
     private function queryRouteKey(int|string|null $id): ?string

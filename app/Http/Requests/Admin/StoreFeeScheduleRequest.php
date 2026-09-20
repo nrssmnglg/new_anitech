@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFeeScheduleRequest extends FormRequest
@@ -14,6 +15,7 @@ class StoreFeeScheduleRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'member_type_id' => $this->decodeRouteKey($this->input('member_type_id')),
             'is_active' => $this->boolean('is_active'),
         ]);
     }
@@ -49,5 +51,18 @@ class StoreFeeScheduleRequest extends FormRequest
                 $validator->errors()->add('year', 'A fee schedule already exists for this member type and year.');
             }
         });
+    }
+
+    private function decodeRouteKey(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 }

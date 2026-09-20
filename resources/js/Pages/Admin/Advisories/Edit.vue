@@ -30,8 +30,8 @@ function submit() {
 
     form.transform((data) => ({
         ...data,
-        barangay_id: data.audience_type === 'barangay' && data.barangay_id ? Number(data.barangay_id) : null,
-        member_type_id: data.audience_type === 'group' && data.member_type_id ? Number(data.member_type_id) : null,
+        barangay_id: data.audience_type === 'barangay' && data.barangay_id ? data.barangay_id : null,
+        member_type_id: data.audience_type === 'group' && data.member_type_id ? data.member_type_id : null,
         _method: 'put',
     })).post(props.urls.update, {
         preserveScroll: true,

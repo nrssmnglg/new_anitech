@@ -30,7 +30,7 @@ function submit() {
 
     form.transform((data) => ({
         ...data,
-        member_type_id: data.member_type_id ? Number(data.member_type_id) : null,
+        member_type_id: data.member_type_id || null,
         is_active: Boolean(data.is_active),
         effective_to: data.effective_to || null,
     }));

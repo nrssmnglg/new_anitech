@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -67,8 +68,21 @@ class UpdateAdvisoryRequest extends FormRequest
         $audienceType = (string) $this->input('audience_type', 'all');
 
         $this->merge([
-            'barangay_id' => $audienceType === 'barangay' ? $this->input('barangay_id') : null,
-            'member_type_id' => $audienceType === 'group' ? $this->input('member_type_id') : null,
+            'barangay_id' => $audienceType === 'barangay' ? $this->decodeRouteKey($this->input('barangay_id')) : null,
+            'member_type_id' => $audienceType === 'group' ? $this->decodeRouteKey($this->input('member_type_id')) : null,
         ]);
+    }
+
+    private function decodeRouteKey(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 }

@@ -26,9 +26,9 @@ const form = useForm({
     civil_status: props.farmer.profile.civilStatus || '',
     mobile_number: props.farmer.profile.mobileNumber || '',
     address: props.farmer.profile.address || '',
-    barangay_id: String(props.farmer.barangay?.id || ''),
-    association_id: String(props.farmer.association?.id || ''),
-    member_type_id: String(props.farmer.memberType?.id || ''),
+    barangay_id: String(props.farmer.barangay?.key || props.farmer.barangay?.id || ''),
+    association_id: String(props.farmer.association?.key || props.farmer.association?.id || ''),
+    member_type_id: String(props.farmer.memberType?.key || props.farmer.memberType?.id || ''),
     status: props.farmer.status.value,
     registered_at: props.farmer.registeredAt ? new Date(props.farmer.registeredAt).toISOString().slice(0, 10) : '',
     remarks: '',
@@ -39,7 +39,7 @@ const filteredAssociations = computed(() => {
         return props.associations;
     }
 
-    return props.associations.filter((association) => String(association.barangay_id) === String(form.barangay_id));
+    return props.associations.filter((association) => String(association.barangay_key || association.barangay_id) === String(form.barangay_id));
 });
 
 function syncAssociation() {
@@ -48,10 +48,10 @@ function syncAssociation() {
         return;
     }
 
-    const matches = filteredAssociations.value.some((association) => String(association.id) === String(form.association_id));
+    const matches = filteredAssociations.value.some((association) => String(association.key || association.id) === String(form.association_id));
 
     if (!matches) {
-        form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].id) : '';
+        form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].key || filteredAssociations.value[0].id) : '';
     }
 }
 
@@ -76,7 +76,7 @@ function submit() {
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Member Type</span>
                             <select v-model="form.member_type_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
                                 <option value="">Select member type</option>
-                                <option v-for="item in memberTypes" :key="item.id" :value="String(item.id)">{{ item.code }} - {{ item.name }}</option>
+                                <option v-for="item in memberTypes" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.code }} - {{ item.name }}</option>
                             </select>
                         </label>
                         <label class="space-y-2">
@@ -131,14 +131,14 @@ function submit() {
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Barangay</span>
                             <select v-model="form.barangay_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white" @change="syncAssociation">
                                 <option value="">Select barangay</option>
-                                <option v-for="item in barangays" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+                                <option v-for="item in barangays" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
                             </select>
                         </label>
                         <label class="space-y-2">
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Association</span>
                             <select v-model="form.association_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
                                 <option value="">No association assigned</option>
-                                <option v-for="item in filteredAssociations" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+                                <option v-for="item in filteredAssociations" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
                             </select>
                         </label>
                         <label class="space-y-2 md:col-span-2 xl:col-span-4">

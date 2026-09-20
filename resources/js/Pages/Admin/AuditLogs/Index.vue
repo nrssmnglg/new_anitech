@@ -1,338 +1,128 @@
-<script setup>
+﻿<script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
 const props = defineProps({
-    logs: { type: Object, required: true },
-    filters: { type: Object, required: true },
-    activeFilterCount: { type: Number, required: true },
-    moduleOptions: { type: Array, required: true },
-    eventOptions: { type: Array, required: true },
-    actorOptions: { type: Array, required: true },
-    summary: { type: Object, required: true },
-    urls: { type: Object, required: true },
+    logs: { type: Object, required: true }, filters: { type: Object, required: true },
+    activeFilterCount: { type: Number, required: true }, moduleOptions: { type: Array, required: true },
+    eventOptions: { type: Array, required: true }, actorOptions: { type: Array, required: true },
+    summary: { type: Object, required: true }, urls: { type: Object, required: true },
 });
-
-const form = reactive({
-    module: props.filters.module ?? '',
-    event: props.filters.event ?? '',
-    actor_user_id: props.filters.actor_user_id ? String(props.filters.actor_user_id) : '',
-    date_from: props.filters.date_from ?? '',
-    date_to: props.filters.date_to ?? '',
-    search: props.filters.search ?? '',
-});
-
+const form = reactive({ ...props.filters });
 const applying = ref(false);
-const filtersOpen = ref(props.activeFilterCount > 0);
-const expandedIds = ref([]);
-
-const summaryCards = computed(() => [
-    {
-        label: 'All recorded actions',
-        value: props.summary.total ?? 0,
-        helper: 'Complete audit history',
-        tone: 'bg-[#e8f3ed] text-[#145c47]',
-        icon: '≡',
-    },
-    {
-        label: 'Actions today',
-        value: props.summary.today ?? 0,
-        helper: 'Since midnight',
-        tone: 'bg-[#e9f1ff] text-[#2457a7]',
-        icon: '↻',
-    },
-    {
-        label: 'Login activity',
-        value: props.summary.auth ?? 0,
-        helper: 'Sign-ins and access events',
-        tone: 'bg-[#fff2d9] text-[#9a5b00]',
-        icon: '↪',
-    },
-    {
-        label: 'Admin actions',
-        value: props.summary.admin ?? 0,
-        helper: 'Performed by administrators',
-        tone: 'bg-[#f0eaff] text-[#6844a5]',
-        icon: '◆',
-    },
+const datesOpen = ref(false);
+const selectedId = ref(null);
+const selected = computed(() => props.logs.data.find(log => log.id === selectedId.value) || props.logs.data[0] || null);
+watch(() => props.filters, filters => Object.assign(form, filters));
+const cards = computed(() => [
+    { label: "Today's volume", value: `${props.summary.today ?? 0} Actions`, note: 'Activity recorded since midnight', icon: 'history', tone: 'mint' },
+    { label: 'Recorded activity', value: `${props.summary.total ?? 0} Actions`, note: 'Complete municipal audit history', icon: 'people', tone: 'green' },
+    { label: 'Access activity', value: `${props.summary.auth ?? 0} Events`, note: 'Recorded sign-in and access events', icon: 'shield', tone: 'peach' },
 ]);
-
+const paths = {
+    shield: 'M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Zm-4 9 3 3 5-6',
+    history: 'M3 11a9 9 0 1 1 2 7M3 4v7h7m2-5v6l4 2',
+    people: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m18 0v-2a4 4 0 0 0-3-3.87M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-7a4 4 0 0 1 0 7.75',
+};
 function applyFilters() {
     if (applying.value) return;
-
     applying.value = true;
-    router.get(props.urls.index, {
-        module: form.module || undefined,
-        event: form.event || undefined,
-        actor_user_id: form.actor_user_id || undefined,
-        date_from: form.date_from || undefined,
-        date_to: form.date_to || undefined,
-        search: form.search || undefined,
-    }, {
-        preserveScroll: true,
-        preserveState: true,
-        replace: true,
-        onFinish: () => {
-            applying.value = false;
-        },
+    router.get(props.urls.index, Object.fromEntries(Object.entries(form).filter(([, value]) => value !== '' && value != null)), {
+        preserveScroll: true, preserveState: true, replace: true, onFinish: () => { applying.value = false; },
     });
 }
-
 function resetFilters() {
-    if (applying.value) return;
-
-    Object.assign(form, {
-        module: '',
-        event: '',
-        actor_user_id: '',
-        date_from: '',
-        date_to: '',
-        search: '',
-    });
+    Object.keys(form).forEach(key => { form[key] = ''; });
     applyFilters();
 }
-
-function toggleDetails(id) {
-    expandedIds.value = expandedIds.value.includes(id)
-        ? expandedIds.value.filter((item) => item !== id)
-        : [...expandedIds.value, id];
-}
-
-function isExpanded(id) {
-    return expandedIds.value.includes(id);
-}
-
-function eventStyle(event) {
-    const value = String(event || '').toLowerCase();
-
-    if (value.includes('delete') || value.includes('reject') || value.includes('fail')) {
-        return {
-            icon: '!',
-            badge: 'bg-[#fff0f1] text-[#ad3443]',
-            dot: 'bg-[#d54a58] ring-[#ffe0e3]',
-        };
-    }
-
-    if (value.includes('create') || value.includes('approve') || value.includes('success')) {
-        return {
-            icon: '+',
-            badge: 'bg-[#e7f6ed] text-[#167049]',
-            dot: 'bg-[#239263] ring-[#d8f2e4]',
-        };
-    }
-
-    if (value.includes('login') || value.includes('logout') || value.includes('auth')) {
-        return {
-            icon: '↪',
-            badge: 'bg-[#fff3df] text-[#956000]',
-            dot: 'bg-[#d99517] ring-[#ffedc9]',
-        };
-    }
-
-    if (value.includes('update') || value.includes('edit') || value.includes('change')) {
-        return {
-            icon: '↻',
-            badge: 'bg-[#e9f1ff] text-[#285faa]',
-            dot: 'bg-[#4c7fc4] ring-[#dce9ff]',
-        };
-    }
-
-    return {
-        icon: '•',
-        badge: 'bg-[#eef2f0] text-[#52635b]',
-        dot: 'bg-[#718079] ring-[#e5ebe8]',
-    };
-}
-
-function actorInitials(name) {
-    return String(name || 'System')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase();
+function initials(name) { return String(name || 'System').split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase(); }
+function roleLabel(role) { return role === 'Staff' ? 'Office Staff' : role || 'System'; }
+function eventTone(event) {
+    if (/delete|reject|fail/i.test(event)) return 'danger';
+    if (/create|approve|success/i.test(event)) return 'success';
+    return 'neutral';
 }
 </script>
 
 <template>
-    <Head title="Activity Logs" />
-
-    <AdminLayout title="Activity Logs">
-        <div class="space-y-3">
-            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
-                <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">System audit</p>
-                <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Activity Logs</h1>
-            </section>
-
-            <section class="grid grid-cols-2 gap-2 xl:grid-cols-4">
-                <article v-for="card in summaryCards" :key="card.label" class="rounded-lg border border-[#dce5df] bg-white px-3 py-2.5">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#708078]">{{ card.label }}</p>
-                            <p class="mt-1 text-xl font-semibold leading-none text-[#102f26]">{{ card.value }}</p>
-                        </div>
-                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold" :class="card.tone">{{ card.icon }}</span>
-                    </div>
+    <Head title="Audit Trail" />
+    <AdminLayout title="Audit Trail">
+        <div class="audit-page">
+            <section class="summary-grid" aria-label="Activity summary">
+                <article v-for="card in cards" :key="card.label" class="summary-card">
+                    <div><p class="eyebrow">{{ card.label }}</p><h2>{{ card.value }}</h2><p class="card-note">{{ card.note }}</p></div>
+                    <span class="card-icon" :class="card.tone"><svg viewBox="0 0 24 24"><path :d="paths[card.icon]" /></svg></span>
                 </article>
             </section>
-
-            <section class="rounded-lg border border-[#dce5df] bg-white">
-                <div class="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
-                    <form class="relative min-w-0 flex-1" @submit.prevent="applyFilters">
-                        <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-[#708078]">⌕</span>
-                        <input
-                            v-model="form.search"
-                            type="search"
-                            placeholder="Search an action, person, module, or record..."
-                            class="h-9 w-full rounded-md border border-[#d8e1db] bg-[#f9fbfa] pl-9 pr-3 text-xs text-[#17382e] outline-none transition focus:border-[#17634d] focus:bg-white"
-                        >
-                    </form>
-                    <button type="button" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition" :class="filtersOpen || activeFilterCount ? 'border-[#17634d] bg-[#edf6f1] text-[#145642]' : 'border-[#d8e1db] text-[#52645b] hover:bg-[#f5f8f6]'" @click="filtersOpen = !filtersOpen">
-                        Filters
-                        <span v-if="activeFilterCount" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#17634d] px-1.5 text-xs text-white">{{ activeFilterCount }}</span>
-                    </button>
-                    <button type="button" class="h-9 rounded-md bg-[#0d4d3b] px-4 text-xs font-semibold text-white transition hover:bg-[#083c2e] disabled:opacity-60" :disabled="applying" @click="applyFilters">
-                        {{ applying ? 'Loading…' : 'Search logs' }}
-                    </button>
+            <form class="filter-panel" @submit.prevent="applyFilters">
+                <div class="filter-grid">
+                    <div class="search-control"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" /><path d="m15 15 5 5" /></svg><input v-model="form.search" aria-label="Search activity" placeholder="Search activity…" type="search"></div>
+                    <button type="button" class="filter-control" :aria-expanded="datesOpen" @click="datesOpen = !datesOpen">{{ form.date_from || form.date_to ? 'Custom date range' : 'All dates' }} <span aria-hidden="true">▦</span></button>
+                    <select v-model="form.actor_user_id" aria-label="Filter by user" @change="applyFilters"><option value="">All Users</option><option :value="null" hidden>All Users</option><option v-for="option in actorOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select>
+                    <select v-model="form.module" aria-label="Filter by module" @change="applyFilters"><option value="">All Modules</option><option :value="null" hidden>All Modules</option><option v-for="option in moduleOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select>
+                    <select v-model="form.event" aria-label="Filter by action" @change="applyFilters"><option value="">All Actions</option><option :value="null" hidden>All Actions</option><option v-for="option in eventOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select>
+                    <button class="button primary" :disabled="applying">{{ applying ? 'Loading…' : 'Search' }}</button>
                 </div>
-
-                <div v-if="filtersOpen" class="border-t border-[#e4ebe7] bg-[#f8faf9] p-3">
-                    <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-                        <label class="space-y-1 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#40534a]">
-                            <span>Area of the system</span>
-                            <select v-model="form.module" class="h-9 w-full rounded-md border border-[#d6e0da] bg-white px-3 text-xs normal-case tracking-normal outline-none focus:border-[#17634d]">
-                                <option value="">Every module</option>
-                                <option v-for="option in moduleOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                            </select>
-                        </label>
-                        <label class="space-y-1 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#40534a]">
-                            <span>Type of action</span>
-                            <select v-model="form.event" class="h-9 w-full rounded-md border border-[#d6e0da] bg-white px-3 text-xs normal-case tracking-normal outline-none focus:border-[#17634d]">
-                                <option value="">Every action</option>
-                                <option v-for="option in eventOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                            </select>
-                        </label>
-                        <label class="space-y-1 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#40534a]">
-                            <span>Performed by</span>
-                            <select v-model="form.actor_user_id" class="h-9 w-full rounded-md border border-[#d6e0da] bg-white px-3 text-xs normal-case tracking-normal outline-none focus:border-[#17634d]">
-                                <option value="">Everyone</option>
-                                <option v-for="option in actorOptions" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
-                            </select>
-                        </label>
-                        <label class="space-y-1 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#40534a]">
-                            <span>From date</span>
-                            <input v-model="form.date_from" type="date" :max="form.date_to || undefined" class="h-9 w-full rounded-md border border-[#d6e0da] bg-white px-3 text-xs normal-case tracking-normal outline-none focus:border-[#17634d]">
-                        </label>
-                        <label class="space-y-1 text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#40534a]">
-                            <span>To date</span>
-                            <input v-model="form.date_to" type="date" :min="form.date_from || undefined" class="h-9 w-full rounded-md border border-[#d6e0da] bg-white px-3 text-xs normal-case tracking-normal outline-none focus:border-[#17634d]">
-                        </label>
-                    </div>
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <button type="button" class="h-8 rounded-md bg-[#17634d] px-3 text-[0.68rem] font-semibold text-white disabled:opacity-60" :disabled="applying" @click="applyFilters">Apply</button>
-                        <button type="button" class="h-8 rounded-md border border-[#d6e0da] px-3 text-[0.68rem] font-semibold text-[#596a62] hover:bg-[#edf2ef]" :disabled="applying" @click="resetFilters">Clear</button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="overflow-hidden rounded-lg border border-[#dce5df] bg-white">
-                <div class="flex flex-col gap-1 border-b border-[#e2e9e5] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="text-sm font-semibold text-[#12372c]">Activity timeline</h2>
-                        <p class="mt-0.5 text-[0.65rem] text-[#738078]">Newest actions first</p>
-                    </div>
-                    <p class="text-[0.65rem] font-semibold text-[#5f7067]">{{ logs.total }} {{ logs.total === 1 ? 'entry' : 'entries' }}</p>
-                </div>
-
-                <div v-if="logs.data.length" class="px-3 py-1 sm:px-4">
-                    <article v-for="(log, index) in logs.data" :key="log.id" class="relative grid grid-cols-[30px_minmax(0,1fr)] gap-2.5 py-2.5">
-                        <div v-if="index < logs.data.length - 1" class="absolute bottom-0 left-[14px] top-[34px] w-px bg-[#dce5df]"></div>
-                        <div class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-[0.65rem] font-semibold text-white ring-4" :class="eventStyle(log.event.value).dot">
-                            {{ eventStyle(log.event.value).icon }}
-                        </div>
-
-                        <div class="min-w-0 rounded-md border border-[#e1e8e4] bg-[#fbfcfb] p-3 transition hover:border-[#cbd8d1] hover:bg-white">
-                            <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="rounded-full px-2 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]" :class="eventStyle(log.event.value).badge">{{ log.event.label }}</span>
-                                        <span class="rounded-full bg-[#edf2ef] px-2 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#5b6d64]">{{ log.module.label }}</span>
-                                    </div>
-                                    <h3 class="mt-1.5 text-xs font-semibold leading-5 text-[#142f27]">{{ log.description }}</h3>
-
-                                    <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                                        <div class="flex items-center gap-2">
-                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#dcece4] text-[0.55rem] font-semibold text-[#155a45]">{{ actorInitials(log.actorName) }}</span>
-                                            <div class="leading-tight">
-                                                <p class="text-[0.68rem] font-semibold text-[#28463c]">{{ log.actorName }}</p>
-                                                <p class="text-[0.58rem] text-[#7b8982]">{{ log.actorRole || 'Automated system' }}</p>
-                                            </div>
-                                        </div>
-                                        <span class="hidden h-1 w-1 rounded-full bg-[#aab6b0] sm:block"></span>
-                                        <time class="text-[0.65rem] text-[#66766e]">{{ log.createdAt }}</time>
-                                    </div>
-                                </div>
-
-                                <Link v-if="log.recordUrl" :href="log.recordUrl" class="inline-flex h-8 w-8 shrink-0 items-center justify-center self-start rounded-md border border-[#cbd9d2] bg-white text-[#145c47] transition hover:border-[#145c47] hover:bg-[#f0f7f3]" title="Open record" aria-label="Open record">
-                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
-                                    </svg>
-                                </Link>
-                            </div>
-
-                            <div v-if="log.subjectLabel" class="mt-2 rounded-md border border-[#dfe7e2] bg-white px-3 py-2">
-                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#819087]">Affected record</p>
-                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#29483d]">{{ log.subjectLabel }}</p>
-                            </div>
-
-                            <div v-if="log.changeSummary.length || log.metadata.length" class="mt-2 border-t border-[#e1e8e4] pt-2">
-                                <button type="button" class="flex w-full items-center justify-between gap-3 text-left text-[0.68rem] font-semibold text-[#476158]" :aria-expanded="isExpanded(log.id)" @click="toggleDetails(log.id)">
-                                    <span>{{ isExpanded(log.id) ? 'Hide technical details' : `View details${log.changeSummary.length ? ` and ${log.changeSummary.length} recorded change${log.changeSummary.length === 1 ? '' : 's'}` : ''}` }}</span>
-                                    <span class="text-lg transition" :class="isExpanded(log.id) ? 'rotate-180' : ''">⌄</span>
-                                </button>
-
-                                <div v-if="isExpanded(log.id)" class="mt-2 space-y-2">
-                                    <div v-if="log.changeSummary.length" class="grid gap-2 lg:grid-cols-3">
-                                        <div v-for="change in log.changeSummary" :key="`${log.id}-${change.field}`" class="rounded-md border border-[#dce5df] bg-white p-2.5">
-                                            <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#74847b]">{{ change.field }}</p>
-                                            <div class="mt-1.5 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 text-[0.65rem]">
-                                                <span class="break-words rounded bg-[#f3f5f4] px-2 py-1.5 text-[#68766f]">{{ change.from }}</span>
-                                                <span class="text-[#92a098]">→</span>
-                                                <span class="break-words rounded bg-[#eaf5ef] px-2 py-1.5 font-semibold text-[#17634d]">{{ change.to }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-if="log.metadata.length" class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                                        <div v-for="item in log.metadata" :key="`${log.id}-${item.key}`" class="rounded-md bg-[#f2f5f3] px-3 py-2">
-                                            <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#7b8982]">{{ item.key }}</p>
-                                            <p class="mt-0.5 break-words text-[0.65rem] font-semibold text-[#334e44]">{{ item.value }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div v-else class="px-6 py-16 text-center">
-                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#edf3ef] text-2xl text-[#557168]">⌕</span>
-                    <h3 class="mt-4 text-lg font-black text-[#17382e]">No activity matches these filters</h3>
-                    <p class="mt-2 text-sm text-[#74827b]">Clear one or more filters to see a broader history.</p>
-                    <button type="button" class="mt-5 rounded-xl bg-[#17634d] px-5 py-2.5 text-sm font-bold text-white" @click="resetFilters">Clear all filters</button>
-                </div>
-
-                <div class="flex flex-col gap-4 border-t border-[#e2e9e5] bg-[#f8faf9] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-sm text-[#68776f]">Showing {{ logs.from || 0 }}–{{ logs.to || 0 }} of {{ logs.total }} entries</p>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <template v-for="link in logs.links" :key="link.label">
-                            <span v-if="!link.url" class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-[#dde5e0] px-3 text-sm text-[#9aa6a1]" v-html="link.label" />
-                            <Link v-else :href="link.url" class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border px-3 text-sm font-bold transition" :class="link.active ? 'border-[#145c47] bg-[#145c47] text-white' : 'border-[#d8e1db] bg-white text-[#5d6c65] hover:border-[#9fb5aa]'" preserve-scroll preserve-state v-html="link.label" />
-                        </template>
-                    </div>
-                </div>
-            </section>
+                <div v-if="datesOpen" class="date-controls"><label>From <input v-model="form.date_from" type="date" :max="form.date_to || undefined"></label><label>To <input v-model="form.date_to" type="date" :min="form.date_from || undefined"></label><button class="button" :disabled="applying">Apply dates</button></div>
+                <div class="filter-footer"><p><span class="count-badge">Showing {{ logs.total }} activities</span><span class="filter-caption">{{ activeFilterCount ? `${activeFilterCount} active filters` : 'Municipal activity history' }}</span></p><button type="button" :disabled="applying" @click="resetFilters">↻ Clear Filters</button></div>
+            </form>
+            <div class="activity-layout">
+                <section class="activity-table-panel" aria-label="Audit activities" :aria-busy="applying">
+                    <div class="table-scroll"><table><thead><tr><th>Date &amp; time</th><th>User</th><th>Role</th><th>Module</th><th>Action</th></tr></thead>
+                        <tbody><tr v-for="log in logs.data" :key="log.id" :class="{ selected: selected?.id === log.id }" @click="selectedId = log.id">
+                            <td><time>{{ log.createdAt }}</time></td>
+                            <td><button class="actor-button" :aria-pressed="selected?.id === log.id" @click.stop="selectedId = log.id"><span class="avatar" :class="{ staff: log.actorRole !== 'Admin' }">{{ initials(log.actorName) }}</span>{{ log.actorName }}</button></td>
+                            <td><span class="role-badge" :class="{ staff: log.actorRole !== 'Admin' }">{{ roleLabel(log.actorRole) }}</span></td><td>{{ log.module.label }}</td><td><span class="event-badge" :class="eventTone(log.event.value)">{{ log.event.label }}</span></td>
+                        </tr></tbody></table></div>
+                    <div v-if="!logs.data.length" class="empty-state"><h2>No activity found</h2><p>Try another search or clear the filters.</p><button class="button" @click="resetFilters">Clear filters</button></div>
+                    <footer class="pagination"><p>{{ logs.from || 0 }}–{{ logs.to || 0 }} of {{ logs.total }} activities</p><nav aria-label="Activity pages"><template v-for="link in logs.links" :key="link.label"><Link v-if="link.url" :href="link.url" :class="{ current: link.active }" :aria-current="link.active ? 'page' : undefined" preserve-scroll v-html="link.label" /><span v-else v-html="link.label" /></template></nav></footer>
+                </section>
+                <aside class="details-panel" aria-label="Activity details" aria-live="polite">
+                    <div class="details-heading"><h2><span aria-hidden="true">ⓘ</span> Activity Details</h2><span v-if="selected" class="event-badge" :class="eventTone(selected.event.value)">{{ selected.event.label }}</span></div>
+                    <template v-if="selected">
+                        <div class="record-card"><dl><div><dt>Timestamp</dt><dd>{{ selected.createdAt }}</dd></div><div><dt>Responsible User</dt><dd>{{ selected.actorName }}</dd></div><div><dt>Office Designation</dt><dd><span class="role-badge" :class="{ staff: selected.actorRole !== 'Admin' }">{{ roleLabel(selected.actorRole) }}</span></dd></div><div><dt>Module Area</dt><dd>{{ selected.module.label }}</dd></div></dl><div class="subject"><p>Subject Record:</p><h3>{{ selected.subjectLabel || 'System activity' }}</h3></div></div>
+                        <p class="description">{{ selected.description }}</p>
+                        <div class="changes-heading"><h3>Recorded changes</h3><span>{{ selected.changeSummary.length }} field updates</span></div>
+                        <div v-for="(change, index) in selected.changeSummary" :key="index" class="change-card"><p>{{ change.field }}</p><div class="change-values"><del>{{ change.from }}</del><span aria-hidden="true">→</span><strong>{{ change.to }}</strong></div></div>
+                        <p v-if="!selected.changeSummary.length" class="muted-note">No field changes recorded for this activity.</p>
+                        <div v-if="selected.metadata.length" class="metadata"><h3>Additional details</h3><dl><div v-for="item in selected.metadata" :key="item.key"><dt>{{ item.key }}</dt><dd>{{ item.value }}</dd></div></dl></div>
+                        <Link v-if="selected.recordUrl" :href="selected.recordUrl" class="button record-link">Open related record <span aria-hidden="true">↗</span></Link>
+                    </template>
+                    <p v-else class="muted-note">Select an activity to view its details.</p>
+                </aside>
+            </div>
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.audit-page { color: #113b37; background: #f8f7fd; padding: 18px; border-radius: 12px; font-size: 12px; }
+svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.button { display:inline-flex; justify-content:center; align-items:center; gap:6px; border:1px solid #eeedf5; border-radius:6px; padding:10px 12px; background:white; font-size:11px; cursor:pointer; text-decoration:none; }
+.primary { background:#1b4535; color:white; border-color:#1b4535; font-weight:600; }
+button:disabled { opacity:.5; cursor:wait; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid #29836e; outline-offset:3px; }
+.summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.summary-card { display:flex; align-items:center; justify-content:space-between; gap:12px; background:white; padding:18px 14px; border:1px solid #f0eef8; border-radius:8px; box-shadow:0 1px 2px #30205204; }
+.eyebrow { text-transform:uppercase; letter-spacing:.06em; font-size:10px; }
+.summary-card h2 { font-size:21px; font-weight:700; margin:9px 0 6px; }
+.card-note { color:#087d72; font-size:10px; }
+.card-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:7px; flex-shrink:0; }
+.card-icon svg { width:21px; height:21px; }
+.mint { background:#bcebd6; }.green { background:#94f4c6; }.peach { background:#ffdacb; color:#783815; }
+.filter-panel { background:white; padding:11px; border:1px solid #f0eef8; border-radius:8px; margin-bottom:16px; }
+.filter-grid { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr 1fr auto; gap:6px; }
+.filter-grid input,.filter-grid select,.filter-control { min-width:0; width:100%; border:0; border-radius:4px; background:#f3f2ff; height:34px; padding:0 10px; font-size:11px; color:#24405d; }
+.filter-grid .button { padding:0 12px; }
+.filter-control { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.search-control { position:relative; min-width:0; }.search-control svg { position:absolute; left:10px; top:10px; width:14px; height:14px; }.search-control input { padding-left:31px; }
+.filter-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; font-size:10px; }.filter-footer button { color:#007b77; cursor:pointer; }.count-badge { background:#e5e7ff; border-radius:20px; padding:3px 8px; }.filter-caption { margin-left:5px; color:#64758a; }
+.date-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding-top:12px; }.date-controls input { background:#f3f2ff; border:1px solid #e6e4f1; padding:6px; border-radius:4px; margin-left:5px; }
+.activity-layout { display:grid; grid-template-columns:minmax(0,1fr) 315px; gap:16px; align-items:start; }.activity-table-panel { min-width:0; overflow:hidden; background:white; border:1px solid #f0eef8; border-radius:8px; }.table-scroll { overflow-x:auto; }table { width:100%; border-collapse:collapse; text-align:left; }th { background:#f5f5ff; padding:17px 12px; text-transform:uppercase; font-size:9px; letter-spacing:.06em; font-weight:500; white-space:nowrap; }td { padding:24px 12px; font-size:11px; border-bottom:1px solid #faf9fc; }td:first-child { white-space:nowrap; }tr.selected { background:#f1faf5; }tbody tr { cursor:pointer; }tbody tr:hover { background:#f5faf7; }.actor-button { display:flex; align-items:center; gap:5px; white-space:nowrap; font-weight:500; cursor:pointer; text-align:left; }.avatar { display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%; background:#bdebd6; font-size:9px; flex-shrink:0; }.role-badge { display:inline-block; background:#bdebd6; border-radius:4px; padding:2px 5px; font-size:9px; white-space:nowrap; }.staff { background:#e0e5ff; color:#173c69; }.event-badge { display:inline-block; border-radius:12px; padding:3px 7px; font-size:9px; }.neutral { background:#e0e5ff; color:#294479; }.success { background:#d9f3e4; color:#246743; }.danger { background:#ffe2db; color:#a34435; }
+.details-panel { background:white; border:1px solid #f0eef8; border-radius:8px; padding:12px; min-width:0; }.details-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }.details-heading h2 { font-size:15px; font-weight:700; white-space:nowrap; }.details-heading h2 span { color:#008384; }.record-card,.change-card { background:#f3f2ff; border-radius:5px; padding:10px; }dl { margin:0; }dl > div { display:flex; justify-content:space-between; gap:14px; margin-bottom:9px; }dt { font-size:10px; color:#536580; }dd { margin:0; font-size:10px; text-align:right; overflow-wrap:anywhere; }.subject { margin-top:16px; }.subject p { font-size:10px; color:#536580; }.subject h3 { font-size:13px; font-weight:600; margin:5px 0 0; overflow-wrap:anywhere; }.description { margin:12px 0; font-size:11px; line-height:1.6; color:#536580; }.changes-heading { display:flex; justify-content:space-between; gap:8px; margin:12px 0 6px; }.changes-heading h3,.metadata h3 { text-transform:uppercase; font-size:10px; letter-spacing:.04em; }.changes-heading span { color:#00817d; font-size:10px; }.change-card { margin-bottom:7px; }.change-card > p { color:#536580; font-size:10px; margin-bottom:8px; }.change-values { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:10px; font-size:10px; align-items:center; }.change-values del { color:#85909c; overflow-wrap:anywhere; }.change-values > span { color:#00817d; }.change-values strong { text-align:right; font-weight:500; overflow-wrap:anywhere; }.muted-note { color:#7d8898; line-height:1.6; padding:12px 0; font-size:11px; }.metadata { border-top:1px solid #eeedf5; padding-top:12px; margin-top:12px; }.metadata h3 { margin-bottom:12px; }.record-link { width:100%; margin-top:12px; color:#17634d; }.pagination { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 12px; font-size:10px; color:#788394; }.pagination nav { display:flex; gap:4px; flex-wrap:wrap; }.pagination a,.pagination nav span { padding:5px 8px; border-radius:4px; border:1px solid #eeedf5; }.pagination .current { background:#1b4535; color:white; }.pagination nav span { opacity:.5; }.empty-state { padding:60px 20px; text-align:center; }.empty-state h2 { font-weight:600; }.empty-state p { margin:8px 0 16px; }
+@media(min-width:1500px) { .activity-layout { grid-template-columns:minmax(0,1fr) 350px; } }
+@media(max-width:1100px) { .filter-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.activity-layout { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) { .audit-page { padding:10px; }.summary-grid { grid-template-columns:1fr; gap:8px; }.summary-card { padding:14px; }.filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.filter-caption { display:none; } }
+@media print { .audit-page { background:white; padding:0; }.filter-panel,.pagination nav,.record-link { display:none; }.activity-layout { display:block; }.table-scroll { overflow:visible; }td { padding:12px 8px; }.details-panel { margin-top:20px; break-inside:avoid; }.summary-card { break-inside:avoid; } }
+</style>

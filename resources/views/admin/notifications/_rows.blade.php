@@ -1,4 +1,5 @@
 @forelse ($notifications as $notification)
+    @php($recipientKey = app(\App\Services\Routing\PublicRouteKeyService::class)->encode($notification->recipient_id))
     <tr>
         <td>
             <div>{{ $notification->type_label }}</div>
@@ -20,7 +21,7 @@
         <td>
             <div class="table-actions">
                 @if ($notification->target_url)
-                    <form method="POST" action="{{ route('admin.notifications.open', $notification->recipient_id) }}">
+                    <form method="POST" action="{{ route('admin.notifications.open', $recipientKey) }}">
                         @csrf
                         <button type="submit" class="notification-action-btn notification-action-btn--primary" aria-label="Open record" title="Open record">
                             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -33,7 +34,7 @@
                 @endif
 
                 @unless ($notification->read_at)
-                    <form method="POST" action="{{ route('admin.notifications.read', $notification->recipient_id) }}">
+                    <form method="POST" action="{{ route('admin.notifications.read', $recipientKey) }}">
                         @csrf
                         <button type="submit" class="notification-action-btn notification-action-btn--ghost" aria-label="Mark as read" title="Mark as read">
                             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">

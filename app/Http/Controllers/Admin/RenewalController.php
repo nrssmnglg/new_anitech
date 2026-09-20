@@ -160,14 +160,14 @@ class RenewalController extends Controller
                 'barangays' => Barangay::query()
                     ->orderBy('name')
                     ->get(['id', 'name'])
-                    ->map(fn (Barangay $barangay): array => ['id' => $barangay->id, 'name' => $barangay->name])
+                    ->map(fn (Barangay $barangay): array => ['id' => $this->queryRouteKey($barangay->id), 'name' => $barangay->name])
                     ->values()
                     ->all(),
                 'memberTypes' => MemberType::query()
                     ->orderBy('code')
                     ->get(['id', 'code', 'name'])
                     ->map(fn (MemberType $memberType): array => [
-                        'id' => $memberType->id,
+                        'id' => $this->queryRouteKey($memberType->id),
                         'label' => $memberType->code . ' - ' . $memberType->name,
                     ])
                     ->values()
@@ -179,7 +179,7 @@ class RenewalController extends Controller
                     ->values()
                     ->all(),
                 'barangays' => $availableBarangays
-                    ->map(fn (Barangay $barangay): array => ['id' => $barangay->id, 'name' => $barangay->name])
+                    ->map(fn (Barangay $barangay): array => ['id' => $this->queryRouteKey($barangay->id), 'name' => $barangay->name])
                     ->values()
                     ->all(),
                 'sources' => collect($sourceOptions)
@@ -303,8 +303,8 @@ class RenewalController extends Controller
             ->latest('id')
             ->get();
 
-        $selectedBarangay = filled($recordFilters['record_barangay_id'])
-            ? Barangay::query()->with('association:id,barangay_id,name,president_name')->find($recordFilters['record_barangay_id'], ['id', 'name'])
+        $selectedBarangay = filled($recordFilters['record_barangay_value'] ?? null)
+            ? Barangay::query()->with('association:id,barangay_id,name,president_name')->find($recordFilters['record_barangay_value'], ['id', 'name'])
             : null;
 
         if ($selectedBarangay) {
@@ -438,7 +438,7 @@ class RenewalController extends Controller
 
         return Inertia::render('Admin/Renewals/Create', [
             'farmer' => [
-                'id' => $farmer->id,
+                'id' => $this->queryRouteKey($farmer->id),
                 'fullName' => $farmer->full_name,
                 'farmerCode' => $farmer->farmer_code,
                 'memberType' => $farmer->memberType ? [
@@ -1029,6 +1029,7 @@ class RenewalController extends Controller
             'record_search' => (string) $request->string('record_search'),
             'record_year' => $request->filled('record_year') ? (string) $request->input('record_year') : '',
             'record_barangay_id' => $request->filled('record_barangay_id') ? (string) $request->input('record_barangay_id') : '',
+            'record_barangay_value' => $this->decodeQueryRouteKey((string) $request->input('record_barangay_id', '')),
             'record_source' => $request->filled('record_source') ? (string) $request->input('record_source') : '',
             'record_status' => $request->filled('record_status') ? (string) $request->input('record_status') : '',
         ];
@@ -1046,9 +1047,11 @@ class RenewalController extends Controller
             'queue_barangay_id' => $request->filled('queue_barangay_id')
                 ? (string) $request->input('queue_barangay_id')
                 : '',
+            'queue_barangay_value' => $this->decodeQueryRouteKey((string) $request->input('queue_barangay_id', '')),
             'queue_member_type_id' => $request->filled('queue_member_type_id')
                 ? (string) $request->input('queue_member_type_id')
                 : '',
+            'queue_member_type_value' => $this->decodeQueryRouteKey((string) $request->input('queue_member_type_id', '')),
         ];
     }
 
@@ -1069,11 +1072,11 @@ class RenewalController extends Controller
                 });
             })
             ->when(
-                $queueFilters['queue_barangay_id'] ?? null,
+                $queueFilters['queue_barangay_value'] ?? null,
                 fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId)
             )
             ->when(
-                $queueFilters['queue_member_type_id'] ?? null,
+                $queueFilters['queue_member_type_value'] ?? null,
                 fn (Builder $query, string $memberTypeId) => $query->where('member_type_id', $memberTypeId)
             );
     }
@@ -1098,7 +1101,7 @@ class RenewalController extends Controller
                 });
             })
             ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
-            ->when($recordFilters['record_barangay_id'] ?? null, function (Builder $query, string $barangayId): void {
+            ->when($recordFilters['record_barangay_value'] ?? null, function (Builder $query, string $barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             })
             ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
@@ -1137,7 +1140,7 @@ class RenewalController extends Controller
                 });
             })
             ->when($recordFilters['record_year'] ?? null, fn (Builder $query, string $year) => $query->where('year', (int) $year))
-            ->when($recordFilters['record_barangay_id'] ?? null, fn (Builder $query, string $barangayId) => $query->whereHas('membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId)))
+            ->when($recordFilters['record_barangay_value'] ?? null, fn (Builder $query, string $barangayId) => $query->whereHas('membershipTransaction.farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId)))
             ->when($recordFilters['record_source'] ?? null, fn (Builder $query, string $source) => $query->whereHas('membershipTransaction', fn (Builder $transactionQuery) => $transactionQuery->where('source', $source)))
             ->when(
                 $recordFilters['record_status'] ?? null,
@@ -1228,7 +1231,7 @@ class RenewalController extends Controller
                         });
                 });
             })
-            ->when($recordFilters['record_barangay_id'] ?? null, fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId));
+            ->when($recordFilters['record_barangay_value'] ?? null, fn (Builder $query, string $barangayId) => $query->where('barangay_id', $barangayId));
     }
 
     private function settledAssessmentStatuses(): array

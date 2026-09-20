@@ -50,11 +50,11 @@ const availableMemberTypes = computed(() => props.memberTypes.filter(item =>
     form.record_mode === 'new' || ['OM', 'OSC'].includes(item.code)));
 const transactionType = computed(() => {
     if (form.record_mode === 'existing') return 'Renewal';
-    const code = props.memberTypes.find(item => String(item.id) === String(form.member_type_id))?.code;
+    const code = props.memberTypes.find(item => String(item.key || item.id) === String(form.member_type_id))?.code;
     return code ? (['OM', 'OSC'].includes(code) ? 'Renewal' : 'Application') : 'Select a member type';
 });
 const yearAlreadyRecorded = computed(() => selectedFarmer.value?.recordedYears?.some(year => Number(year) === Number(form.historical_year)) ?? false);
-const selectedMemberType = computed(() => props.memberTypes.find(item => String(item.id) === String(form.member_type_id)) ?? null);
+const selectedMemberType = computed(() => props.memberTypes.find(item => String(item.key || item.id) === String(form.member_type_id)) ?? null);
 const readyToSave = computed(() => Boolean(
     form.historical_year
     && form.member_type_id
@@ -95,7 +95,8 @@ function selectFarmer(farmer) {
     form.farmer_id = farmer.id;
     form.existing_farmer_code = farmer.farmerCode;
     const code = ['NSC', 'OSC'].includes(farmer.memberType) ? 'OSC' : 'OM';
-    form.member_type_id = String(props.memberTypes.find(item => item.code === code)?.id ?? '');
+    const memberType = props.memberTypes.find(item => item.code === code);
+    form.member_type_id = memberType ? String(memberType.key || memberType.id) : '';
     form.clearErrors();
     searchResults.value = [];
 }
@@ -125,7 +126,7 @@ const filteredAssociations = computed(() => {
         return props.associations;
     }
 
-    return props.associations.filter((association) => String(association.barangay_id) === String(form.barangay_id));
+    return props.associations.filter((association) => String(association.barangay_key || association.barangay_id) === String(form.barangay_id));
 });
 
 function syncAssociation() {
@@ -134,10 +135,10 @@ function syncAssociation() {
         return;
     }
 
-    const matches = filteredAssociations.value.some((association) => String(association.id) === String(form.association_id));
+    const matches = filteredAssociations.value.some((association) => String(association.key || association.id) === String(form.association_id));
 
     if (!matches) {
-        form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].id) : '';
+        form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].key || filteredAssociations.value[0].id) : '';
     }
 }
 
@@ -267,7 +268,7 @@ function submit() {
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Member Type</span>
                             <select v-model="form.member_type_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
                                 <option value="">Select member type</option>
-                                <option v-for="item in availableMemberTypes" :key="item.id" :value="String(item.id)">{{ item.code }} - {{ item.name }}</option>
+                                <option v-for="item in availableMemberTypes" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.code }} - {{ item.name }}</option>
                             </select>
                             <p v-if="form.errors.member_type_id" class="text-xs font-medium text-rose-600">{{ form.errors.member_type_id }}</p>
                         </label>
@@ -339,7 +340,7 @@ function submit() {
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Barangay</span>
                             <select v-model="form.barangay_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white" @change="syncAssociation">
                                 <option value="">Select barangay</option>
-                                <option v-for="item in barangays" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+                                <option v-for="item in barangays" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
                             </select>
                             <p v-if="form.errors.barangay_id" class="text-xs font-medium text-rose-600">{{ form.errors.barangay_id }}</p>
                         </label>
@@ -347,7 +348,7 @@ function submit() {
                             <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Association</span>
                             <select v-model="form.association_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
                                 <option value="">No association assigned</option>
-                                <option v-for="item in filteredAssociations" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+                                <option v-for="item in filteredAssociations" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
                             </select>
                             <p v-if="form.errors.association_id" class="text-xs font-medium text-rose-600">{{ form.errors.association_id }}</p>
                         </label>

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Enums\FarmerStatus;
 use App\Models\Association;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,6 +13,26 @@ class UpdateFarmerRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        foreach (['barangay_id', 'association_id', 'member_type_id'] as $key) {
+            if (! $this->filled($key)) {
+                continue;
+            }
+
+            $this->merge([$key => $this->decodeRouteKey($this->input($key))]);
+        }
+    }
+
+    private function decodeRouteKey(mixed $value): mixed
+    {
+        if (! filled($value) || is_numeric($value)) {
+            return $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 
     public function rules(): array

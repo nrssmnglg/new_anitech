@@ -152,9 +152,10 @@ class NotificationController extends Controller
             ->with('success', 'All notifications marked as read.');
     }
 
-    public function markRead(Request $request, int $recipient): JsonResponse|RedirectResponse
+    public function markRead(Request $request, string $recipient): JsonResponse|RedirectResponse
     {
-        $updated = $this->markRecipientRead($recipient);
+        $recipientId = $this->decodeNotificationRouteKey($recipient);
+        $updated = $this->markRecipientRead($recipientId);
         $message = $updated ? 'Notification marked as read.' : 'Notification already marked as read.';
 
         if ($request->expectsJson()) {
@@ -170,13 +171,15 @@ class NotificationController extends Controller
             ->with('success', $message);
     }
 
-    public function open(Request $request, int $recipient): JsonResponse|RedirectResponse
+    public function open(Request $request, string $recipient): JsonResponse|RedirectResponse
     {
+        $recipientId = $this->decodeNotificationRouteKey($recipient);
+
         $notification = $this->notificationQuery()
-            ->where('recipients.id', $recipient)
+            ->where('recipients.id', $recipientId)
             ->firstOrFail();
 
-        $this->markRecipientRead($recipient);
+        $this->markRecipientRead($recipientId);
 
         $payload = $this->decodePayload($notification->payload ?? null);
         $targetUrl = $this->targetUrl((string) $notification->type, $payload);
@@ -682,8 +685,8 @@ class NotificationController extends Controller
             'createdAt' => \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A'),
             'isRead' => $notification->read_at !== null,
             'targetUrl' => $notification->target_url,
-            'readUrl' => route('admin.notifications.read', $notification->recipient_id),
-            'openUrl' => route('admin.notifications.open', $notification->recipient_id),
+            'readUrl' => route('admin.notifications.read', $this->notificationRouteKey($notification->recipient_id)),
+            'openUrl' => route('admin.notifications.open', $this->notificationRouteKey($notification->recipient_id)),
         ];
     }
 }

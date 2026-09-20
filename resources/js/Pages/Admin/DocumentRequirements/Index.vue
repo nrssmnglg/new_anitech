@@ -41,7 +41,7 @@ function transformedPayload(data) {
     return {
         ...data,
         transaction_type_filter: props.filters.transaction_type,
-        document_type_id: data.document_type_id && data.document_type_id !== NEW_DOCUMENT_TYPE_VALUE ? Number(data.document_type_id) : null,
+        document_type_id: data.document_type_id && data.document_type_id !== NEW_DOCUMENT_TYPE_VALUE ? data.document_type_id : null,
         is_required: Boolean(data.is_required),
         is_active: Boolean(data.is_active),
     };

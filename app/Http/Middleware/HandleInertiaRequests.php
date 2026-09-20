@@ -213,11 +213,6 @@ class HandleInertiaRequests extends Middleware
                                         'activePatterns' => ['admin.queries.index', 'admin.queries.show'],
                                     ],
                                     [
-                                        'label' => 'Notification Management',
-                                        'href' => route('admin.notifications.index'),
-                                        'activePatterns' => ['admin.notifications.index', 'admin.notifications.show'],
-                                    ],
-                                    [
                                         'label' => 'Advisories',
                                         'href' => route('admin.advisories.index'),
                                         'activePatterns' => ['admin.advisories.index', 'admin.advisories.show', 'admin.advisories.edit', 'admin.advisories.create'],

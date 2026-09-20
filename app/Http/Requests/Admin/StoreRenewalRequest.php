@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRenewalRequest extends FormRequest
@@ -9,6 +10,17 @@ class StoreRenewalRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $farmerId = $this->input('farmer_id');
+
+        if (filled($farmerId) && ! is_numeric($farmerId)) {
+            $this->merge([
+                'farmer_id' => app(PublicRouteKeyService::class)->decode((string) $farmerId),
+            ]);
+        }
     }
 
     public function rules(): array

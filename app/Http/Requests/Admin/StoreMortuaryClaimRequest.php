@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\DocumentRequirement;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMortuaryClaimRequest extends FormRequest
@@ -10,6 +11,11 @@ class StoreMortuaryClaimRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->decodeRouteKey('membership_ledger_id');
     }
 
     public function rules(): array
@@ -44,5 +50,24 @@ class StoreMortuaryClaimRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    private function decodeRouteKey(string $field): void
+    {
+        $value = $this->input($field);
+
+        if ($value === null || $value === '') {
+            return;
+        }
+
+        if (is_numeric($value)) {
+            $this->merge([$field => (int) $value]);
+
+            return;
+        }
+
+        $this->merge([
+            $field => app(PublicRouteKeyService::class)->decode((string) $value),
+        ]);
     }
 }

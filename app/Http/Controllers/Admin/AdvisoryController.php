@@ -16,6 +16,7 @@ use App\Services\Analytics\AnalyticsService;
 use App\Services\Advisories\AdvisoryPublicationService;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Notifications\NotificationDispatchService;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -474,7 +475,7 @@ class AdvisoryController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn (Barangay $barangay): array => [
-                    'id' => $barangay->id,
+                    'id' => $this->queryRouteKey($barangay->id),
                     'name' => $barangay->name,
                 ])
                 ->all(),
@@ -482,7 +483,7 @@ class AdvisoryController extends Controller
                 ->orderBy('code')
                 ->get(['id', 'code', 'name'])
                 ->map(fn (MemberType $memberType): array => [
-                    'id' => $memberType->id,
+                    'id' => $this->queryRouteKey($memberType->id),
                     'label' => trim($memberType->code . ' - ' . $memberType->name, ' -'),
                 ])
                 ->all(),
@@ -548,8 +549,8 @@ class AdvisoryController extends Controller
             'title' => $advisory->title,
             'content' => $advisory->content,
             'audience_type' => $advisory->audience_type ?: 'all',
-            'barangay_id' => $advisory->barangay_id ? (string) $advisory->barangay_id : '',
-            'member_type_id' => $advisory->member_type_id ? (string) $advisory->member_type_id : '',
+            'barangay_id' => $this->queryRouteKey($advisory->barangay_id),
+            'member_type_id' => $this->queryRouteKey($advisory->member_type_id),
             'existingAttachments' => $this->serializeAttachments($advisory, $advisory->attachments),
         ];
     }
@@ -579,5 +580,10 @@ class AdvisoryController extends Controller
             'group' => 'Member type: ' . ($advisory->memberType ? trim($advisory->memberType->code . ' - ' . $advisory->memberType->name, ' -') : 'Not set'),
             default => 'All farmers',
         };
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
     }
 }

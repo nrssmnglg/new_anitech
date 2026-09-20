@@ -15,6 +15,7 @@ use App\Services\Analytics\AnalyticsService;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Queries\QueryWorkflowService;
+use App\Services\Routing\PublicRouteKeyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -45,13 +46,14 @@ class QueryController extends Controller
         $filters = [
             'status' => $request->query('status'),
             'year' => $request->integer('year') ?: null,
-            'barangay_id' => $request->integer('barangay_id') ?: null,
+            'barangay_id' => $request->filled('barangay_id') ? (string) $request->query('barangay_id') : '',
+            'barangay_value' => $this->decodeQueryRouteKey((string) $request->query('barangay_id', '')),
         ];
 
         $baseQuery = Query::query()
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['year'] ?? null, fn (Builder $query, int $year) => $query->whereYear('created_at', $year))
-            ->when($filters['barangay_id'] ?? null, function (Builder $query, int $barangayId): void {
+            ->when($filters['barangay_value'] ?? null, function (Builder $query, int $barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             });
 
@@ -86,7 +88,7 @@ class QueryController extends Controller
                 'barangays' => Barangay::query()
                     ->orderBy('name')
                     ->get(['id', 'name'])
-                    ->map(fn (Barangay $barangay): array => ['value' => $barangay->id, 'label' => $barangay->name])
+                    ->map(fn (Barangay $barangay): array => ['value' => $this->queryRouteKey($barangay->id), 'label' => $barangay->name])
                     ->values()
                     ->all(),
             ],
@@ -512,7 +514,7 @@ class QueryController extends Controller
         return [
             'status' => $request->filled('status') ? (string) $request->input('status') : null,
             'year' => $request->filled('year') ? (int) $request->input('year') : null,
-            'barangay_id' => $request->filled('barangay_id') ? (int) $request->input('barangay_id') : null,
+            'barangay_id' => $this->decodeQueryRouteKey((string) $request->input('barangay_id', '')),
         ];
     }
 
@@ -521,7 +523,7 @@ class QueryController extends Controller
         return Query::query()
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['year'] ?? null, fn (Builder $query, int $year) => $query->whereYear('created_at', $year))
-            ->when($filters['barangay_id'] ?? null, function (Builder $query, int $barangayId): void {
+            ->when($filters['barangay_value'] ?? $filters['barangay_id'] ?? null, function (Builder $query, int $barangayId): void {
                 $query->whereHas('farmer', fn (Builder $farmerQuery) => $farmerQuery->where('barangay_id', $barangayId));
             });
     }
@@ -576,5 +578,23 @@ class QueryController extends Controller
             'escalated' => (clone $filtered)->where('status', 'Escalated')->count(),
             'archived' => (clone $filtered)->whereNotNull('archived_at')->count(),
         ];
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }

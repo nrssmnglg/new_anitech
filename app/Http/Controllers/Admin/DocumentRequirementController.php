@@ -8,6 +8,7 @@ use App\Models\DocumentRequirement;
 use App\Models\DocumentType;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +42,7 @@ class DocumentRequirementController extends Controller
             'transactionTypeOptions' => $this->transactionTypeOptions(),
             'documentTypeOptions' => $documentTypes
                 ->map(fn (DocumentType $type): array => [
-                    'id' => $type->id,
+                    'id' => $this->queryRouteKey($type->id),
                     'code' => $type->code,
                     'label' => $type->name ?: $type->code,
                 ])
@@ -160,7 +161,8 @@ class DocumentRequirementController extends Controller
 
     private function validateRequirement(Request $request, ?DocumentRequirement $documentRequirement = null): array
     {
-        $documentTypeId = $request->input('document_type_id');
+        $documentTypeId = $this->decodeRouteKey($request->input('document_type_id'));
+        $request->merge(['document_type_id' => $documentTypeId]);
         $creatingDocumentType = blank($documentTypeId);
 
         $validated = $request->validate([
@@ -230,7 +232,7 @@ class DocumentRequirementController extends Controller
             'id' => $requirement->id,
             'transactionType' => $requirement->transaction_type,
             'documentType' => [
-                'id' => $requirement->documentType?->id,
+                'id' => $this->queryRouteKey($requirement->documentType?->id),
                 'code' => $requirement->documentType?->code,
                 'label' => $requirement->documentType?->name ?: $requirement->documentType?->code ?: 'Unknown document',
             ],
@@ -286,5 +288,23 @@ class DocumentRequirementController extends Controller
         }
 
         return $code;
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeRouteKey(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 }

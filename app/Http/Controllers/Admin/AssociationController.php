@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateAssociationRequest;
 use App\Models\Association;
 use App\Models\Barangay;
 use App\Models\User;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,10 @@ class AssociationController extends Controller
     public function index(Request $request): InertiaResponse
     {
         $filters = $request->only(['search', 'status', 'barangay_id']);
+        $queryFilters = [
+            ...$filters,
+            'barangay_id' => $this->decodeQueryRouteKey((string) ($filters['barangay_id'] ?? '')),
+        ];
         $canonicalAssociationIds = Association::query()
             ->selectRaw('MIN(id)')
             ->groupBy('barangay_id');
@@ -46,7 +51,7 @@ class AssociationController extends Controller
                 });
             })
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($filters['barangay_id'] ?? null, fn ($query, string $barangayId) => $query->where('barangay_id', $barangayId));
+            ->when($queryFilters['barangay_id'] ?? null, fn ($query, int $barangayId) => $query->where('barangay_id', $barangayId));
 
         $associations = (clone $associationsQuery)
             ->orderBy('name')
@@ -77,7 +82,7 @@ class AssociationController extends Controller
                     ->orderBy('name')
                     ->get(['id', 'name', 'code'])
                     ->map(fn (Barangay $barangay): array => [
-                        'value' => (string) $barangay->id,
+                        'value' => $this->queryRouteKey($barangay->id),
                         'label' => trim($barangay->name . ($barangay->code ? " ({$barangay->code})" : '')),
                     ])
                     ->values()
@@ -157,7 +162,7 @@ class AssociationController extends Controller
         return Inertia::render('Admin/Associations/Edit', [
             'association' => [
                 'id' => $association->id,
-                'barangay_id' => (string) $association->barangay_id,
+                'barangay_id' => $this->queryRouteKey($association->barangay_id),
                 'name' => $association->name,
                 'code' => $association->code,
                 'president_name' => $association->president_name,
@@ -294,10 +299,28 @@ class AssociationController extends Controller
     private function serializeAvailableBarangay(Barangay $barangay): array
     {
         return [
-            'id' => (string) $barangay->id,
+            'id' => $this->queryRouteKey($barangay->id),
             'name' => $barangay->name,
             'code' => $barangay->code,
             'status' => ucfirst((string) $barangay->status),
         ];
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }

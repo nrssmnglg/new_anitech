@@ -32,6 +32,7 @@ use App\Services\Membership\MemberTypeResolverService;
 use App\Services\Membership\MembershipApplicationService;
 use App\Services\Payments\PaymentAssessmentService;
 use App\Services\Payments\PayMongoPaidAt;
+use App\Services\Routing\PublicRouteKeyService;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -68,7 +69,7 @@ class MembershipApplicationController extends Controller
             'source' => $request->query('source'),
             'status' => $requestedStatus === 'submitted' ? 'pending' : $requestedStatus,
             'year' => $request->integer('year') ?: null,
-            'barangay_id' => $request->integer('barangay_id') ?: null,
+            'barangay_id' => $this->decodeQueryRouteKey((string) $request->query('barangay_id', '')),
         ];
         $summaryFilters = $filters;
         $summaryFilters['status'] = null;
@@ -163,7 +164,7 @@ class MembershipApplicationController extends Controller
                 'source' => $filters['source'] ? (string) $filters['source'] : '',
                 'status' => $filters['status'] ? (string) $filters['status'] : '',
                 'year' => $filters['year'] ? (string) $filters['year'] : '',
-                'barangay_id' => $filters['barangay_id'] ? (string) $filters['barangay_id'] : '',
+                'barangay_id' => $request->filled('barangay_id') ? (string) $request->query('barangay_id') : '',
             ],
             'filterOptions' => [
                 'sources' => [
@@ -188,7 +189,7 @@ class MembershipApplicationController extends Controller
                     ->orderBy('name')
                     ->get(['id', 'name'])
                     ->map(fn (Barangay $barangay) => [
-                        'id' => $barangay->id,
+                        'id' => $this->queryRouteKey($barangay->id),
                         'name' => $barangay->name,
                     ])
                     ->all(),
@@ -251,7 +252,7 @@ class MembershipApplicationController extends Controller
                 );
 
                 return [
-                    'id' => $memberType->id,
+                    'id' => $this->queryRouteKey($memberType->id),
                     'code' => $memberType->code,
                     'name' => $memberType->name,
                 ];
@@ -263,8 +264,25 @@ class MembershipApplicationController extends Controller
             'entryMode' => $entryMode,
             'statuses' => FarmerStatus::options(),
             'canSelectManualStatus' => $canSelectManualStatus,
-            'barangays' => Barangay::query()->orderBy('name')->get(['id', 'name']),
-            'associations' => Association::query()->orderBy('name')->get(['id', 'barangay_id', 'name']),
+            'barangays' => Barangay::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (Barangay $barangay): array => [
+                    'id' => $this->queryRouteKey($barangay->id),
+                    'name' => $barangay->name,
+                ])
+                ->values()
+                ->all(),
+            'associations' => Association::query()
+                ->orderBy('name')
+                ->get(['id', 'barangay_id', 'name'])
+                ->map(fn (Association $association): array => [
+                    'id' => $this->queryRouteKey($association->id),
+                    'barangay_id' => $this->queryRouteKey($association->barangay_id),
+                    'name' => $association->name,
+                ])
+                ->values()
+                ->all(),
             'nextFarmerCode' => $nextFarmerCode,
             'requiredDocuments' => collect($this->documentRequirementService->requiredFor('application', ['source' => 'walk_in']))
                 ->map(fn ($document) => [
@@ -302,9 +320,9 @@ class MembershipApplicationController extends Controller
                 'sex' => old('sex', $prefillProfile?->sex ? strtolower((string) $prefillProfile->sex) : null),
                 'civil_status' => old('civil_status', $prefillProfile?->civil_status ? strtolower((string) $prefillProfile->civil_status) : null),
                 'mobile_number' => old('mobile_number', $prefillProfile?->mobile_number),
-                'member_type_id' => (string) old('member_type_id', $prefillFarmer?->member_type_id ?? ''),
-                'barangay_id' => (string) old('barangay_id', $prefillFarmer?->barangay_id ?? ''),
-                'association_id' => (string) old('association_id', $prefillFarmer?->association_id ?? ''),
+                'member_type_id' => $this->queryRouteKey(old('member_type_id', $prefillFarmer?->member_type_id ?? '')),
+                'barangay_id' => $this->queryRouteKey(old('barangay_id', $prefillFarmer?->barangay_id ?? '')),
+                'association_id' => $this->queryRouteKey(old('association_id', $prefillFarmer?->association_id ?? '')),
                 'address' => old('address', $prefillProfile?->address),
                 'remarks' => old('remarks', $prefillFarmer?->remarks),
                 'documents' => collect($this->documentRequirementService->requiredFor('application', ['source' => 'walk_in']))
@@ -1009,5 +1027,31 @@ class MembershipApplicationController extends Controller
     private function canSelectManualStatus(): bool
     {
         return Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false;
+    }
+
+    private function queryRouteKey(mixed $id): string
+    {
+        if ($id === null || $id === '') {
+            return '';
+        }
+
+        if (! is_numeric($id)) {
+            return (string) $id;
+        }
+
+        return app(PublicRouteKeyService::class)->encode((int) $id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\User;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,9 +16,21 @@ class UpdateUserRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $farmerId = $this->input('farmer_id');
+
         $this->merge([
             'contact_number' => $this->filled('contact_number') ? $this->input('contact_number') : null,
+            'farmer_id' => $this->decodeRouteKey($farmerId),
         ]);
+    }
+
+    private function decodeRouteKey(mixed $value): mixed
+    {
+        if (! filled($value) || is_numeric($value)) {
+            return $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 
     public function rules(): array

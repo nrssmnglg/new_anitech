@@ -37,6 +37,7 @@ use App\Services\Membership\MembershipApplicationService;
 use App\Services\Membership\RenewalRequestService;
 use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Queries\QueryWorkflowService;
+use App\Services\Routing\PublicRouteKeyService;
 
 class DashboardController extends Controller
 {
@@ -58,9 +59,7 @@ class DashboardController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name']);
 
-            $selectedBarangayId = $request->filled('barangay_id')
-                ? $request->integer('barangay_id')
-                : null;
+            $selectedBarangayId = $this->decodeQueryRouteKey((string) $request->input('barangay_id', ''));
 
             if ($selectedBarangayId !== null && ! $barangays->contains('id', $selectedBarangayId)) {
                 $selectedBarangayId = null;
@@ -70,10 +69,10 @@ class DashboardController extends Controller
                 'filters' => [
                     'baseUrl' => route('admin.dashboard.index'),
                     'selectedYear' => $selectedYear,
-                    'selectedBarangayId' => $selectedBarangayId,
+                    'selectedBarangayId' => $request->filled('barangay_id') ? (string) $request->input('barangay_id') : '',
                     'availableYears' => $this->availableYears($selectedYear),
                     'barangays' => $barangays->map(fn (Barangay $barangay): array => [
-                        'id' => $barangay->id,
+                        'id' => $this->queryRouteKey($barangay->id),
                         'name' => $barangay->name,
                     ])->values()->all(),
                 ],
@@ -195,6 +194,10 @@ class DashboardController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
+        if ($request->filled('barangay_id')) {
+            $request->merge(['barangay_id' => $this->decodeQueryRouteKey((string) $request->input('barangay_id'))]);
+        }
+
         $validated = $request->validate([
             'year' => ['nullable', 'integer'],
             'barangay_id' => ['nullable', 'integer'],
@@ -997,17 +1000,17 @@ class DashboardController extends Controller
             'links' => [
                 'applications' => route('admin.membership-applications.index', array_filter([
                     'year' => $year,
-                    'barangay_id' => $barangayId,
+                    'barangay_id' => $this->queryRouteKey($barangayId),
                 ], fn ($value) => $value !== null && $value !== '')),
                 'renewals' => route('admin.renewals.index', array_filter([
                     'section' => 'records',
                     'record_year' => $year,
-                    'record_barangay_id' => $barangayId,
+                    'record_barangay_id' => $this->queryRouteKey($barangayId),
                 ], fn ($value) => $value !== null && $value !== '')),
                 'mortuary' => route('admin.mortuary-claims.index', array_filter([
                     'section' => 'records',
                     'year' => $year,
-                    'barangay_id' => $barangayId,
+                    'barangay_id' => $this->queryRouteKey($barangayId),
                 ], fn ($value) => $value !== null && $value !== '')),
                 'analytics' => route('admin.analytics.index', array_filter([
                     'date_from' => $year !== null ? now()->setYear($year)->startOfYear()->toDateString() : null,
@@ -1084,7 +1087,7 @@ class DashboardController extends Controller
                     'complianceRate' => $eligible > 0 ? round(($renewed / $eligible) * 100, 1) : 0,
                     'href' => route('admin.renewals.index', [
                         'queue_year' => $targetYear,
-                        'queue_barangay_id' => $barangay->id,
+                        'queue_barangay_id' => $this->queryRouteKey($barangay->id),
                     ]),
                 ];
             })
@@ -1116,11 +1119,11 @@ class DashboardController extends Controller
                 'records' => route('admin.renewals.index', array_filter([
                     'section' => 'records',
                     'record_year' => $targetYear,
-                    'record_barangay_id' => $barangayId,
+                    'record_barangay_id' => $this->queryRouteKey($barangayId),
                 ], fn ($value) => $value !== null && $value !== '')),
                 'queue' => route('admin.renewals.index', array_filter([
                     'queue_year' => $targetYear,
-                    'queue_barangay_id' => $barangayId,
+                    'queue_barangay_id' => $this->queryRouteKey($barangayId),
                 ], fn ($value) => $value !== null && $value !== '')),
             ],
         ];
@@ -2092,5 +2095,23 @@ class DashboardController extends Controller
                 $metadata
             )
         );
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
+    }
+
+    private function decodeQueryRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }

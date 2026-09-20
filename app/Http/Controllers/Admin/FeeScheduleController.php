@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateFeeScheduleRequest;
 use App\Models\FeeSchedule;
 use App\Models\MemberType;
 use App\Models\User;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -321,7 +322,7 @@ class FeeScheduleController extends Controller
     {
         return [
             'id' => $schedule->id,
-            'member_type_id' => $schedule->member_type_id,
+            'member_type_id' => $this->queryRouteKey($schedule->member_type_id),
             'year' => $schedule->year,
             'membership_fee' => (float) $schedule->membership_fee,
             'annual_due' => (float) $schedule->annual_due,
@@ -349,11 +350,16 @@ class FeeScheduleController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name'])
             ->map(fn (MemberType $memberType): array => [
-                'id' => $memberType->id,
+                'id' => $this->queryRouteKey($memberType->id),
                 'label' => $memberType->code . ' - ' . $memberType->name,
             ])
             ->values()
             ->all();
+    }
+
+    private function queryRouteKey(int|string|null $id): string
+    {
+        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
     }
 
     private function normalizeActiveSchedules(): void

@@ -9,6 +9,7 @@ use App\Models\Farmer;
 use App\Models\OfficeProfile;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -344,7 +345,7 @@ class UserController extends Controller
             'email' => $user->email,
             'role' => $user->role ?: '',
             'status' => $user->status ?: User::STATUS_ACTIVE,
-            'farmer_id' => $user->farmer_id,
+            'farmer_id' => $this->queryRouteKey($user->farmer_id),
             'job_title' => $officeProfile->job_title,
             'contact_number' => $officeProfile->contact_number,
             'employee_id' => $officeProfile->employee_id,
@@ -368,7 +369,7 @@ class UserController extends Controller
                 ])->filter()->implode(' ')) : $farmer->farmer_code;
 
                 return [
-                    'value' => $farmer->id,
+                    'value' => $this->queryRouteKey($farmer->id),
                     'label' => $name . ' (' . $farmer->farmer_code . ')',
                     'disabled' => $selectedFarmerId !== null && (int) $selectedFarmerId !== (int) $farmer->id && $farmer->users()->exists(),
                 ];
@@ -383,6 +384,11 @@ class UserController extends Controller
             ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
             ->values()
             ->all();
+    }
+
+    private function queryRouteKey(int|string|null $id): ?string
+    {
+        return $id === null ? null : app(PublicRouteKeyService::class)->encode($id);
     }
 
     private function roleOptions(): array

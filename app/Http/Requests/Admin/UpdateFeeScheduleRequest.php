@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\FeeSchedule;
+use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateFeeScheduleRequest extends FormRequest
@@ -15,6 +16,7 @@ class UpdateFeeScheduleRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'member_type_id' => $this->decodeRouteKey($this->input('member_type_id')),
             'is_active' => $this->boolean('is_active'),
         ]);
     }
@@ -57,5 +59,18 @@ class UpdateFeeScheduleRequest extends FormRequest
                 $validator->errors()->add('year', 'A fee schedule already exists for this member type and year.');
             }
         });
+    }
+
+    private function decodeRouteKey(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return app(PublicRouteKeyService::class)->decode((string) $value);
     }
 }

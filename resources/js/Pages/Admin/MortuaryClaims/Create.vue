@@ -6,7 +6,7 @@ import AdminLayout from '../../../Layouts/AdminLayout.vue';
 const props = defineProps({
     eligibleLedgers: { type: Array, required: true },
     requirements: { type: Array, required: true },
-    selectedLedgerId: { type: Number, default: null },
+    selectedLedgerId: { type: String, default: null },
     storeUrl: { type: String, required: true },
     queueUrl: { type: String, required: true },
 });

@@ -7,6 +7,7 @@ use App\Models\Farmer;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Backup\BackupRecoveryService;
+use App\Services\Routing\PublicRouteKeyService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,9 @@ class BackupRecoveryController extends Controller
 
     public function storeFarmerSnapshot(Request $request): RedirectResponse
     {
+        $barangayId = $this->decodeRouteKey((string) $request->input('barangay_id', ''));
+        $memberTypeId = $this->decodeRouteKey((string) $request->input('member_type_id', ''));
+
         $farmers = Farmer::query()
             ->with(['profile', 'barangay', 'association', 'memberType'])
             ->when($request->filled('status'), function (Builder $query) use ($request): void {
@@ -102,8 +106,8 @@ class BackupRecoveryController extends Controller
                     $query->whereNull('inactive_at')->where('membership_status', '!=', 'active');
                 }
             })
-            ->when($request->filled('barangay_id'), fn (Builder $query) => $query->where('barangay_id', $request->input('barangay_id')))
-            ->when($request->filled('member_type_id'), fn (Builder $query) => $query->where('member_type_id', $request->input('member_type_id')))
+            ->when($barangayId !== null, fn (Builder $query) => $query->where('barangay_id', $barangayId))
+            ->when($memberTypeId !== null, fn (Builder $query) => $query->where('member_type_id', $memberTypeId))
             ->get();
 
         $manifest = $this->backupRecoveryService->createFarmerExportSnapshot(
@@ -184,5 +188,18 @@ class BackupRecoveryController extends Controller
         }
 
         return User::query()->whereKey($userId)->value('name') ?? 'User #' . $userId;
+    }
+
+    private function decodeRouteKey(string $key): ?int
+    {
+        if ($key === '') {
+            return null;
+        }
+
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        return app(PublicRouteKeyService::class)->decode($key);
     }
 }
