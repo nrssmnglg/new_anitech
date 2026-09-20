@@ -299,16 +299,28 @@ function formatSubmitted(value) {
     }
 
     const now = new Date();
-    const diffHours = Math.max(0, Math.round((now.getTime() - date.getTime()) / (1000 * 60 * 60)));
+    const diffMinutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / (1000 * 60)));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
     const primary = date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
     });
 
+    let secondary = 'Just now';
+
+    if (diffMinutes >= 1 && diffMinutes < 60) {
+        secondary = `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours >= 1 && diffHours < 24) {
+        secondary = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays >= 1) {
+        secondary = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    }
+
     return {
         primary,
-        secondary: diffHours < 24 ? `${Math.max(1, diffHours)} hour${diffHours === 1 ? '' : 's'} ago` : `${Math.round(diffHours / 24)} day${Math.round(diffHours / 24) === 1 ? '' : 's'} ago`,
+        secondary,
     };
 }
 
