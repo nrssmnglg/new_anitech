@@ -102,7 +102,7 @@ class QueryController extends Controller
         ]);
     }
 
-    public function export(Request $request): BinaryFileResponse|StreamedResponse
+    public function export(Request $request): BinaryFileResponse|StreamedResponse|\Illuminate\Http\Response
     {
         $filters = $this->filters($request);
         $format = strtolower((string) $request->query('format', 'pdf'));
@@ -124,6 +124,15 @@ class QueryController extends Controller
                 ->mapWithKeys(fn (string $column): array => [$column => FarmerInquiryExport::availableColumns()[$column]])
                 ->all(),
         ])->setPaper('a4', 'landscape');
+
+        if ($request->boolean('preview')) {
+            $fileName = 'farmer-inquiries-' . now()->format('Y-m-d') . '.pdf';
+
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            ]);
+        }
 
         return response()->streamDownload(
             static function () use ($pdf): void {

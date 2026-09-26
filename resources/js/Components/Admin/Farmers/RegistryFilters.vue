@@ -1,10 +1,30 @@
 <script setup>
-defineProps({
+import { computed, watch } from 'vue';
+
+const props = defineProps({
     form: { type: Object, required: true },
     filterOptions: { type: Object, required: true },
     activeFilterCount: { type: Number, required: true },
     totalPages: { type: Number, required: true },
     filteredTargetCount: { type: Number, required: true },
+});
+
+const associations = computed(() => {
+    if (!props.form.barangay_id) {
+        return props.filterOptions.associations || [];
+    }
+
+    return (props.filterOptions.associations || []).filter(
+        (association) => String(association.barangay_key || association.barangay_id) === String(props.form.barangay_id),
+    );
+});
+
+watch(() => props.form.barangay_id, () => {
+    if (props.form.association_id && !associations.value.some(
+        (association) => String(association.key || association.id) === String(props.form.association_id),
+    )) {
+        props.form.association_id = '';
+    }
 });
 
 defineEmits(['apply', 'reset', 'open-export']);
@@ -28,7 +48,7 @@ defineEmits(['apply', 'reset', 'open-export']);
         </div>
 
         <form class="mt-3 space-y-2" @submit.prevent="$emit('apply')">
-            <div class="grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr]">
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
                 <label class="space-y-1.5">
                     <span class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-[#263d35]">Search Records</span>
                     <div class="relative">
@@ -38,6 +58,14 @@ defineEmits(['apply', 'reset', 'open-export']);
                         </svg>
                         <input v-model="form.search" type="text" placeholder="Search by code, name, mobile..." class="w-full rounded-md border border-[#c8d0cc] bg-white py-2 pl-9 pr-3 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
                     </div>
+                </label>
+
+                <label class="space-y-1.5">
+                    <span class="ml-1 text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#78857f]">Association</span>
+                    <select v-model="form.association_id" class="w-full rounded-md border border-[#c8d0cc] bg-white px-3 py-2 text-sm text-[#1a2420] outline-none transition focus:border-[#376757]">
+                        <option value="">All associations</option>
+                        <option v-for="association in associations" :key="association.key || association.id" :value="String(association.key || association.id)">{{ association.name }}</option>
+                    </select>
                 </label>
 
                 <label class="space-y-1.5">

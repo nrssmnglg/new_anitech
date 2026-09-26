@@ -286,7 +286,7 @@ class RenewalController extends Controller
         return back()->with('success', "Renewal reminder emailed to {$email}.");
     }
 
-    public function summaryReport(Request $request): View|BinaryFileResponse|StreamedResponse
+    public function summaryReport(Request $request): View|BinaryFileResponse|StreamedResponse|\Illuminate\Http\Response
     {
         $recordFilters = $this->recordFilters($request);
         $reportYear = (int) ($recordFilters['record_year'] ?: now()->year);
@@ -334,6 +334,12 @@ class RenewalController extends Controller
                     $reportYear,
                     $selectedColumns,
                 );
+                if ($request->boolean('preview')) {
+                    return response($pdfContent, 200, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+                    ]);
+                }
                 $export = $this->storedPdfExportService->store(
                     'renewal_barangay_masterlist',
                     $fileName,
@@ -389,6 +395,12 @@ class RenewalController extends Controller
                 now()->format('F d, Y h:i A'),
                 $reportYear
             );
+            if ($request->boolean('preview')) {
+                return response($pdfContent, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+                ]);
+            }
             $export = $this->storedPdfExportService->store(
                 'renewal_summary',
                 $fileName,

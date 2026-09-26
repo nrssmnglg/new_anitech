@@ -10,6 +10,7 @@ use App\Models\RenewalRequest;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class FarmerDocumentService
 {
@@ -21,6 +22,8 @@ class FarmerDocumentService
     public function ensureApplicationChecklist(MembershipApplication $application): Collection
     {
         foreach ($this->documentRequirementService->checklistRowsForApplication($application) as $row) {
+            $row = $this->filterFarmerDocumentColumns($row);
+
             FarmerDocument::query()->updateOrCreate(
                 [
                     'membership_transaction_id' => $application->id,
@@ -36,6 +39,8 @@ class FarmerDocumentService
     public function ensureRenewalChecklist(RenewalRequest $renewalRequest): Collection
     {
         foreach ($this->documentRequirementService->checklistRowsForRenewal($renewalRequest) as $row) {
+            $row = $this->filterFarmerDocumentColumns($row);
+
             FarmerDocument::query()->updateOrCreate(
                 [
                     'membership_transaction_id' => $renewalRequest->id,
@@ -51,6 +56,8 @@ class FarmerDocumentService
     public function ensureReactivationChecklist(ReactivationRequest $reactivationRequest): Collection
     {
         foreach ($this->documentRequirementService->checklistRowsForReactivation($reactivationRequest) as $row) {
+            $row = $this->filterFarmerDocumentColumns($row);
+
             FarmerDocument::query()->updateOrCreate(
                 [
                     'membership_transaction_id' => $reactivationRequest->id,
@@ -183,6 +190,15 @@ class FarmerDocumentService
             'two_by_two_picture' => 730,
             default => null,
         };
+    }
+
+    private function filterFarmerDocumentColumns(array $row): array
+    {
+        static $columns = null;
+
+        $columns ??= Schema::getColumnListing('farmer_documents');
+
+        return array_intersect_key($row, array_flip($columns));
     }
 }
 

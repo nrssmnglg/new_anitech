@@ -47,6 +47,7 @@ const form = reactive({
     search: props.filters.search || '',
     status: props.filters.status || '',
     barangay_id: optionValueForId(props.filterOptions.barangays, props.filters.barangay_id),
+    association_id: optionValueForId(props.filterOptions.associations, props.filters.association_id),
     member_type_id: optionValueForId(props.filterOptions.memberTypes, props.filters.member_type_id),
     quality: props.filters.quality || '',
 });
@@ -88,16 +89,23 @@ function resetFilters() {
     form.search = '';
     form.status = '';
     form.barangay_id = '';
+    form.association_id = '';
     form.member_type_id = '';
     form.quality = '';
     applyFilters();
 }
 
-const activeFilterCount = computed(() => [form.search, form.status, form.barangay_id, form.member_type_id, form.quality].filter(Boolean).length);
+const activeFilterCount = computed(() => [form.search, form.status, form.barangay_id, form.association_id, form.member_type_id, form.quality].filter(Boolean).length);
 const totalPages = computed(() => props.farmers.last_page || 1);
 const selectedCount = computed(() => selectedIds.value.length);
 const filteredTargetCount = computed(() => props.farmers.total || 0);
 const allCurrentPageSelected = computed(() => props.farmers.data.length > 0 && props.farmers.data.every((farmer) => selectedIds.value.includes(farmer.id)));
+const exportPreviewUrl = computed(() => {
+    const url = new URL(buildExportUrl(exportFormat.value));
+    url.searchParams.set('preview', '1');
+    return url.toString();
+});
+const selectedExportColumnLabels = computed(() => availableExportColumns.filter((column) => selectedExportColumns.includes(column.value)).map((column) => column.label));
 
 const assignmentAssociations = computed(() => {
     if (!assignmentForm.barangay_id) {
@@ -132,6 +140,7 @@ function buildExportUrl(format) {
         search: form.search || '',
         status: form.status || '',
         barangay_id: form.barangay_id || '',
+        association_id: form.association_id || '',
         member_type_id: form.member_type_id || '',
         quality: form.quality || '',
         format,
@@ -195,6 +204,8 @@ function bulkPayload(extra = {}) {
         status: form.status || '',
         barangay_id: form.barangay_id || '',
         barangay_id_filter: form.barangay_id || '',
+        association_id: form.association_id || '',
+        association_id_filter: form.association_id || '',
         member_type_id: form.member_type_id || '',
         member_type_id_filter: form.member_type_id || '',
         quality: form.quality || '',
@@ -298,7 +309,7 @@ function submitBulkArchive() {
         </div>
 
         <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-5" @click.self="closeExportModal">
-            <section class="w-full max-w-4xl rounded-lg border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
+            <section class="max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
                 <div class="flex items-center justify-between gap-3 border-b border-[#e4ebe7] pb-3">
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#40534b]">Export Columns</p>
@@ -325,6 +336,19 @@ function submitBulkArchive() {
                         >
                         <span class="font-medium">{{ column.label }}</span>
                     </label>
+                </div>
+
+                <div class="mt-4 rounded-lg border border-[#d7e0db] bg-[#f8faf9] p-3">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <p class="text-xs font-semibold text-[#1a2420]">Report Preview</p>
+                        <a :href="exportPreviewUrl" target="_blank" rel="noopener" class="text-xs font-semibold text-[#047857] hover:underline">Open full preview</a>
+                    </div>
+                    <iframe v-if="exportFormat === 'pdf'" :src="exportPreviewUrl" title="Farmer registry report preview" class="h-56 w-full rounded-md border border-[#d7e0db] bg-white"></iframe>
+                    <div v-else class="rounded-md border border-[#d7e0db] bg-white p-4 text-sm text-[#40534b]">
+                        <p class="font-semibold text-[#1a2420]">Excel export preview</p>
+                        <p class="mt-1 text-xs">The generated spreadsheet will include {{ filteredTargetCount }} filtered record{{ filteredTargetCount === 1 ? '' : 's' }} and these columns:</p>
+                        <p class="mt-2 text-xs">{{ selectedExportColumnLabels.join(', ') }}</p>
+                    </div>
                 </div>
 
                 <div class="mt-4 flex justify-end gap-2 border-t border-[#e8edea] pt-3">

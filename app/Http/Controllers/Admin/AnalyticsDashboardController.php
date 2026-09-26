@@ -39,7 +39,7 @@ class AnalyticsDashboardController extends Controller
         ]);
     }
 
-    public function export(Request $request): StreamedResponse|BinaryFileResponse
+    public function export(Request $request): StreamedResponse|BinaryFileResponse|\Illuminate\Http\Response
     {
         [$from, $to, $days] = $this->resolveRange($request);
         $analytics = $this->buildAnalyticsPayload($from, $to, $days);
@@ -58,6 +58,13 @@ class AnalyticsDashboardController extends Controller
                 'analytics' => $analytics,
                 'generatedAt' => now()->format('F d, Y h:i A'),
             ])->setPaper('a4', 'portrait');
+
+            if ($request->boolean('preview')) {
+                return response($pdf->output(), 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $fileBase . '.pdf"',
+                ]);
+            }
 
             return response()->streamDownload(
                 static function () use ($pdf): void {

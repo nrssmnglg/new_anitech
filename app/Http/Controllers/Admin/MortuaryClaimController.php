@@ -133,6 +133,7 @@ class MortuaryClaimController extends Controller
             }
 
             if ($format === 'pdf') {
+                $fileName = 'Mortuary-Records-' . now()->format('m-d-Y') . '.pdf';
                 $pdf = Pdf::loadView('admin.mortuary-claims.records-report', [
                     'generatedAt' => now(),
                     'filters' => $filters,
@@ -143,7 +144,9 @@ class MortuaryClaimController extends Controller
                         ->all(),
                 ])->setPaper('a4', 'landscape');
 
-                return $pdf->download('Mortuary-Records-' . now()->format('m-d-Y') . '.pdf');
+                return $request->boolean('preview')
+                    ? $pdf->stream($fileName)
+                    : $pdf->download($fileName);
             }
 
             return view('admin.mortuary-claims.records-report', [
@@ -170,6 +173,7 @@ class MortuaryClaimController extends Controller
         }
 
         if ($format === 'pdf') {
+            $fileName = 'Mortuary-Queue-' . now()->format('m-d-Y') . '.pdf';
             $pdf = Pdf::loadView('admin.mortuary-claims.queue-report', [
                 'generatedAt' => now(),
                 'filters' => $filters,
@@ -180,7 +184,9 @@ class MortuaryClaimController extends Controller
                     ->all(),
             ])->setPaper('a4', 'landscape');
 
-            return $pdf->download('Mortuary-Queue-' . now()->format('m-d-Y') . '.pdf');
+            return $request->boolean('preview')
+                ? $pdf->stream($fileName)
+                : $pdf->download($fileName);
         }
 
         return view('admin.mortuary-claims.queue-report', [
@@ -256,6 +262,7 @@ class MortuaryClaimController extends Controller
                 'id' => $requirement->id,
                 'code' => strtolower((string) $requirement->documentType?->code),
                 'label' => $requirement->documentType?->name ?: $requirement->documentType?->code ?: 'Requirement',
+                'isRequired' => (bool) $requirement->is_required,
             ])->values()->all(),
             'storeUrl' => route('admin.mortuary-claims.store'),
             'queueUrl' => route('admin.mortuary-claims.index'),
@@ -266,8 +273,13 @@ class MortuaryClaimController extends Controller
     {
         $validated = $request->validated();
         $ledger = MembershipLedger::query()
-            ->with(['membershipTransaction.farmer.profile', 'membershipTransaction.farmer.memberType'])
+            ->with([
+                'membershipTransaction.farmer.profile',
+                'membershipTransaction.farmer.memberType',
+                'membershipTransaction.farmer.membershipLedgers',
+            ])
             ->findOrFail($validated['membership_ledger_id']);
+        $expectedClaimAmount = $this->mortuaryClaimAmountForFarmer($ledger->membershipTransaction?->farmer);
 
         if (MortuaryClaim::query()
             ->whereHas('membershipLedger.membershipTransaction', fn (Builder $query) => $query->where('farmer_id', $ledger->farmer_id))
@@ -281,7 +293,7 @@ class MortuaryClaimController extends Controller
         [$claimerFirstName, $claimerMiddleName, $claimerLastName] = $this->splitClaimerName((string) $validated['claimer_name']);
         $claimPayload = [
             'membership_ledger_id' => $ledger->id,
-            'claim_amount' => $validated['claim_amount'],
+            'claim_amount' => $expectedClaimAmount,
             'claim_date' => $validated['claim_date'],
             'claimer_first_name' => $claimerFirstName,
             'claimer_middle_name' => $claimerMiddleName,
@@ -544,7 +556,8 @@ class MortuaryClaimController extends Controller
     {
         $settledLedgers = $this->settledMortuaryLedgers($farmer);
         $representativeLedger = $this->representativeMortuaryLedger($farmer);
-        $expectedClaim = round((float) $settledLedgers->sum(fn (MembershipLedger $item): float => (float) $item->mortuary_fee), 2);
+        $contributionYears = $settledLedgers->count();
+        $expectedClaim = $this->mortuaryClaimAmountForYears($contributionYears);
 
         return [
             'id' => $farmer->id,
@@ -564,7 +577,7 @@ class MortuaryClaimController extends Controller
                 'paymentStatus' => $representativeLedger?->payment_status
                     ? str((string) $representativeLedger->payment_status)->replace('_', ' ')->title()->toString()
                     : 'No payment status',
-                'contributionYears' => $settledLedgers->count(),
+                'contributionYears' => $contributionYears,
             ],
             'claimAmount' => $expectedClaim,
             'status' => [
@@ -583,14 +596,15 @@ class MortuaryClaimController extends Controller
     {
         $settledLedgers = $this->settledMortuaryLedgers($farmer);
         $representativeLedger = $this->representativeMortuaryLedger($farmer);
-        $expectedClaim = round((float) $settledLedgers->sum(fn (MembershipLedger $item): float => (float) $item->mortuary_fee), 2);
+        $contributionYears = $settledLedgers->count();
+        $expectedClaim = $this->mortuaryClaimAmountForYears($contributionYears);
 
         return [
             'id' => $this->queryRouteKey($representativeLedger?->id),
             'label' => trim(($farmer?->full_name ?? 'Unknown Farmer') . ' - ' . ($farmer?->farmer_code ?? 'No code')),
             'year' => $representativeLedger?->year,
             'expectedClaimAmount' => $expectedClaim,
-            'contributionYears' => $settledLedgers->count(),
+            'contributionYears' => $contributionYears,
             'paymentStatusLabel' => $representativeLedger?->payment_status
                 ? 'Payment ' . str((string) $representativeLedger->payment_status)->replace('_', ' ')->title()->toString()
                 : 'No payment status',
@@ -620,6 +634,27 @@ class MortuaryClaimController extends Controller
                 ['id', 'desc'],
             ])
             ->values();
+    }
+
+    private function mortuaryClaimAmountForFarmer(?Farmer $farmer): float
+    {
+        if (! $farmer) {
+            return 0.0;
+        }
+
+        return $this->mortuaryClaimAmountForYears($this->settledMortuaryLedgers($farmer)->count());
+    }
+
+    private function mortuaryClaimAmountForYears(int $contributionYears): float
+    {
+        return match (true) {
+            $contributionYears <= 0 => 0.0,
+            $contributionYears <= 1 => 1000.0,
+            $contributionYears <= 3 => 2000.0,
+            $contributionYears <= 6 => 4000.0,
+            $contributionYears <= 9 => 7000.0,
+            default => 10000.0,
+        };
     }
 
     private function representativeMortuaryLedger(?Farmer $farmer): ?MembershipLedger
@@ -755,20 +790,20 @@ class MortuaryClaimController extends Controller
         }
     }
 
-    private function activeMortuaryRequirements()
+    private function activeMortuaryRequirements(bool $requiredOnly = false)
     {
         return DocumentRequirement::query()
             ->with('documentType:id,code,name')
             ->where('transaction_type', 'Mortuary')
             ->where('is_active', true)
-            ->where('is_required', true)
+            ->when($requiredOnly, fn (Builder $query) => $query->where('is_required', true))
             ->orderBy('id')
             ->get();
     }
 
     private function claimRequirementsComplete(MortuaryClaim $claim): bool
     {
-        $requiredCodes = $this->activeMortuaryRequirements()
+        $requiredCodes = $this->activeMortuaryRequirements(true)
             ->map(fn (DocumentRequirement $requirement): string => strtolower((string) $requirement->documentType?->code))
             ->filter()
             ->values();

@@ -119,7 +119,12 @@ class BarangayController extends Controller
 
     public function show(Barangay $barangay): InertiaResponse
     {
-        $barangay->load(['association:id,barangay_id,name,code,status'])
+        $barangay->load([
+            'association:id,barangay_id,name,code,status',
+            'farmers.profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number',
+            'farmers.memberType:id,code,name',
+            'farmers.association:id,name',
+        ])
             ->loadCount(['farmers', 'associations']);
 
         return Inertia::render('Admin/Barangays/Show', [
@@ -128,10 +133,28 @@ class BarangayController extends Controller
                 'associations_count' => (int) ($barangay->associations_count ?? 0),
                 'farmers_count' => (int) ($barangay->farmers_count ?? 0),
             ],
+            'farmers' => $barangay->farmers
+                ->sortBy(fn ($farmer): string => strtolower($farmer->full_name))
+                ->values()
+                ->map(fn ($farmer): array => [
+                    'id' => $farmer->id,
+                    'farmerCode' => $farmer->farmer_code,
+                    'fullName' => $farmer->full_name,
+                    'memberType' => $farmer->memberType?->name ?? 'Not set',
+                    'association' => $farmer->association?->name ?? 'Unassigned',
+                    'mobileNumber' => $farmer->profile?->mobile_number ?? 'Not recorded',
+                    'status' => $farmer->status->label(),
+                    'statusValue' => $farmer->status->value,
+                    'showUrl' => route('admin.farmers.show', $farmer),
+                ])
+                ->all(),
             'urls' => [
                 'index' => route('admin.barangays.index'),
                 'edit' => route('admin.barangays.edit', $barangay),
                 'farmers' => route('admin.farmers.index', ['barangay_id' => app(PublicRouteKeyService::class)->encode($barangay->id)]),
+                'association' => $barangay->association
+                    ? route('admin.associations.show', $barangay->association)
+                    : null,
             ],
         ]);
     }

@@ -6,6 +6,8 @@ use App\Enums\DocumentType as DocumentTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\DocumentRequirement;
 use App\Models\DocumentType;
+use App\Models\FarmerDocument;
+use App\Models\MortuaryClaimRequirement;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Routing\PublicRouteKeyService;
@@ -137,6 +139,15 @@ class DocumentRequirementController extends Controller
     {
         $transactionType = $documentRequirement->transaction_type;
         $documentTypeId = $documentRequirement->document_type_id;
+        $usageCount = $this->transactionUsageCount($documentRequirement);
+
+        if ($usageCount > 0) {
+            return redirect()
+                ->route('admin.document-requirements.index', [
+                    'transaction_type' => $this->normalizeTransactionType((string) $request->input('transaction_type_filter', $transactionType)),
+                ])
+                ->with('error', "This document requirement cannot be deleted because it is connected to {$usageCount} transaction record(s). You may mark it inactive instead.");
+        }
 
         $documentRequirement->delete();
 
@@ -228,6 +239,8 @@ class DocumentRequirementController extends Controller
 
     private function serializeRequirement(DocumentRequirement $requirement): array
     {
+        $usageCount = $this->transactionUsageCount($requirement);
+
         return [
             'id' => $requirement->id,
             'transactionType' => $requirement->transaction_type,
@@ -238,11 +251,35 @@ class DocumentRequirementController extends Controller
             ],
             'isRequired' => (bool) $requirement->is_required,
             'isActive' => (bool) $requirement->is_active,
+            'usageCount' => $usageCount,
+            'canDelete' => $usageCount === 0,
             'actions' => [
                 'updateUrl' => route('admin.document-requirements.update', $requirement),
-                'deleteUrl' => route('admin.document-requirements.destroy', $requirement),
+                'deleteUrl' => $usageCount === 0
+                    ? route('admin.document-requirements.destroy', $requirement)
+                    : null,
             ],
         ];
+    }
+
+    private function transactionUsageCount(DocumentRequirement $requirement): int
+    {
+        if ($requirement->transaction_type === 'Mortuary') {
+            $documentCode = $requirement->documentType?->code;
+
+            if (blank($documentCode)) {
+                return 0;
+            }
+
+            return MortuaryClaimRequirement::query()
+                ->whereHas('requirementType', fn ($query) => $query->where('code', $documentCode))
+                ->count();
+        }
+
+        return FarmerDocument::query()
+            ->where('document_type_id', $requirement->document_type_id)
+            ->whereHas('membershipTransaction', fn ($query) => $query->where('transaction_type', $requirement->transaction_type))
+            ->count();
     }
 
     private function transactionTypeOptions(): array

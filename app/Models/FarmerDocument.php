@@ -18,6 +18,7 @@ class FarmerDocument extends Model
     protected $fillable = [
         'membership_transaction_id',
         'document_type_id',
+        'is_required',
         'original_name',
         'file_path',
         'verification_status',
@@ -28,6 +29,7 @@ class FarmerDocument extends Model
     ];
 
     protected $casts = [
+        'is_required' => 'boolean',
         'verified_at' => 'datetime',
         'uploaded_at' => 'datetime',
     ];
@@ -98,9 +100,9 @@ class FarmerDocument extends Model
         return 'public';
     }
 
-    public function getIsRequiredAttribute(): bool
+    public function getIsRequiredAttribute(mixed $value): bool
     {
-        return true;
+        return $value === null ? true : (bool) $value;
     }
 
     public function getIsReceivedAttribute(): bool

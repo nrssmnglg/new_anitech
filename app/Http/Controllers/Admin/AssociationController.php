@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreAssociationRequest;
 use App\Http\Requests\Admin\UpdateAssociationRequest;
 use App\Models\Association;
 use App\Models\Barangay;
+use App\Models\Farmer;
 use App\Models\User;
 use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
@@ -139,7 +140,12 @@ class AssociationController extends Controller
 
     public function show(Association $association): InertiaResponse
     {
-        $association->load('barangay:id,name,code,status')
+        $association->load([
+            'barangay:id,name,code,status',
+            'president.profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number',
+            'farmers.profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number',
+            'farmers.memberType:id,code,name',
+        ])
             ->loadCount('farmers');
 
         return Inertia::render('Admin/Associations/Show', [
@@ -147,9 +153,24 @@ class AssociationController extends Controller
             'stats' => [
                 'farmers_count' => (int) ($association->farmers_count ?? 0),
             ],
+            'farmers' => $association->farmers
+                ->sortBy(fn ($farmer): string => strtolower($farmer->full_name))
+                ->values()
+                ->map(fn ($farmer): array => [
+                    'id' => $farmer->id,
+                    'farmerCode' => $farmer->farmer_code,
+                    'fullName' => $farmer->full_name,
+                    'memberType' => $farmer->memberType?->name ?? 'Not set',
+                    'mobileNumber' => $farmer->profile?->mobile_number ?? 'Not recorded',
+                    'status' => $farmer->status->label(),
+                    'statusValue' => $farmer->status->value,
+                    'showUrl' => route('admin.farmers.show', $farmer),
+                ])
+                ->all(),
             'urls' => [
                 'index' => route('admin.associations.index'),
                 'edit' => route('admin.associations.edit', $association),
+                'farmers' => route('admin.farmers.index', ['association_id' => $this->queryRouteKey($association->id)]),
                 'barangay' => $association->barangay
                     ? route('admin.barangays.show', $association->barangay)
                     : null,
@@ -166,8 +187,21 @@ class AssociationController extends Controller
                 'name' => $association->name,
                 'code' => $association->code,
                 'president_name' => $association->president_name,
+                'president_farmer_id' => $this->queryRouteKey($association->president_farmer_id),
                 'status' => $association->status ?: 'active',
             ],
+            'presidentCandidates' => $association->farmers()
+                ->with('profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number')
+                ->get()
+                ->sortBy(fn (Farmer $farmer): string => strtolower($farmer->full_name))
+                ->values()
+                ->map(fn (Farmer $farmer): array => [
+                    'id' => $this->queryRouteKey($farmer->id),
+                    'name' => $farmer->full_name,
+                    'farmerCode' => $farmer->farmer_code,
+                    'mobileNumber' => $farmer->profile?->mobile_number ?? 'No contact number',
+                ])
+                ->all(),
             'barangays' => $this->availableBarangays($association)
                 ->map(fn (Barangay $barangay): array => $this->serializeAvailableBarangay($barangay))
                 ->values()
@@ -184,7 +218,15 @@ class AssociationController extends Controller
 
     public function update(UpdateAssociationRequest $request, Association $association): RedirectResponse
     {
-        $association->update($request->validated());
+        $validated = $request->validated();
+        $president = filled($validated['president_farmer_id'] ?? null)
+            ? Farmer::query()->find($validated['president_farmer_id'])
+            : null;
+
+        $association->update([
+            ...$validated,
+            'president_name' => $president?->full_name,
+        ]);
 
         return redirect()
             ->route('admin.associations.show', $association)
@@ -279,6 +321,12 @@ class AssociationController extends Controller
             'name' => $association->name,
             'code' => $association->code,
             'president_name' => $association->president_name,
+            'president' => $association->president ? [
+                'name' => $association->president->full_name,
+                'farmerCode' => $association->president->farmer_code,
+                'contactNumber' => $association->president->profile?->mobile_number,
+                'showUrl' => route('admin.farmers.show', $association->president),
+            ] : null,
             'is_active' => $status === 'active',
             'contact_number' => $association->contact_number,
             'address' => $association->address,

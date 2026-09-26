@@ -144,6 +144,12 @@ const exportReportUrl = computed(() => {
 });
 
 const activeExportColumns = computed(() => form.record_barangay_id ? masterlistExportColumns : summaryExportColumns);
+const exportPreviewUrl = computed(() => {
+    const url = new URL(exportReportUrl.value);
+    url.searchParams.set('preview', '1');
+    return url.toString();
+});
+const selectedExportColumnLabels = computed(() => activeExportColumns.value.filter((column) => selectedExportColumns.includes(column.value)).map((column) => column.label));
 
 function openExportModal(format = 'pdf') {
     exportFormat.value = format;
@@ -214,7 +220,7 @@ function startExport() {
         </div>
 
         <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/50 p-4" @click.self="closeExportModal">
-            <section class="w-full max-w-2xl rounded-xl border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
+            <section class="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
                 <div class="flex items-center justify-between border-b border-[#e4ebe7] pb-3">
                     <p class="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-[#7a8781]">Export report</p>
                     <button type="button" aria-label="Close export dialog" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" @click="closeExportModal">
@@ -261,6 +267,19 @@ function startExport() {
                                 >
                                 <span class="font-medium">{{ column.label }}</span>
                             </label>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg border border-[#d7e0db] bg-[#f8faf9] p-3">
+                        <div class="mb-2 flex items-center justify-between gap-3">
+                            <p class="text-xs font-semibold text-[#1a2420]">Report Preview</p>
+                            <a :href="exportPreviewUrl" target="_blank" rel="noopener" class="text-xs font-semibold text-[#047857] hover:underline">Open full preview</a>
+                        </div>
+                        <iframe v-if="exportFormat === 'pdf'" :src="exportPreviewUrl" title="Renewal report preview" class="h-56 w-full rounded-md border border-[#d7e0db] bg-white"></iframe>
+                        <div v-else class="rounded-md border border-[#d7e0db] bg-white p-4 text-sm text-[#40534b]">
+                            <p class="font-semibold text-[#1a2420]">Excel export preview</p>
+                            <p class="mt-1 text-xs">The spreadsheet will use the current filters and selected columns.</p>
+                            <p class="mt-2 text-xs">{{ selectedExportColumnLabels.join(', ') }}</p>
                         </div>
                     </div>
 

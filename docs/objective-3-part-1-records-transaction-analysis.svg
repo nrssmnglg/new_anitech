@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Analysis of Organizational Records and Transactions in AniTech</title>
+  <desc id="desc">A process diagram showing AniTech collecting farmer, membership, payment, and service records, validating them, storing them centrally, filtering them, and producing analytics-ready information.</desc>
+  <defs><marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto"><path d="M0 0 L13 6.5 L0 13 z" fill="#0b624c"/></marker></defs>
+  <style>
+    .bg{fill:#f5f8f6}.head{fill:#064f40}.source{fill:#e8f6ee;stroke:#55a276;stroke-width:2}.process{fill:#eef4f1;stroke:#0b624c;stroke-width:3}.out{fill:#edf3ff;stroke:#557fb5;stroke-width:2}.arrow{fill:none;stroke:#0b624c;stroke-width:4;marker-end:url(#arrow)}.title{font:700 32px Arial,sans-serif}.sub{font:500 17px Arial,sans-serif}.h{font:700 23px Arial,sans-serif}.t{font:500 17px Arial,sans-serif}.small{font:500 15px Arial,sans-serif}.ink{fill:#153c32}.muted{fill:#5f7069}.white{fill:#fff}.green{fill:#0f7a59}
+  </style>
+  <rect class="bg" width="1600" height="900"/><rect class="head" width="1600" height="112"/>
+  <text class="white title" x="64" y="52">Figure X. Analysis of Organizational Records and Transactions</text>
+  <text class="white sub" x="64" y="82">Objective 3, Part 1: AniTech transforms operational records into analytics-ready information.</text>
+  <text class="ink h" x="72" y="168">Organizational data sources</text>
+  <rect class="source" x="72" y="195" width="330" height="88" rx="14"/><text class="ink h" x="98" y="230">Farmer Registry</text><text class="muted t" x="98" y="257">Profiles, location, status, association</text>
+  <rect class="source" x="72" y="310" width="330" height="88" rx="14"/><text class="ink h" x="98" y="345">Membership Transactions</text><text class="muted t" x="98" y="372">Applications and renewal requests</text>
+  <rect class="source" x="72" y="425" width="330" height="88" rx="14"/><text class="ink h" x="98" y="460">Payment Transactions</text><text class="muted t" x="98" y="487">Fees, amount paid, date, method, status</text>
+  <rect class="source" x="72" y="540" width="330" height="88" rx="14"/><text class="ink h" x="98" y="575">Service Records</text><text class="muted t" x="98" y="602">Mortuary claims, inquiries, advisories</text>
+  <rect class="process" x="530" y="255" width="305" height="120" rx="18"/><text class="ink h" x="589" y="299">Validation</text><text class="muted t" x="557" y="330">Required fields, statuses,</text><text class="muted t" x="557" y="353">and transaction consistency</text>
+  <rect class="process" x="530" y="455" width="305" height="120" rx="18"/><text class="ink h" x="580" y="499">Central Storage</text><text class="muted t" x="557" y="530">Linked farmer, transaction,</text><text class="muted t" x="557" y="553">payment, and service records</text>
+  <rect class="process" x="950" y="255" width="305" height="120" rx="18"/><text class="ink h" x="1024" y="299">Filtering</text><text class="muted t" x="977" y="330">By date, barangay, year,</text><text class="muted t" x="977" y="353">status, and transaction type</text>
+  <rect class="process" x="950" y="455" width="305" height="120" rx="18"/><text class="ink h" x="1005" y="499">Aggregation</text><text class="muted t" x="977" y="530">Counts, totals, rates, trends,</text><text class="muted t" x="977" y="553">and grouped comparisons</text>
+  <rect class="out" x="1335" y="315" width="210" height="190" rx="18"/><text class="ink h" x="1361" y="359">Analytics-Ready</text><text class="ink h" x="1381" y="388">Information</text><line x1="1362" y1="407" x2="1518" y2="407" stroke="#9fb8d7"/><text class="muted small" x="1360" y="438">Reliable records for</text><text class="muted small" x="1360" y="462">dashboard indicators,</text><text class="muted small" x="1360" y="486">reports, and decisions</text>
+  <path class="arrow" d="M402 239 H480 Q505 239 505 275 V315 H520"/><path class="arrow" d="M402 354 H485 Q505 354 505 335 H520"/><path class="arrow" d="M402 469 H470 Q505 469 505 335 H520"/><path class="arrow" d="M402 584 H480 Q505 584 505 515 H520"/>
+  <path class="arrow" d="M682 375 V445"/><path class="arrow" d="M835 515 H925 Q940 515 940 495 H940"/><path class="arrow" d="M1102 455 V385"/><path class="arrow" d="M1255 515 H1300 Q1320 515 1320 470 H1325"/>
+  <text class="green h" x="72" y="730">Key result:</text><text class="ink t" x="220" y="730">AniTech replaces isolated records with a structured, searchable, and comparable data source.</text>
+  <text class="muted small" x="72" y="853">Source: AniTech modules for farmer registry, membership applications, renewals, payments, mortuary assistance, inquiries, and analytics.</text>
+</svg>

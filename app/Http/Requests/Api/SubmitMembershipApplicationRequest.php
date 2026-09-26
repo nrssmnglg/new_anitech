@@ -28,6 +28,7 @@ class SubmitMembershipApplicationRequest extends JsonFormRequest
             'barangay_id' => ['required', 'integer', 'exists:barangays,id'],
             'association_id' => ['nullable', 'integer', 'exists:associations,id'],
             'remarks' => ['nullable', 'string'],
+            'terms_accepted' => ['accepted'],
             'reapply_from_application_id' => ['nullable', 'integer', 'exists:membership_applications,id'],
         ];
     }
@@ -43,6 +44,7 @@ class SubmitMembershipApplicationRequest extends JsonFormRequest
             'mobile_number' => 'mobile number',
             'barangay_id' => 'barangay',
             'association_id' => 'association',
+            'terms_accepted' => 'Terms and Conditions',
             'reapply_from_application_id' => 'previous application',
         ];
     }

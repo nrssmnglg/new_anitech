@@ -96,7 +96,7 @@ class DocumentVerificationQueueController extends Controller
         ]);
     }
 
-    public function export(Request $request): StreamedResponse|BinaryFileResponse
+    public function export(Request $request): StreamedResponse|BinaryFileResponse|\Illuminate\Http\Response
     {
         $filters = $this->filtersFromRequest($request);
         $columns = $this->resolveExportColumns($request->input('columns', []));
@@ -121,6 +121,13 @@ class DocumentVerificationQueueController extends Controller
             'filters' => $filters,
             'generatedAt' => now()->format('F d, Y h:i A'),
         ])->setPaper('a4', 'landscape');
+
+        if ($request->boolean('preview')) {
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileBase . '.pdf"',
+            ]);
+        }
 
         return response()->streamDownload(
             static function () use ($pdf): void {

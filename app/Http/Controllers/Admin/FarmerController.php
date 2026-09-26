@@ -182,7 +182,7 @@ class FarmerController extends Controller
         ]);
     }
 
-    public function export(Request $request): BinaryFileResponse|StreamedResponse
+    public function export(Request $request): BinaryFileResponse|StreamedResponse|\Illuminate\Http\Response
     {
         $filters = $this->filters($request);
         $farmers = $this->exportFarmersQuery($filters)->get();
@@ -231,6 +231,13 @@ class FarmerController extends Controller
                 ->all(),
             'memberTypeBreakdown' => $memberTypeBreakdown,
         ])->setPaper('a4', 'landscape');
+
+        if ($request->boolean('preview')) {
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            ]);
+        }
 
         return response()->streamDownload(
             static function () use ($pdf): void {
@@ -653,6 +660,7 @@ class FarmerController extends Controller
             'search' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'barangay_id' => ['nullable', 'string'],
+            'association_id' => ['nullable', 'string'],
             'member_type_id' => ['nullable', 'string'],
             'quality' => ['nullable', 'string'],
         ]);
@@ -731,6 +739,7 @@ class FarmerController extends Controller
             'search' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'barangay_id' => ['nullable', 'string'],
+            'association_id' => ['nullable', 'string'],
             'member_type_id' => ['nullable', 'string'],
             'quality' => ['nullable', 'string'],
         ]);
@@ -797,6 +806,7 @@ class FarmerController extends Controller
             'search' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'barangay_id_filter' => ['nullable', 'string'],
+            'association_id_filter' => ['nullable', 'string'],
             'member_type_id_filter' => ['nullable', 'string'],
             'quality' => ['nullable', 'string'],
         ]);
@@ -807,6 +817,7 @@ class FarmerController extends Controller
             'search' => $request->input('search'),
             'status' => $request->input('status'),
             'barangay_id' => $request->input('barangay_id_filter'),
+            'association_id' => $request->input('association_id_filter'),
             'member_type_id' => $request->input('member_type_id_filter'),
             'quality' => $request->input('quality'),
         ];
@@ -866,6 +877,7 @@ class FarmerController extends Controller
             'search' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'barangay_id' => ['nullable', 'string'],
+            'association_id' => ['nullable', 'string'],
             'member_type_id' => ['nullable', 'string'],
             'quality' => ['nullable', 'string'],
         ]);
@@ -916,6 +928,7 @@ class FarmerController extends Controller
             'search' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'barangay_id' => ['nullable', 'string'],
+            'association_id' => ['nullable', 'string'],
             'member_type_id' => ['nullable', 'string'],
             'quality' => ['nullable', 'string'],
         ]);
@@ -1009,6 +1022,7 @@ class FarmerController extends Controller
             'search' => trim((string) $request->string('search')),
             'status' => $request->filled('status') ? (string) $request->input('status') : null,
             'barangay_id' => $this->decodeFilterRouteKey((string) $request->input('barangay_id', '')),
+            'association_id' => $this->decodeFilterRouteKey((string) $request->input('association_id', '')),
             'member_type_id' => $this->decodeFilterRouteKey((string) $request->input('member_type_id', '')),
             'quality' => $request->filled('quality') ? (string) $request->input('quality') : null,
         ];
@@ -1035,6 +1049,7 @@ class FarmerController extends Controller
                 $this->applyStatusFilter($builder, $filters['status']);
             })
             ->when($filters['barangay_id'] ?? null, fn (Builder $builder, string $barangayId) => $builder->where('barangay_id', $barangayId))
+            ->when($filters['association_id'] ?? null, fn (Builder $builder, string $associationId) => $builder->where('association_id', $associationId))
             ->when($filters['member_type_id'] ?? null, fn (Builder $builder, string $memberTypeId) => $builder->where('member_type_id', $memberTypeId))
             ->when($filters['quality'] ?? null, function (Builder $builder, string $quality): void {
                 match ($quality) {
@@ -1153,6 +1168,9 @@ class FarmerController extends Controller
             'barangay' => filled($filters['barangay_id'])
                 ? Barangay::query()->whereKey($filters['barangay_id'])->value('name') ?? 'Selected barangay'
                 : 'All barangays',
+            'association' => filled($filters['association_id'])
+                ? Association::query()->whereKey($filters['association_id'])->value('name') ?? 'Selected association'
+                : 'All associations',
             'member_type' => filled($filters['member_type_id'])
                 ? MemberType::query()->whereKey($filters['member_type_id'])->value('code') ?? 'Selected member type'
                 : 'All member types',
@@ -1785,9 +1803,18 @@ class FarmerController extends Controller
                 'search' => trim((string) ($payload['search'] ?? '')),
                 'status' => filled($payload['status'] ?? null) ? (string) $payload['status'] : null,
                 'barangay_id' => filled($payload['barangay_id'] ?? null) ? (string) $payload['barangay_id'] : null,
-                'member_type_id' => filled($payload['member_type_id'] ?? null) ? (string) $payload['member_type_id'] : null,
+                'association_id' => filled($payload['association_id'] ?? null)
+                    ? $this->decodeFilterRouteKey((string) $payload['association_id'])
+                    : null,
+                'member_type_id' => filled($payload['member_type_id'] ?? null)
+                    ? $this->decodeFilterRouteKey((string) $payload['member_type_id'])
+                    : null,
                 'quality' => filled($payload['quality'] ?? null) ? (string) $payload['quality'] : null,
             ];
+
+            $filters['barangay_id'] = filled($payload['barangay_id'] ?? null)
+                ? $this->decodeFilterRouteKey((string) $payload['barangay_id'])
+                : null;
 
             return $this->applyIndexFilters(
                 Farmer::query()->with(['profile', 'barangay', 'association', 'memberType']),

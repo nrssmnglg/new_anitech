@@ -47,8 +47,34 @@ class DocumentRequirementService
     {
         $source = $this->resolveSource($context);
 
-        return $this->configuredRequirementsFor($workflow, $source)
+        return $this->configuredRequirementsFor($workflow, $source, false)
             ?? collect($this->defaultRequiredFor($workflow, $source));
+    }
+
+    private function configuredChecklistRequirementsFor(string $workflow, array|object $context = []): Collection
+    {
+        $source = $this->resolveSource($context);
+        $configured = $this->configuredRequirementRecordsFor($workflow, false);
+
+        if ($configured !== null) {
+            return $configured
+                ->map(function (DocumentRequirement $requirement): ?array {
+                    $type = DocumentType::tryFrom((string) $requirement->documentType?->code);
+
+                    return $type ? [
+                        'type' => $type,
+                        'is_required' => (bool) $requirement->is_required,
+                    ] : null;
+                })
+                ->filter()
+                ->values();
+        }
+
+        return collect($this->defaultRequiredFor($workflow, $source))
+            ->map(fn (DocumentType $type): array => [
+                'type' => $type,
+                'is_required' => true,
+            ]);
     }
 
     private function defaultRequiredFor(string $workflow, ?string $source = null): array
@@ -81,8 +107,9 @@ class DocumentRequirementService
     {
         $source = strtolower((string) $application->source);
 
-        return $this->configuredDocumentTypesFor('application', $application)
-            ->map(function (DocumentType $type) use ($application, $source): array {
+        return $this->configuredChecklistRequirementsFor('application', $application)
+            ->map(function (array $requirement) use ($application, $source): array {
+            $type = $requirement['type'];
             $documentTypeId = DocumentTypeModel::query()->firstOrCreate(
                 ['code' => $type->value],
                 [
@@ -95,6 +122,7 @@ class DocumentRequirementService
             return [
                 'membership_transaction_id' => $application->id,
                 'document_type_id' => $documentTypeId,
+                'is_required' => (bool) $requirement['is_required'],
                 'original_name' => $source === 'walk_in' ? $type->label() : 'Pending Upload',
                 'file_path' => $source === 'walk_in' ? 'office-checklist/' . $type->value : 'pending-upload/' . $type->value,
                 'verification_status' => DocumentVerificationStatus::PENDING,
@@ -108,8 +136,9 @@ class DocumentRequirementService
     {
         $source = strtolower((string) $renewalRequest->source);
 
-        return $this->configuredDocumentTypesFor('renewal', $renewalRequest)
-            ->map(function (DocumentType $type) use ($renewalRequest, $source): array {
+        return $this->configuredChecklistRequirementsFor('renewal', $renewalRequest)
+            ->map(function (array $requirement) use ($renewalRequest, $source): array {
+                $type = $requirement['type'];
                 $documentTypeId = DocumentTypeModel::query()->firstOrCreate(
                     ['code' => $type->value],
                     [
@@ -122,6 +151,7 @@ class DocumentRequirementService
                 return [
                     'membership_transaction_id' => $renewalRequest->id,
                     'document_type_id' => $documentTypeId,
+                    'is_required' => (bool) $requirement['is_required'],
                     'original_name' => $source === 'walk_in' ? $type->label() : 'Pending Upload',
                     'file_path' => $source === 'walk_in' ? 'office-checklist/' . $type->value : 'pending-upload/' . $type->value,
                     'verification_status' => DocumentVerificationStatus::PENDING,
@@ -135,8 +165,9 @@ class DocumentRequirementService
     {
         $source = strtolower((string) $reactivationRequest->source);
 
-        return $this->configuredDocumentTypesFor('reactivation', $reactivationRequest)
-            ->map(function (DocumentType $type) use ($reactivationRequest, $source): array {
+        return $this->configuredChecklistRequirementsFor('reactivation', $reactivationRequest)
+            ->map(function (array $requirement) use ($reactivationRequest, $source): array {
+                $type = $requirement['type'];
                 $documentTypeId = DocumentTypeModel::query()->firstOrCreate(
                     ['code' => $type->value],
                     [
@@ -149,6 +180,7 @@ class DocumentRequirementService
                 return [
                     'membership_transaction_id' => $reactivationRequest->id,
                     'document_type_id' => $documentTypeId,
+                    'is_required' => (bool) $requirement['is_required'],
                     'original_name' => $source === 'walk_in' ? $type->label() : 'Pending Upload',
                     'file_path' => $source === 'walk_in' ? 'office-checklist/' . $type->value : 'pending-upload/' . $type->value,
                     'verification_status' => DocumentVerificationStatus::PENDING,
@@ -269,7 +301,16 @@ class DocumentRequirementService
         return isset($context->source) ? strtolower((string) $context->source) : null;
     }
 
-    private function configuredRequirementsFor(string $workflow, ?string $source): ?Collection
+    private function configuredRequirementsFor(string $workflow, ?string $source, bool $requiredOnly = true): ?Collection
+    {
+        $requirements = $this->configuredRequirementRecordsFor($workflow, $requiredOnly);
+
+        return $requirements?->map(fn (DocumentRequirement $requirement) => DocumentType::tryFrom((string) $requirement->documentType?->code))
+            ->filter()
+            ->values();
+    }
+
+    private function configuredRequirementRecordsFor(string $workflow, bool $requiredOnly = true): ?Collection
     {
         try {
             $hasTable = Schema::hasTable('document_requirements');
@@ -292,14 +333,12 @@ class DocumentRequirementService
 
         $requirements = $baseQuery
             ->where('is_active', true)
-            ->where('is_required', true)
+            ->when($requiredOnly, fn ($query) => $query->where('is_required', true))
             ->orderBy('id')
             ->with('documentType')
             ->get();
 
-        return $requirements
-            ->map(fn (DocumentRequirement $requirement) => DocumentType::tryFrom((string) $requirement->documentType?->code))
-            ->filter();
+        return $requirements;
     }
 }
 

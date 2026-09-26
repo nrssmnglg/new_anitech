@@ -16,6 +16,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    presidentCandidates: {
+        type: Array,
+        default: () => [],
+    },
     urls: {
         type: Object,
         required: true,
@@ -27,6 +31,7 @@ const form = useForm({
     name: props.association.name ?? '',
     code: props.association.code ?? '',
     president_name: props.association.president_name ?? '',
+    president_farmer_id: props.association.president_farmer_id ?? '',
     status: props.association.status ?? 'active',
 });
 
@@ -55,7 +60,7 @@ const submit = () => {
                 @submit.prevent="submit"
             >
                 <div class="mb-3 border-b border-[#edf2ee] pb-2.5"><h2 class="text-sm font-semibold text-[#0f172a]">Association information</h2></div>
-                <AssociationFormFields :form="form" :barangays="barangays" :status-options="statusOptions" />
+                <AssociationFormFields :form="form" :barangays="barangays" :status-options="statusOptions" :president-candidates="presidentCandidates" />
 
                 <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-[#edf2ee] pt-3">
                     <button

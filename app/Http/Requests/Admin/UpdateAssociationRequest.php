@@ -18,6 +18,7 @@ class UpdateAssociationRequest extends FormRequest
     {
         $this->merge([
             'barangay_id' => $this->decodeRouteKey($this->input('barangay_id')),
+            'president_farmer_id' => $this->decodeRouteKey($this->input('president_farmer_id')),
             'name' => trim((string) $this->input('name')),
             'president_name' => filled($this->input('president_name')) ? trim((string) $this->input('president_name')) : null,
         ]);
@@ -32,6 +33,12 @@ class UpdateAssociationRequest extends FormRequest
             'barangay_id' => ['required', 'exists:barangays,id', Rule::unique('associations', 'barangay_id')->ignore($association)],
             'name' => ['required', 'string', 'max:255', Rule::unique('associations', 'name')->ignore($association)],
             'president_name' => ['nullable', 'string', 'max:255'],
+            'president_farmer_id' => [
+                'nullable',
+                Rule::exists('farmers', 'id')->where(
+                    fn ($query) => $query->where('association_id', $association?->id),
+                ),
+            ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

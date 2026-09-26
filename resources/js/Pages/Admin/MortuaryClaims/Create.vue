@@ -18,37 +18,14 @@ const requirementEntries = Object.fromEntries(
     props.requirements.map((requirement) => [requirement.code, { is_received: false }]),
 );
 
-const search = ref('');
-const yearFilter = ref('');
-const barangayFilter = ref('');
-const associationFilter = ref('');
 const selectedLedgerId = ref(props.selectedLedgerId || props.eligibleLedgers[0]?.id || null);
-
-const filteredLedgers = computed(() => {
-    const searchValue = search.value.trim().toLowerCase();
-
-    return props.eligibleLedgers.filter((ledger) => {
-        const matchesSearch = searchValue === ''
-            || ledger.label.toLowerCase().includes(searchValue)
-            || String(ledger.farmer.fullName || '').toLowerCase().includes(searchValue)
-            || String(ledger.farmer.farmerCode || '').toLowerCase().includes(searchValue);
-        const matchesYear = yearFilter.value === '' || String(ledger.year || '') === yearFilter.value;
-        const matchesBarangay = barangayFilter.value === '' || String(ledger.farmer.barangay || '') === barangayFilter.value;
-        const matchesAssociation = associationFilter.value === '' || String(ledger.farmer.association || '') === associationFilter.value;
-
-        return matchesSearch && matchesYear && matchesBarangay && matchesAssociation;
-    });
-});
 
 const selectedLedger = computed(() => (
     props.eligibleLedgers.find((ledger) => ledger.id === selectedLedgerId.value)
-    || filteredLedgers.value[0]
+    || props.eligibleLedgers[0]
     || null
 ));
 
-const years = computed(() => [...new Set(props.eligibleLedgers.map((ledger) => ledger.year).filter(Boolean))].sort((a, b) => b - a));
-const barangays = computed(() => [...new Set(props.eligibleLedgers.map((ledger) => ledger.farmer.barangay).filter(Boolean))].sort());
-const associations = computed(() => [...new Set(props.eligibleLedgers.map((ledger) => ledger.farmer.association).filter(Boolean))].sort());
 const selectedInitials = computed(() => (
     selectedLedger.value?.farmer.fullName
         ?.split(' ')
@@ -72,21 +49,10 @@ const form = useForm({
 });
 
 const checklistComplete = computed(() => (
-    props.requirements.every((requirement) => form.requirements?.[requirement.code]?.is_received)
+    props.requirements
+        .filter((requirement) => requirement.isRequired)
+        .every((requirement) => form.requirements?.[requirement.code]?.is_received)
 ));
-
-function selectLedger(ledger) {
-    selectedLedgerId.value = ledger.id;
-    form.membership_ledger_id = ledger.id;
-    form.claim_amount = ledger.expectedClaimAmount || '';
-}
-
-function resetFilters() {
-    search.value = '';
-    yearFilter.value = '';
-    barangayFilter.value = '';
-    associationFilter.value = '';
-}
 
 function submit() {
     form.post(props.storeUrl, {
@@ -105,10 +71,7 @@ function submit() {
                 <div class="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.4)_1px,transparent_1px)] [background-size:40px_40px]"></div>
                 <div class="relative mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div class="flex items-center gap-2 text-[#baeed9]/85">
-                            <span class="text-[0.72rem] font-black uppercase tracking-[0.22em]">Transaction Schema v2.4</span>
-                        </div>
-                        <h1 class="mt-3 text-5xl font-black tracking-[-0.04em]">File Mortuary Claim</h1>
+                        <h1 class="text-5xl font-black tracking-[-0.04em]">File Mortuary Claim</h1>
                     </div>
 
                     <Link :href="queueUrl" class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20">
@@ -226,7 +189,7 @@ function submit() {
                                                     <input v-model="form.requirements[requirement.code].is_received" type="checkbox" class="mt-1 h-5 w-5 rounded border-[#c0c9c3] text-[#003629] focus:ring-[#003629]">
                                                     <div>
                                                         <p class="font-bold text-[#191c1c]">{{ requirement.label }}</p>
-                                                        <p class="text-xs text-[#6f5d57]">Required for filing</p>
+                                                        <p class="text-xs text-[#6f5d57]">{{ requirement.isRequired ? 'Required for filing' : 'Optional supporting document' }}</p>
                                                     </div>
                                                 </div>
                                             </label>
@@ -242,7 +205,14 @@ function submit() {
                                             <span class="text-sm font-bold text-[#404945]">Claim Amount (PHP)</span>
                                             <div class="relative">
                                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#707974]">PHP</span>
-                                                <input v-model="form.claim_amount" type="number" min="0.01" step="0.01" class="w-full rounded-xl border border-[#c0c9c3] bg-[#f8faf9] py-3 pl-14 pr-4 text-sm outline-none transition focus:border-[#003629] focus:ring-2 focus:ring-[#003629]/20">
+                                                <input
+                                                    v-model="form.claim_amount"
+                                                    type="number"
+                                                    readonly
+                                                    aria-readonly="true"
+                                                    title="Claim amount is calculated from the farmer's settled mortuary contributions"
+                                                    class="w-full cursor-not-allowed rounded-xl border border-[#c0c9c3] bg-[#eef1ef] py-3 pl-14 pr-4 text-sm font-semibold text-[#404945] outline-none"
+                                                >
                                             </div>
                                         </label>
                                     </div>
@@ -320,84 +290,6 @@ function submit() {
                         </div>
                     </div>
                 </section>
-
-                <section class="pb-8">
-                    <div class="mx-auto max-w-7xl">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <h2 class="text-2xl font-black text-[#191c1c]">Eligible Farmers Selector</h2>
-                                <p class="mt-1 text-sm text-[#6f5d57]">One farmer equals one mortuary record. Claim totals include all settled mortuary contributions.</p>
-                            </div>
-                            <button type="button" class="inline-flex items-center justify-center rounded-lg border border-[#c0c9c3] px-4 py-2 text-sm font-bold text-[#5f6c67] transition hover:bg-[#f2f4f3]" @click="resetFilters">
-                                Reset Filters
-                            </button>
-                        </div>
-
-                        <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                            <label class="space-y-2">
-                                <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Search Farmers</span>
-                                <input v-model="search" type="text" placeholder="Farmer name or code" class="w-full rounded-lg border border-[#c0c9c3] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#003629]">
-                            </label>
-                            <label class="space-y-2">
-                                <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Year</span>
-                                <select v-model="yearFilter" class="w-full rounded-lg border border-[#c0c9c3] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#003629]">
-                                    <option value="">All years</option>
-                                    <option v-for="year in years" :key="year" :value="String(year)">{{ year }}</option>
-                                </select>
-                            </label>
-                            <label class="space-y-2">
-                                <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Barangay</span>
-                                <select v-model="barangayFilter" class="w-full rounded-lg border border-[#c0c9c3] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#003629]">
-                                    <option value="">All barangays</option>
-                                    <option v-for="barangay in barangays" :key="barangay" :value="barangay">{{ barangay }}</option>
-                                </select>
-                            </label>
-                            <label class="space-y-2">
-                                <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Association</span>
-                                <select v-model="associationFilter" class="w-full rounded-lg border border-[#c0c9c3] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#003629]">
-                                    <option value="">All associations</option>
-                                    <option v-for="association in associations" :key="association" :value="association">{{ association }}</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <button
-                                v-for="ledger in filteredLedgers"
-                                :key="ledger.id"
-                                type="button"
-                                class="rounded-xl border bg-white p-5 text-left shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] transition hover:-translate-y-0.5"
-                                :class="selectedLedger?.id === ledger.id ? 'border-2 border-[#003629] bg-[#eef5f1]' : 'border-[#e1e3e2] hover:border-[#003629]'"
-                                @click="selectLedger(ledger)"
-                            >
-                                <div v-if="selectedLedger?.id === ledger.id" class="mb-3 inline-flex rounded-full bg-[#003629] px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em] text-white">
-                                    Selected
-                                </div>
-                                <div v-else class="mb-3 inline-flex rounded-full bg-[#eceeed] px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#404945]">
-                                    Eligible
-                                </div>
-                                <h3 class="text-xl font-black text-[#191c1c]">{{ ledger.farmer.fullName }}</h3>
-                                <p class="mt-1 text-sm font-mono text-[#6f5d57]">{{ ledger.farmer.farmerCode }}</p>
-                                <div class="mt-5 flex items-end justify-between border-t border-[#e1e3e2] pt-4">
-                                    <div>
-                                        <p class="text-xs uppercase tracking-[0.14em] text-[#6f5d57]">Year</p>
-                                        <p class="font-bold text-[#191c1c]">{{ ledger.year }}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-xs uppercase tracking-[0.14em] text-[#6f5d57]">Expected</p>
-                                        <p class="font-bold" :class="selectedLedger?.id === ledger.id ? 'text-[#003629]' : 'text-[#191c1c]'">
-                                            PHP {{ Number(ledger.expectedClaimAmount || 0).toFixed(2) }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-
-                        <div v-if="filteredLedgers.length === 0" class="mt-6 rounded-xl border border-dashed border-[#c0c9c3] bg-white px-6 py-10 text-center text-sm text-[#707974]">
-                            No eligible farmers matched the current filters.
-                        </div>
-                    </div>
-                </section>
             </template>
         </div>
     </AdminLayout>
@@ -425,4 +317,37 @@ function submit() {
 .mortuary-claim-process select { min-height: 2.25rem; border-radius: 0.375rem; padding-top: 0; padding-bottom: 0; font-size: 0.75rem; }
 .mortuary-claim-process textarea { border-radius: 0.375rem; padding: 0.75rem; font-size: 0.75rem; }
 .mortuary-claim-process button { border-radius: 0.375rem; }
+
+/* Keep the filing workflow visible without excessive vertical scrolling. */
+.mortuary-claim-process .col-span-4 > section { padding: 0.75rem; }
+.mortuary-claim-process .col-span-4 > section > div.mt-5,
+.mortuary-claim-process .col-span-4 > section > div.mt-6 { margin-top: 0.625rem; }
+.mortuary-claim-process .col-span-4 .space-y-5 > :not([hidden]) ~ :not([hidden]),
+.mortuary-claim-process .col-span-4 .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.625rem; }
+.mortuary-claim-process .col-span-4 .h-14.w-14 { height: 2.5rem; width: 2.5rem; font-size: 0.75rem; }
+.mortuary-claim-process .col-span-4 .gap-4 { gap: 0.625rem; }
+.mortuary-claim-process .col-span-4 .text-2xl { font-size: 0.9rem; line-height: 1.25rem; }
+.mortuary-claim-process .col-span-4 .border-t.pt-5 { padding-top: 0.625rem; }
+.mortuary-claim-process .col-span-4 .rounded-lg.p-4 { padding: 0.625rem; }
+.mortuary-claim-process .col-span-4 .mt-2 { margin-top: 0.25rem; }
+.mortuary-claim-process .col-span-4 p { line-height: 1.25rem; }
+
+.mortuary-claim-process form > div:nth-child(2) > section:first-child { padding: 0.75rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child .mt-5 { margin-top: 0.625rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child .grid { gap: 0.5rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child label { padding: 0.625rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child input[type='checkbox'] { height: 1rem; width: 1rem; }
+.mortuary-claim-process form .grid.gap-6 { gap: 0.75rem; }
+.mortuary-claim-process form section.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+.mortuary-claim-process form textarea { min-height: 4rem; }
+.mortuary-claim-process form .border-t.pt-6 { padding-top: 0.75rem; }
+.mortuary-claim-process form .border-t.pt-6,
+.mortuary-claim-process form .border-t.pt-6 > div { gap: 0.5rem; }
+.mortuary-claim-process form .border-t.pt-6 a,
+.mortuary-claim-process form .border-t.pt-6 button { min-height: 2.25rem; padding: 0 1rem; }
+
+@media (min-width: 1280px) {
+    .mortuary-claim-process .col-span-4 { grid-column: span 3 / span 3; }
+    .mortuary-claim-process .col-span-8 { grid-column: span 9 / span 9; }
+}
 </style>

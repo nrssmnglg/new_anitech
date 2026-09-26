@@ -446,6 +446,12 @@ class MembershipApplicationController extends Controller
             'internalNotes.creator:id,name',
         ]);
 
+        if ($membershipApplication->source !== 'legacy'
+            && ($membershipApplication->source !== 'walk_in' || $membershipApplication->documents->isNotEmpty())) {
+            $this->farmerDocumentService->ensureApplicationChecklist($membershipApplication);
+            $membershipApplication->load('documents.verifier:id,name');
+        }
+
         $documents = $membershipApplication->documents->map(function (FarmerDocument $document): FarmerDocument {
             $document->setAttribute('ready_for_verification', $this->farmerDocumentService->readyForVerification($document));
             $document->setAttribute('upload_present', $this->farmerDocumentService->uploadPresent($document));

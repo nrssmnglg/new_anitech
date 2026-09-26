@@ -18,6 +18,7 @@ class Association extends Model
         'code',
         'name',
         'president_name',
+        'president_farmer_id',
         'status',
     ];
 
@@ -29,5 +30,10 @@ class Association extends Model
     public function farmers(): HasMany
     {
         return $this->hasMany(Farmer::class);
+    }
+
+    public function president(): BelongsTo
+    {
+        return $this->belongsTo(Farmer::class, 'president_farmer_id');
     }
 }

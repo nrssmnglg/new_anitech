@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import RequirementForm from '../../../Components/Admin/DocumentRequirements/RequirementForm.vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
@@ -15,6 +15,10 @@ const props = defineProps({
     formDefaults: { type: Object, required: true },
     urls: { type: Object, required: true },
 });
+
+const page = usePage();
+const flashSuccess = computed(() => page.props.flash?.success || '');
+const flashError = computed(() => page.props.flash?.error || '');
 
 const mode = ref('create');
 const editingRequirementId = ref(null);
@@ -101,7 +105,7 @@ function submitEdit(requirement) {
 }
 
 function destroyRequirement(requirement) {
-    if (isBusy.value) {
+    if (isBusy.value || !requirement.canDelete || !requirement.actions.deleteUrl) {
         return;
     }
 
@@ -194,6 +198,9 @@ function transactionTone(value) {
                 <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Membership configuration</p>
                 <h1 class="mt-0.5 text-xl font-semibold tracking-[-0.02em]">Document Requirements</h1>
             </section>
+
+            <section v-if="flashSuccess" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800">{{ flashSuccess }}</section>
+            <section v-if="flashError" class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800">{{ flashError }}</section>
 
             <section class="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 <article class="rounded-lg border border-[#dbe4de] bg-white px-3 py-2.5">
@@ -315,8 +322,15 @@ function transactionTone(value) {
                                         <button type="button" class="font-medium text-[#014d3c] transition hover:underline disabled:cursor-not-allowed disabled:opacity-50" :disabled="isBusy" @click="startEdit(requirement)">
                                             Edit
                                         </button>
-                                        <button type="button" class="font-medium text-[#c05c3c] transition hover:underline disabled:cursor-not-allowed disabled:opacity-50" :disabled="isBusy" @click="destroyRequirement(requirement)">
-                                            {{ deletingId === requirement.id ? 'Deleting...' : 'Delete' }}
+                                        <button
+                                            type="button"
+                                            class="font-medium transition disabled:cursor-not-allowed"
+                                            :class="requirement.canDelete ? 'text-[#c05c3c] hover:underline' : 'text-[#8b9690]'"
+                                            :disabled="isBusy || !requirement.canDelete"
+                                            :title="requirement.canDelete ? 'Delete requirement' : `Used by ${requirement.usageCount} transaction record(s); mark it inactive instead`"
+                                            @click="destroyRequirement(requirement)"
+                                        >
+                                            {{ deletingId === requirement.id ? 'Deleting...' : (requirement.canDelete ? 'Delete' : 'In Use') }}
                                         </button>
                                     </div>
                                 </td>

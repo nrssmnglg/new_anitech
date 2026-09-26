@@ -64,6 +64,12 @@ const selectedExportColumns = reactive([
     'responses_count',
     'submitted_at',
 ]);
+const exportPreviewUrl = computed(() => {
+    const url = new URL(buildExportUrl(exportFormat.value));
+    url.searchParams.set('preview', '1');
+    return url.toString();
+});
+const selectedExportColumnLabels = computed(() => availableExportColumns.filter((column) => selectedExportColumns.includes(column.value)).map((column) => column.label));
 
 const progressRate = computed(() => {
     const openTotal = props.summary.new + props.summary.inProgress + props.summary.resolved + props.summary.escalated;
@@ -679,7 +685,7 @@ function toggleSort(key) {
         </div>
 
         <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-6" @click.self="closeExportModal">
-            <section class="w-full max-w-6xl rounded-[28px] border border-[#dbe2de] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] sm:p-6">
+            <section class="max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-[18px] border border-[#dbe2de] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)]">
                 <div class="flex flex-col gap-4 border-b border-[#e4ebe7] pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Export Inquiries</p>
@@ -729,6 +735,19 @@ function toggleSort(key) {
                         >
                         <span class="font-medium">{{ column.label }}</span>
                     </label>
+                </div>
+
+                <div class="mt-5 rounded-2xl border border-[#d7e0db] bg-[#f8faf9] p-4">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="text-sm font-bold text-[#1a2420]">Report Preview</p>
+                        <a :href="exportPreviewUrl" target="_blank" rel="noopener" class="text-sm font-bold text-[#014d3c] transition hover:underline">Open full preview</a>
+                    </div>
+                    <iframe v-if="exportFormat === 'pdf'" :src="exportPreviewUrl" title="Farmer inquiries report preview" class="h-56 w-full rounded-xl border border-[#d7e0db] bg-white"></iframe>
+                    <div v-else class="rounded-xl border border-[#d7e0db] bg-white p-4 text-sm text-[#40534b]">
+                        <p class="font-semibold text-[#1a2420]">Excel export preview</p>
+                        <p class="mt-1 text-xs">The spreadsheet will use the current inquiry filters and selected columns.</p>
+                        <p class="mt-2 text-xs">{{ selectedExportColumnLabels.join(', ') }}</p>
+                    </div>
                 </div>
 
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">

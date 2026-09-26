@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Objective 3 Process: Analysis, Monitoring, and Decision-Making</title>
+  <desc id="desc">A three-part AniTech process diagram for analysis of organizational records and transactions, performance monitoring, and data-driven decision-making.</desc>
+  <defs><marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto"><path d="M0 0 L13 6.5 L0 13 z" fill="#0b624c"/></marker></defs>
+  <style>
+   .bg{fill:#f5f8f6}.head{fill:#064f40}.p1{fill:#e8f6ee;stroke:#4f9b70;stroke-width:3}.p2{fill:#eaf1fb;stroke:#537db3;stroke-width:3}.p3{fill:#fff4df;stroke:#d18a29;stroke-width:3}.box{fill:#fff;stroke:#c8ded2;stroke-width:2}.arrow{fill:none;stroke:#0b624c;stroke-width:4;marker-end:url(#arrow)}.h{font:700 25px Arial,sans-serif}.title{font:700 32px Arial,sans-serif}.sub{font:500 17px Arial,sans-serif}.t{font:500 17px Arial,sans-serif}.small{font:500 15px Arial,sans-serif}.ink{fill:#153c32}.muted{fill:#5f7069}.white{fill:#fff}.green{fill:#0f7a59}.blue{fill:#4d78ad}.orange{fill:#bf7717}
+  </style>
+  <rect class="bg" width="1600" height="900"/><rect class="head" width="1600" height="112"/>
+  <text class="white title" x="64" y="52">Figure X. Objective 3: Data-Driven Decision-Making and Performance Monitoring</text>
+  <text class="white sub" x="64" y="82">AniTech processes organizational records and transactions into actionable management information.</text>
+  <rect class="p1" x="55" y="165" width="460" height="590" rx="22"/><circle cx="100" cy="211" r="23" class="green"/><text class="white h" x="92" y="220">1</text>
+  <text class="ink h" x="140" y="207">Analysis of Organizational</text><text class="ink h" x="140" y="237">Records and Transactions</text><text class="muted small" x="86" y="270">The system consolidates and analyzes data from:</text>
+  <rect class="box" x="85" y="300" width="400" height="66" rx="11"/><text class="ink t" x="108" y="328">Farmer Registry Records</text><text class="muted small" x="108" y="350">Member profiles, status, barangay, association</text>
+  <rect class="box" x="85" y="385" width="400" height="66" rx="11"/><text class="ink t" x="108" y="413">Membership and Renewal Transactions</text><text class="muted small" x="108" y="435">Applications, approvals, rejections, renewals</text>
+  <rect class="box" x="85" y="470" width="400" height="66" rx="11"/><text class="ink t" x="108" y="498">Payment and Collection Records</text><text class="muted small" x="108" y="520">Verified payments, amounts, payment methods</text>
+  <rect class="box" x="85" y="555" width="400" height="66" rx="11"/><text class="ink t" x="108" y="583">Service and Support Records</text><text class="muted small" x="108" y="605">Mortuary claims, inquiries, advisories</text><text class="green h" x="85" y="684">Output:</text><text class="ink t" x="85" y="714">Centralized, filterable organizational data</text>
+  <rect class="p2" x="570" y="165" width="460" height="590" rx="22"/><circle cx="615" cy="211" r="23" class="blue"/><text class="white h" x="607" y="220">2</text>
+  <text class="ink h" x="655" y="222">Performance Monitoring</text><text class="muted small" x="600" y="270">Operations Analytics transforms records into indicators:</text>
+  <rect class="box" x="600" y="300" width="400" height="74" rx="11"/><text class="ink t" x="623" y="329">Membership Performance</text><text class="muted small" x="623" y="353">Active/inactive farmers and renewal compliance rate</text>
+  <rect class="box" x="600" y="393" width="400" height="74" rx="11"/><text class="ink t" x="623" y="422">Transaction Performance</text><text class="muted small" x="623" y="446">Application/renewal status and payment collections</text>
+  <rect class="box" x="600" y="486" width="400" height="74" rx="11"/><text class="ink t" x="623" y="515">Processing Efficiency</text><text class="muted small" x="623" y="539">Queue aging and average turnaround time</text>
+  <rect class="box" x="600" y="579" width="400" height="74" rx="11"/><text class="ink t" x="623" y="608">Service Demand and Issues</text><text class="muted small" x="623" y="632">Claims, inquiries, document issues, rejection reasons</text><text class="blue h" x="600" y="684">Output:</text><text class="ink t" x="600" y="714">Dashboard trends, charts, and comparative metrics</text>
+  <rect class="p3" x="1085" y="165" width="460" height="590" rx="22"/><circle cx="1130" cy="211" r="23" class="orange"/><text class="white h" x="1122" y="220">3</text>
+  <text class="ink h" x="1170" y="222">Data-Driven Decision-Making</text><text class="muted small" x="1115" y="270">Administrators use monitored results to:</text>
+  <rect class="box" x="1115" y="300" width="400" height="66" rx="11"/><text class="ink t" x="1138" y="328">Prioritize Delayed Transactions</text><text class="muted small" x="1138" y="350">Act on requests identified through queue aging</text>
+  <rect class="box" x="1115" y="385" width="400" height="66" rx="11"/><text class="ink t" x="1138" y="413">Target Low-Compliance Areas</text><text class="muted small" x="1138" y="435">Follow up barangays with lower renewal rates</text>
+  <rect class="box" x="1115" y="470" width="400" height="66" rx="11"/><text class="ink t" x="1138" y="498">Improve Processes and Services</text><text class="muted small" x="1138" y="520">Address common document and inquiry concerns</text>
+  <rect class="box" x="1115" y="555" width="400" height="66" rx="11"/><text class="ink t" x="1138" y="583">Support Planning and Reporting</text><text class="muted small" x="1138" y="605">Export CSV, Excel, and PDF management reports</text><text class="orange h" x="1115" y="684">Output:</text><text class="ink t" x="1115" y="714">Evidence-based operational actions and plans</text>
+  <path class="arrow" d="M515 460 H560"/><path class="arrow" d="M1030 460 H1075"/><path d="M1315 755 V815 H280 V765" fill="none" stroke="#6b9a85" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#arrow)"/><text class="muted small" x="610" y="808">Decisions improve operations, producing new records for the next monitoring cycle.</text>
+  <text class="muted small" x="55" y="857">Source: AniTech organizational modules and Operations Analytics dashboard.</text>
+</svg>
