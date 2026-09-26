@@ -20,18 +20,9 @@ const acting = ref(false);
 const previewAttachment = ref(null);
 
 const statusLabel = computed(() => {
-    if (props.queryRecord.status === 'In Progress') {
-        return 'In Progress';
-    }
-
-    if (props.queryRecord.status === 'Resolved') {
-        return 'Resolved';
-    }
-
-    if (props.queryRecord.status === 'Escalated') {
-        return 'Escalated';
-    }
-
+    if (props.queryRecord.status === 'In Progress') return 'In Progress';
+    if (props.queryRecord.status === 'Resolved') return 'Resolved';
+    if (props.queryRecord.status === 'Escalated') return 'Escalated';
     return 'New';
 });
 
@@ -65,7 +56,7 @@ function closeInquiry() {
         return;
     }
 
-    if (!window.confirm('Close this inquiry?')) {
+    if (!window.confirm('Mark this inquiry as resolved?')) {
         return;
     }
 
@@ -126,29 +117,27 @@ function farmerInitials(name) {
         .join('') || 'FM';
 }
 
-function responderInitials(name) {
-    return String(name || 'Support')
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('') || 'SP';
-}
-
 function statusTone(status) {
     if (status === 'In Progress') {
-        return 'bg-[#e4f4c8] text-[#4b7517]';
+        return 'bg-[#dcfce7] text-[#15803d] border-[#bbf7d0]';
     }
 
     if (status === 'Resolved') {
-        return 'bg-[#d9e5de] text-[#4a5b53]';
+        return 'bg-[#f1f5f9] text-[#475569] border-[#cbd5e1]';
     }
 
     if (status === 'Escalated') {
-        return 'bg-[#ffe4e7] text-[#cf3657]';
+        return 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]';
     }
 
-    return 'bg-[#fff1cd] text-[#c07a00]';
+    return 'bg-[#fffbeb] text-[#d97706] border-[#fde68a]';
+}
+
+function statusDotTone(status) {
+    if (status === 'In Progress') return 'bg-[#22c55e]';
+    if (status === 'Resolved') return 'bg-[#64748b]';
+    if (status === 'Escalated') return 'bg-[#f43f5e]';
+    return 'bg-[#f59e0b]';
 }
 
 function isImageAttachment(attachment) {
@@ -173,65 +162,74 @@ function closeAttachmentPreview() {
     <Head title="Inquiry Thread" />
 
     <AdminLayout title="Inquiry Thread">
-        <div class="space-y-3">
-            <section class="rounded-xl bg-[#003629] px-4 py-3.5 text-white">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <Link :href="urls.index" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/20 text-white transition hover:bg-white/10" aria-label="Back to inquiry queue">
-                            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2.2">
-                                <path d="M15 18 9 12l6-6" />
+        <div class="space-y-4">
+            <!-- Hero Header -->
+            <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-5 py-5 text-white shadow-lg shadow-[#003629]/15">
+                <div class="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/[0.04]"></div>
+                <div class="pointer-events-none absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-white/[0.03]"></div>
+
+                <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3.5">
+                        <Link :href="urls.index" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 text-white transition hover:bg-white/10" aria-label="Back to inquiry queue">
+                            <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.61l4.47 4.47a.75.75 0 1 1-1.06 1.06l-5.75-5.75a.75.75 0 0 1 0-1.06l5.75-5.75a.75.75 0 1 1 1.06 1.06L5.61 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/>
                             </svg>
                         </Link>
                         <div class="min-w-0">
-                            <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/60">Inquiry thread</p>
-                            <h1 class="truncate text-lg font-semibold text-white">{{ queryRecord.subject }}</h1>
+                            <p class="text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[#7ddfb8]/80">Communication</p>
+                            <h1 class="truncate text-xl font-bold tracking-[-0.02em]">{{ queryRecord.subject }}</h1>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
-                        <span class="rounded-full px-2.5 py-1 text-[0.65rem] font-semibold" :class="statusTone(queryRecord.status)">
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <span class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-bold" :class="statusTone(queryRecord.status)">
+                            <span class="h-2 w-2 rounded-full" :class="statusDotTone(queryRecord.status)"></span>
                             {{ statusLabel }}
                         </span>
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-[0.65rem] font-semibold text-white">
-                            {{ responderInitials('AniTech Support') }}
-                        </div>
+                        <Link :href="urls.index" class="inline-flex h-9 items-center gap-1 rounded-lg border border-white/20 px-3 text-xs font-semibold text-white/90 transition hover:bg-white/10 hover:text-white">
+                            Queue
+                        </Link>
                     </div>
                 </div>
             </section>
 
-            <div class="grid gap-3 xl:grid-cols-[16rem_minmax(0,1fr)]">
-                <div class="space-y-3">
-                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
-                        <div class="flex items-start gap-3">
-                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#0f5b46] text-xs font-semibold text-white">
+            <!-- Main Layout Grid -->
+            <div class="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)] items-start">
+                <!-- Left Sidebar Column -->
+                <div class="space-y-4">
+                    <!-- Farmer Info Card -->
+                    <section class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e6f5ec] to-[#d4eddd] text-sm font-bold text-[#0f6b45] shadow-sm">
                                 {{ farmerInitials(queryRecord.farmer.name) }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-semibold leading-4 text-[#0f172a]">{{ queryRecord.farmer.name }}</p>
-                                <p class="mt-0.5 text-[0.65rem] text-[#52626b]">{{ queryRecord.farmer.code }}</p>
+                                <p class="font-bold text-[#0f172a]">{{ queryRecord.farmer.name }}</p>
+                                <p class="text-[0.68rem] font-mono text-[#64748b]">{{ queryRecord.farmer.code }}</p>
                             </div>
                         </div>
 
-                        <div class="mt-3 space-y-2">
-                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
-                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Barangay</p>
-                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.farmer.barangay }}</p>
+                        <div class="mt-4 space-y-2 border-t border-[#edf2ee] pt-3 text-xs">
+                            <div class="rounded-lg bg-[#f8faf9] p-2.5">
+                                <p class="text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[#94a3b8]">Barangay</p>
+                                <p class="mt-0.5 font-bold text-[#0f172a]">{{ queryRecord.farmer.barangay }}</p>
                             </div>
-                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
-                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Association</p>
-                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.farmer.association }}</p>
+                            <div class="rounded-lg bg-[#f8faf9] p-2.5">
+                                <p class="text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[#94a3b8]">Association</p>
+                                <p class="mt-0.5 font-bold text-[#0f172a]">{{ queryRecord.farmer.association }}</p>
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
-                        <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Thread controls</p>
+                    <!-- Thread Controls Card -->
+                    <section class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">Thread Controls</h2>
 
-                        <div class="mt-2 space-y-2">
+                        <div class="mt-3 space-y-2">
                             <button
                                 v-if="queryRecord.status === 'Resolved'"
                                 type="button"
-                                class="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#0f5b46] px-3 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#014d3c] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.98] disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="reopenInquiry"
                             >
@@ -240,16 +238,17 @@ function closeAttachmentPreview() {
                             <button
                                 v-else
                                 type="button"
-                                class="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#0f5b46] px-3 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#014d3c] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.98] disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="closeInquiry"
                             >
                                 Mark as Resolved
                             </button>
+
                             <button
                                 v-if="queryRecord.canEscalateToAdmin && queryRecord.status !== 'Resolved' && queryRecord.status !== 'Escalated'"
                                 type="button"
-                                class="inline-flex h-9 w-full items-center justify-center rounded-md border border-[#f0c6cf] bg-[#fff5f7] px-3 text-xs font-semibold text-[#b73d59] transition hover:bg-[#ffedf1] disabled:opacity-60"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-4 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
                                 :disabled="acting || form.processing"
                                 @click="escalateInquiry"
                             >
@@ -258,94 +257,115 @@ function closeAttachmentPreview() {
 
                             <Link
                                 :href="urls.index"
-                                class="inline-flex h-9 w-full items-center justify-center rounded-md border border-[#e58e8e] bg-white px-3 text-xs font-semibold text-[#c94f4f] transition hover:bg-[#fff6f6]"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-lg border border-[#dbe3dd] bg-white px-4 text-xs font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]"
                             >
                                 Back to Queue
                             </Link>
                         </div>
-
                     </section>
 
-                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
-                        <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Accountability</p>
-                        <div class="mt-2 space-y-2">
-                            <div class="rounded-md bg-[#f4f6f4] px-3 py-2">
-                                <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-[#71808b]">Last record edited by</p>
-                                <p class="mt-0.5 text-[0.68rem] font-semibold text-[#0f172a]">{{ queryRecord.accountability?.lastUpdatedBy || 'No staff update recorded' }}</p>
-                                <p class="mt-0.5 text-[0.6rem] text-[#71808b]">{{ queryRecord.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
-                            </div>
+                    <!-- Accountability Card -->
+                    <section class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.08em] text-[#64748b]">Accountability</h2>
+                        <div class="mt-3 rounded-lg bg-[#f8faf9] p-3 text-xs">
+                            <p class="text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[#94a3b8]">Last Updated By</p>
+                            <p class="mt-0.5 font-bold text-[#0f172a]">{{ queryRecord.accountability?.lastUpdatedBy || 'System' }}</p>
+                            <p class="mt-0.5 text-[0.65rem] text-[#64748b]">{{ queryRecord.accountability?.lastUpdatedAt || 'Not recorded' }}</p>
                         </div>
                     </section>
                 </div>
 
-                <div class="space-y-3">
-                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
-                        <div class="space-y-3">
-                            <article class="flex justify-start">
-                                <div class="max-w-[46rem] rounded-lg border border-[#e6f1d8] bg-[#fff9ec] px-3 py-2.5 text-[#3b3120]">
-                                    <div class="flex items-center justify-between gap-4 text-[0.65rem] text-[#7d6a43]">
-                                        <span class="font-semibold">{{ queryRecord.farmer.name }}</span>
-                                        <span>{{ queryRecord.submittedAt }}</span>
-                                    </div>
-                                    <p class="mt-1.5 whitespace-pre-line text-xs leading-5">{{ queryRecord.message }}</p>
+                <!-- Right Thread Discussion Column -->
+                <div class="space-y-4">
+                    <!-- Message Discussion Stream -->
+                    <section class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.08em] text-[#64748b] mb-4">Conversation Thread</h2>
 
-                                    <div v-if="queryRecord.attachments.length" class="mt-4 flex flex-wrap gap-2">
+                        <div class="space-y-4">
+                            <!-- Farmer's Initial Inquiry -->
+                            <article class="flex justify-start">
+                                <div class="max-w-2xl rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-4 text-[#0f172a] shadow-sm">
+                                    <div class="flex items-center justify-between gap-4 border-b border-[#fde68a]/60 pb-2 text-[0.68rem] text-[#92400e]">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#fde68a] text-[0.6rem] font-bold text-[#78350f]">F</span>
+                                            <span class="font-bold">{{ queryRecord.farmer.name }}</span>
+                                        </div>
+                                        <time class="text-[#78350f]">{{ queryRecord.submittedAt }}</time>
+                                    </div>
+
+                                    <p class="mt-3 whitespace-pre-line text-xs leading-relaxed text-[#334155]">{{ queryRecord.message }}</p>
+
+                                    <!-- Attachments -->
+                                    <div v-if="queryRecord.attachments.length" class="mt-3 flex flex-wrap gap-2 border-t border-[#fde68a]/60 pt-2.5">
                                         <button
                                             v-for="attachment in queryRecord.attachments"
                                             :key="attachment.id"
                                             type="button"
-                                            class="inline-flex items-center rounded-full border border-[#ecdca6] bg-white px-3 py-2 text-xs font-bold text-[#8a6218] transition hover:bg-[#fffef8]"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-[#fde68a] bg-white px-2.5 py-1 text-xs font-semibold text-[#b45309] transition hover:bg-[#fef3c7]"
                                             @click="openAttachment(attachment)"
                                         >
-                                            {{ attachment.name }}
+                                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.595 5.52l3.246-3.246a.75.75 0 011.06 1.06l-3.245 3.247a1.125 1.125 0 101.59 1.591l3.456-3.554a3 3 0 00-.081-4.24z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span>{{ attachment.name }}</span>
                                         </button>
                                     </div>
                                 </div>
                             </article>
 
+                            <!-- Staff Responses -->
                             <article v-for="response in queryRecord.responses" :key="response.id" class="flex justify-end">
-                                <div class="max-w-[46rem] rounded-lg border border-[#e3e7e5] bg-white px-3 py-2.5 text-[#22343b]">
-                                    <div class="flex items-center justify-between gap-4 text-[0.65rem] text-[#52626b]">
-                                        <span class="font-semibold">AniTech Support ({{ response.responder }})</span>
-                                        <span>{{ response.respondedAt }}</span>
+                                <div class="max-w-2xl rounded-2xl border border-[#d1fae5] bg-[#f0fdf4] p-4 text-[#0f172a] shadow-sm">
+                                    <div class="flex items-center justify-between gap-4 border-b border-[#d1fae5] pb-2 text-[0.68rem] text-[#065f46]">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#10b981] text-[0.6rem] font-bold text-white">S</span>
+                                            <span class="font-bold">AniTech Support ({{ response.responder }})</span>
+                                        </div>
+                                        <time class="text-[#047857]">{{ response.respondedAt }}</time>
                                     </div>
-                                    <p class="mt-1.5 whitespace-pre-line text-xs leading-5">{{ response.message }}</p>
 
-                                    <div v-if="response.attachments.length" class="mt-4 flex flex-wrap gap-2">
+                                    <p class="mt-3 whitespace-pre-line text-xs leading-relaxed text-[#334155]">{{ response.message }}</p>
+
+                                    <!-- Attachments -->
+                                    <div v-if="response.attachments.length" class="mt-3 flex flex-wrap gap-2 border-t border-[#d1fae5] pt-2.5">
                                         <button
                                             v-for="attachment in response.attachments"
                                             :key="attachment.id"
                                             type="button"
-                                            class="inline-flex items-center rounded-full border border-[#d9e2dc] bg-[#f8fbf9] px-3 py-2 text-xs font-bold text-[#0f5b46] transition hover:bg-[#eef5f1]"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-[#a7f3d0] bg-white px-2.5 py-1 text-xs font-semibold text-[#047857] transition hover:bg-[#ecfdf5]"
                                             @click="openAttachment(attachment)"
                                         >
-                                            {{ attachment.name }}
+                                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.595 5.52l3.246-3.246a.75.75 0 011.06 1.06l-3.245 3.247a1.125 1.125 0 101.59 1.591l3.456-3.554a3 3 0 00-.081-4.24z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span>{{ attachment.name }}</span>
                                         </button>
                                     </div>
                                 </div>
                             </article>
 
-                            <div v-if="queryRecord.responses.length === 0" class="rounded-[1.5rem] border border-dashed border-[#d9e2dc] bg-[#fbfdfc] px-5 py-8 text-center text-sm text-[#71808b]">
-                                No response has been recorded yet. Send the first reply below.
+                            <!-- Empty thread state -->
+                            <div v-if="queryRecord.responses.length === 0" class="rounded-xl border border-dashed border-[#dde4de] bg-[#fbfcfb] p-6 text-center text-xs text-[#94a3b8]">
+                                <svg viewBox="0 0 24 24" class="mx-auto h-7 w-7 text-[#cbd5e1]" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <p class="mt-2 font-medium">No response has been recorded yet. Compose a reply below.</p>
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-lg border border-[#d9e2dc] bg-white p-3">
-                        <form v-if="queryRecord.status !== 'Resolved'" class="space-y-3" @submit.prevent="submitResponse">
-                            <div class="space-y-2 rounded-md border border-[#d9e2dc] bg-[#fbfdfc] p-3">
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#52626b]">Response templates</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
+                    <!-- Response Composer -->
+                    <section v-if="queryRecord.status !== 'Resolved'" class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <form class="space-y-4" @submit.prevent="submitResponse">
+                            <!-- Quick Templates -->
+                            <div v-if="responseTemplates.length" class="space-y-2 rounded-xl border border-[#e2eae4] bg-[#f8faf9] p-3.5">
+                                <p class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Quick Response Templates</p>
+                                <div class="flex flex-wrap gap-1.5">
                                     <button
                                         v-for="template in responseTemplates"
                                         :key="template.key"
                                         type="button"
-                                        class="inline-flex items-center rounded-full border border-[#d9e2dc] bg-white px-3 py-2 text-xs font-black text-[#36554a] transition hover:bg-[#f4f7f5]"
+                                        class="inline-flex items-center rounded-lg border border-[#dbe3dd] bg-white px-2.5 py-1 text-xs font-semibold text-[#0f6b45] shadow-xs transition hover:border-[#014d3c] hover:bg-[#e6f5ec]"
                                         @click="applyTemplate(template)"
                                     >
                                         {{ template.label }}
@@ -353,85 +373,85 @@ function closeAttachmentPreview() {
                                 </div>
                             </div>
 
-                            <div class="rounded-md bg-[#f5f7f6] p-2">
+                            <!-- Message Textarea -->
+                            <div class="space-y-1.5">
+                                <label class="block text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Your Response</label>
                                 <textarea
                                     v-model="form.message"
                                     rows="4"
-                                    class="w-full resize-none bg-transparent px-2 py-2 text-xs text-[#0f172a] outline-none"
-                                    :placeholder="`Type your response to ${queryRecord.farmer.name}...`"
+                                    class="w-full rounded-xl border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                                    :placeholder="`Compose response to ${queryRecord.farmer.name}...`"
                                 />
+                                <p v-if="form.errors.message" class="text-xs font-medium text-rose-600">{{ form.errors.message }}</p>
                             </div>
-                            <p v-if="form.errors.message" class="text-sm font-medium text-[#c94f4f]">{{ form.errors.message }}</p>
 
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div class="flex flex-wrap items-center gap-3 text-sm text-[#52626b]">
-                                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#d9e2dc] px-3 py-2 transition hover:bg-[#f5f7f6]">
-                                        <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
-                                            <path d="M21.4 11.1 12.3 20a5 5 0 1 1-7.1-7.1l9.2-9.2a3.5 3.5 0 1 1 5 5l-9.5 9.5a2 2 0 0 1-2.8-2.8l8.5-8.5" />
+                            <!-- Footer controls -->
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[#edf2ee] pt-3.5">
+                                <div class="flex items-center gap-3">
+                                    <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#dbe3dd] bg-white px-3 py-1.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f4f7f5]">
+                                        <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.595 5.52l3.246-3.246a.75.75 0 011.06 1.06l-3.245 3.247a1.125 1.125 0 101.59 1.591l3.456-3.554a3 3 0 00-.081-4.24z" clip-rule="evenodd" />
                                         </svg>
-                                        <span class="font-medium">Attach Files</span>
+                                        <span>Attach Files</span>
                                         <input type="file" multiple class="hidden" @change="onAttachmentChange">
                                     </label>
-                                    <span class="text-xs">{{ queryRecord.status === 'Escalated' ? 'Escalated priority' : 'Standard priority' }}</span>
+                                    <span v-if="form.attachments.length" class="text-xs font-semibold text-[#0f6b45]">
+                                        {{ form.attachments.length }} file{{ form.attachments.length === 1 ? '' : 's' }} selected
+                                    </span>
                                 </div>
 
-                                <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#0f5b46] px-4 text-xs font-semibold text-white transition hover:bg-[#0b4938] disabled:opacity-60" :disabled="form.processing || acting">
+                                <button
+                                    type="submit"
+                                    class="inline-flex h-9 items-center justify-center rounded-lg bg-[#014d3c] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.97] disabled:opacity-60"
+                                    :disabled="form.processing || acting"
+                                >
                                     {{ form.processing ? 'Sending...' : 'Send Response' }}
                                 </button>
                             </div>
-
-                            <p v-if="form.attachments.length" class="text-xs text-[#52626b]">
-                                {{ form.attachments.length }} file{{ form.attachments.length === 1 ? '' : 's' }} selected
-                            </p>
-                            <p v-if="form.errors.attachments" class="text-sm font-medium text-[#c94f4f]">{{ form.errors.attachments }}</p>
-                            <p v-if="form.errors['attachments.0']" class="text-sm font-medium text-[#c94f4f]">{{ form.errors['attachments.0'] }}</p>
                         </form>
                     </section>
 
-                    <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Inquiry Internal Notes" />
+                    <!-- Internal Notes -->
+                    <InternalNotesPanel :notes="internalNotes" :submit-url="urls.storeInternalNote" title="Internal Discussion Notes" />
                 </div>
             </div>
         </div>
 
+        <!-- Attachment Lightbox Modal -->
         <div
             v-if="previewAttachment"
-            class="fixed inset-0 z-[90] flex items-center justify-center bg-[#061510]/80 p-6"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/80 p-4 backdrop-blur-sm"
             @click.self="closeAttachmentPreview"
         >
-            <div class="relative w-full max-w-5xl overflow-hidden rounded-[1.75rem] bg-white shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
-                <div class="flex items-center justify-between border-b border-[#e5ece8] px-5 py-4">
-                    <p class="truncate pr-4 text-sm font-bold text-[#0f172a]">{{ previewAttachment.name }}</p>
-                    <div class="flex items-center gap-3">
+            <div class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-[#edf2ee] px-5 py-3.5">
+                    <p class="truncate text-xs font-bold text-[#0f172a]">{{ previewAttachment.name }}</p>
+                    <div class="flex items-center gap-2">
                         <a
                             :href="previewAttachment.url"
                             :download="previewAttachment.name"
-                            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d9e2dc] text-[#0f5b46] transition hover:bg-[#f5f7f6]"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#dbe3dd] text-[#0f6b45] transition hover:bg-[#f4f7f5]"
                             aria-label="Download attachment"
                         >
-                            <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
-                                <path d="M12 4v10" />
-                                <path d="m8 10 4 4 4-4" />
-                                <path d="M5 19h14" />
+                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v10.638l3.96-4.158a.75.75 0 1 1 1.08 1.04l-5.25 5.5a.75.75 0 0 1-1.08 0l-5.25-5.5a.75.75 0 1 1 1.08-1.04l3.96 4.158V3.75A.75.75 0 0 1 10 3Z" clip-rule="evenodd"/>
                             </svg>
                         </a>
                         <button
                             type="button"
-                            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d9e2dc] text-[#52626b] transition hover:bg-[#f5f7f6]"
-                            aria-label="Close preview"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#dbe3dd] text-[#64748b] transition hover:bg-[#f4f7f5]"
                             @click="closeAttachmentPreview"
                         >
-                            <svg viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
-                                <path d="M6 6l12 12M18 6 6 18" />
-                            </svg>
+                            ✕
                         </button>
                     </div>
                 </div>
 
-                <div class="flex max-h-[80vh] items-center justify-center bg-[#f7faf8] p-4">
+                <div class="flex max-h-[75vh] items-center justify-center bg-[#f8faf9] p-4">
                     <img
                         :src="previewAttachment.url"
                         :alt="previewAttachment.name"
-                        class="max-h-[72vh] w-auto max-w-full rounded-2xl object-contain"
+                        class="max-h-[70vh] w-auto max-w-full rounded-xl object-contain shadow-sm"
                     >
                 </div>
             </div>

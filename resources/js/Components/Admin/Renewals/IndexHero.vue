@@ -22,35 +22,54 @@ const collectionRate = computed(() => {
 </script>
 
 <template>
-    <section class="relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white sm:px-5">
-        <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_#1b4d3e_0%,_transparent_50%),radial-gradient(at_100%_0%,_#376757_0%,_transparent_48%),radial-gradient(at_100%_100%,_#16332c_0%,_transparent_50%),radial-gradient(at_0%_100%,_#003629_0%,_transparent_48%)]"></div>
-
-        <div class="relative z-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                <div>
-                    <p class="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/65">Renewal management</p>
-                    <h1 class="mt-0.5 whitespace-nowrap text-xl font-semibold tracking-[-0.02em]">{{ pageTitle }}</h1>
-                </div>
-                <div class="grid grid-cols-3 overflow-hidden rounded-lg border border-white/15 bg-white/[0.08]">
-                    <div class="px-3 py-2 text-center">
-                        <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-white/60">Pending</p>
-                        <p class="mt-0.5 text-base font-semibold">{{ summary.queueCount }}</p>
-                    </div>
-                    <div class="border-x border-white/10 px-3 py-2 text-center">
-                        <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-white/60">Records</p>
-                        <p class="mt-0.5 text-base font-semibold">{{ summary.recordsCount }}</p>
-                    </div>
-                    <div class="px-3 py-2 text-center">
-                        <p class="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-white/60">Complete</p>
-                        <p class="mt-0.5 text-base font-semibold text-[#c0f190]">{{ collectionRate }}%</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex shrink-0 flex-wrap gap-2">
-                <button type="button" class="inline-flex h-8 items-center justify-center rounded-md bg-white px-3 text-[0.68rem] font-semibold text-[#003629] transition hover:bg-[#f1f7f3]" @click="$emit('export')">Export Summary</button>
-                <Link :href="urls.farmers" class="inline-flex h-8 items-center justify-center rounded-md border border-white/25 px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/10">Farmer List</Link>
-            </div>
+    <div class="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
+        <!-- Title and Category -->
+        <div>
+            <p class="text-[0.62rem] font-bold uppercase tracking-[0.1em] text-slate-500">Renewal Management</p>
+            <h1 class="text-xl font-bold tracking-tight text-[#0f172a] sm:text-2xl">{{ pageTitle }}</h1>
         </div>
-    </section>
+
+        <!-- Summary Metric Chips & Actions -->
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Stats Badges -->
+            <div class="inline-flex items-center gap-1.5 rounded-lg border border-[#dde4de] bg-white px-3 py-1.5 text-xs shadow-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-slate-400">Pending</span>
+                <span class="font-bold text-[#0f172a]">{{ summary.queueCount }}</span>
+            </div>
+
+            <div class="inline-flex items-center gap-1.5 rounded-lg border border-[#dde4de] bg-white px-3 py-1.5 text-xs shadow-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-slate-400">Records</span>
+                <span class="font-bold text-[#0f172a]">{{ summary.recordsCount }}</span>
+            </div>
+
+            <div class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-xs text-emerald-800 shadow-xs">
+                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-emerald-600">Completion</span>
+                <span class="font-bold font-mono">{{ collectionRate }}%</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <button
+                type="button"
+                class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#dde4de] bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95"
+                @click="$emit('export')"
+            >
+                <svg viewBox="0 0 20 20" class="h-4 w-4 text-slate-500" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm4.75 6.75a.75.75 0 0 1 1.5 0v3.44l1.22-1.22a.75.75 0 1 1 1.06 1.06l-2.5 2.5a.75.75 0 0 1-1.06 0l-2.5-2.5a.75.75 0 1 1 1.06-1.06l1.22 1.22V8.75Z" clip-rule="evenodd" />
+                </svg>
+                <span>Export Summary</span>
+            </button>
+
+            <Link
+                :href="urls.farmers"
+                class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a] active:scale-95"
+            >
+                <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                    <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.946 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z" />
+                </svg>
+                <span>Farmer List</span>
+            </Link>
+        </div>
+    </div>
 </template>

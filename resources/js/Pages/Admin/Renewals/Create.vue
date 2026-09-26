@@ -53,46 +53,43 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
     <Head :title="`Process Renewal - ${farmer.fullName}`" />
 
     <AdminLayout title="Process Renewal">
-        <div class="space-y-4">
-            <!-- Hero Header -->
-            <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-5 py-5 text-white shadow-lg shadow-[#003629]/15">
-                <div class="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/[0.04]"></div>
-                <div class="pointer-events-none absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-white/[0.03]"></div>
-
-                <div class="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.15] text-white shadow-sm backdrop-blur-sm">
-                            <svg viewBox="0 0 20 20" class="h-6 w-6 text-[#7ddfb8]" fill="currentColor">
-                                <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.451a.75.75 0 0 0 0-1.5H4.5a.75.75 0 0 0-.75.75v3.75a.75.75 0 0 0 1.5 0v-2.199l.312.311a7 7 0 0 0 11.75-3.418.75.75 0 0 0-1.5-.048ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311H11.75a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 .75-.75V3.421a.75.75 0 0 0-1.5 0v2.199l-.312-.311A7 7 0 0 0 2.688 8.727a.75.75 0 0 0 1.5.048l.5-.199Z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <p class="text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[#7ddfb8]/80">Membership Renewal</p>
-                                <span class="rounded-md bg-white/10 px-2 py-0.5 font-mono text-[0.62rem] font-semibold text-white/90">
-                                    {{ farmer.farmerCode }}
-                                </span>
-                            </div>
-                            <h1 class="mt-0.5 text-xl font-bold tracking-[-0.02em] text-white sm:text-2xl">{{ farmer.fullName }}</h1>
-                        </div>
-                    </div>
-
+        <div class="mx-auto w-full max-w-[1536px] space-y-4 pb-10">
+            <!-- Page Header Row -->
+            <div class="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
                     <div class="flex items-center gap-2">
-                        <Link
-                            :href="showFarmerUrl"
-                            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/[0.18] bg-white/[0.08] px-3.5 text-xs font-semibold text-white shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/15 active:scale-[0.97]"
-                        >
-                            View Record
+                        <Link :href="indexUrl" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 transition hover:text-[#003629]">
+                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Renewal Processing</span>
                         </Link>
-                        <Link
-                            :href="indexUrl"
-                            class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3.5 text-xs font-bold text-[#003629] shadow-sm transition-all duration-200 hover:bg-[#f0faf5] hover:shadow-md active:scale-[0.97]"
-                        >
-                            Renewal List
-                        </Link>
+                        <span class="text-slate-300">/</span>
+                        <span class="text-xs font-semibold text-slate-700">Process Renewal</span>
+                    </div>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                        <h1 class="text-xl font-bold tracking-tight text-[#0f172a] sm:text-2xl">{{ farmer.fullName }}</h1>
+                        <span class="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs font-bold text-slate-700">
+                            {{ farmer.farmerCode }}
+                        </span>
                     </div>
                 </div>
-            </section>
+
+                <div class="flex items-center gap-2">
+                    <Link
+                        :href="showFarmerUrl"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95"
+                    >
+                        View Record
+                    </Link>
+                    <Link
+                        :href="indexUrl"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a] active:scale-95"
+                    >
+                        Back to Queue
+                    </Link>
+                </div>
+            </div>
 
             <!-- Main Layout Grid -->
             <div class="grid gap-4 xl:grid-cols-12">
@@ -210,64 +207,56 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                 </div>
 
                 <!-- Farmer Profile & Breakdown Card (4 columns) -->
-                <div class="xl:col-span-4">
-                    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-sm">
-                        <!-- Top Accent Banner -->
-                        <div class="h-14 bg-gradient-to-r from-[#003629] via-[#00483a] to-[#014d3c]"></div>
-
-                        <div class="relative px-5 pb-5">
-                            <!-- Avatar Overlap -->
-                            <div class="-mt-7 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-white bg-gradient-to-br from-[#e6f5ec] to-[#d4eddd] text-base font-bold text-[#0f6b45] shadow-md">
+                <div class="xl:col-span-4 space-y-4">
+                    <section class="rounded-2xl border border-[#dde4de] bg-white p-5 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#e6f5ec] text-sm font-bold text-[#0f6b45]">
                                 {{ initials }}
                             </div>
-
-                            <div class="mt-2 text-center">
-                                <h3 class="text-sm font-bold text-[#0f172a]">{{ farmer.fullName }}</h3>
-                                <p class="mt-0.5 text-[0.62rem] font-bold uppercase tracking-wider text-[#15803d]">Active Member</p>
-                            </div>
-
-                            <!-- Profile Details -->
-                            <div class="mt-4 space-y-2.5 border-t border-[#f1f5f9] pt-4">
-                                <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-2.5 flex items-center justify-between">
-                                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Farmer Code</span>
-                                    <span class="font-mono text-xs font-bold text-[#0f172a]">{{ farmer.farmerCode || 'Unassigned' }}</span>
-                                </div>
-
-                                <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-2.5 flex items-center justify-between">
-                                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Member Type</span>
-                                    <span class="text-xs font-semibold text-[#0f172a]">{{ memberTypeCode }}</span>
-                                </div>
-
-                                <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-2.5">
-                                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Association</span>
-                                    <p class="mt-0.5 text-xs font-semibold text-[#0f172a]">{{ farmer.association || 'No association assigned' }}</p>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="truncate text-sm font-bold text-[#0f172a]">{{ farmer.fullName }}</h3>
+                                <div class="mt-0.5 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center rounded-md bg-[#f0fdf4] px-1.5 py-0.5 text-[0.62rem] font-bold text-[#15803d]">Active Member</span>
+                                    <span class="font-mono text-[0.68rem] text-[#64748b]">{{ farmer.farmerCode || 'Unassigned' }}</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Itemized Payment Breakdown Card -->
-                            <div class="mt-4 rounded-xl border border-[#bbf7d0] bg-gradient-to-br from-[#f0fdf4] to-white p-3.5">
-                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#166534]">Payment Breakdown</span>
-                                <div class="mt-2 space-y-1.5 text-xs">
-                                    <div class="flex items-center justify-between text-[#475569]">
-                                        <span>Annual Membership Due</span>
-                                        <span class="font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(paymentBreakdown.annualDue || 0)) }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between text-[#475569]">
-                                        <span>Mortuary Contribution</span>
-                                        <span class="font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(paymentBreakdown.mortuaryFee || 0)) }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between border-t border-[#bbf7d0] pt-2 text-[#014d3c]">
-                                        <span class="font-bold">Total Payable</span>
-                                        <span class="text-sm font-black">{{ currencyFormatter.format(Number(paymentBreakdown.total || 0)) }}</span>
-                                    </div>
+                        <!-- Profile Details -->
+                        <div class="mt-4 space-y-2 border-t border-[#f1f5f9] pt-3.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-[#64748b]">Member Type</span>
+                                <span class="font-semibold text-[#0f172a]">{{ memberTypeCode }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-[#64748b]">Association</span>
+                                <span class="max-w-[180px] truncate font-semibold text-[#0f172a]" :title="farmer.association">{{ farmer.association || 'None assigned' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Itemized Payment Breakdown Card -->
+                        <div class="mt-4 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4]/50 p-3.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#166534]">Payment Breakdown</span>
+                            <div class="mt-2 space-y-1.5 text-xs">
+                                <div class="flex items-center justify-between text-[#475569]">
+                                    <span>Annual Membership Due</span>
+                                    <span class="font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(paymentBreakdown.annualDue || 0)) }}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-[#475569]">
+                                    <span>Mortuary Contribution</span>
+                                    <span class="font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(paymentBreakdown.mortuaryFee || 0)) }}</span>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-[#bbf7d0] pt-2 text-[#014d3c]">
+                                    <span class="font-bold">Total Payable</span>
+                                    <span class="text-sm font-black">{{ currencyFormatter.format(Number(paymentBreakdown.total || 0)) }}</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mt-4 text-center">
-                                <Link :href="showFarmerUrl" class="text-xs font-bold text-[#014d3c] hover:underline">
-                                    &larr; Return to Farmer Profile
-                                </Link>
-                            </div>
+                        <div class="mt-4 text-center">
+                            <Link :href="showFarmerUrl" class="text-xs font-semibold text-[#014d3c] hover:underline">
+                                &larr; Return to Farmer Profile
+                            </Link>
                         </div>
                     </section>
                 </div>

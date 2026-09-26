@@ -37,7 +37,7 @@ function submit() {
         forceFormData: true,
         onError: async () => {
             await nextTick();
-            document.querySelector('.advisory-form .text-red-600, .advisory-form [role="alert"]')
+            document.querySelector('.advisory-form .text-red-600, .advisory-form .text-rose-600, .advisory-form [role="alert"]')
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         },
         onFinish: () => {
@@ -55,7 +55,6 @@ function submit() {
             :form="form"
             :reference="reference"
             heading="Create Advisory"
-            description=""
             submit-label="Save Draft"
             :cancel-href="urls.index"
             :disabled="submitting || form.processing"

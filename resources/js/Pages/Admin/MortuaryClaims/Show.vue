@@ -33,184 +33,197 @@ const auditItems = computed(() => {
 });
 
 const statusTone = computed(() => {
-    if (props.claim.status.value === 'released' || props.claim.status.value === 'approved') return 'bg-[#eef7e3] text-[#416918]';
-    if (props.claim.status.value === 'rejected') return 'bg-[#ffdad6] text-[#93000a]';
-    return 'bg-[#fff3dc] text-[#a86100]';
+    if (props.claim.status.value === 'released' || props.claim.status.value === 'approved') return 'bg-[#f0fdf4] text-[#15803d] border border-[#bbf7d0]';
+    if (props.claim.status.value === 'rejected') return 'bg-[#fff1f2] text-[#be123c] border border-[#fecdd3]';
+    return 'bg-[#fefce8] text-[#854d0e] border border-[#fef08a]';
 });
 </script>
 
 <template>
-    <Head :title="claim.claimReference" />
+    <Head :title="`Claim ${claim.claimReference}`" />
 
     <AdminLayout title="Mortuary Claim Details">
-        <div class="mortuary-claim-view space-y-3 overflow-x-hidden">
-            <section class="claim-view-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
-                <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_rgba(27,77,62,1)_0px,_transparent_50%),radial-gradient(at_100%_100%,_rgba(22,51,44,1)_0px,_transparent_50%)]"></div>
-                <div class="absolute inset-0 opacity-5 [background-image:radial-gradient(circle,_#fff_1px,_transparent_1px)] [background-size:40px_40px]"></div>
-                <div class="relative mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <Link :href="urls.queue" class="inline-flex items-center gap-2 text-sm font-bold text-[#baeed9] hover:underline">
-                            Back to Claim Queue
-                        </Link>
-                        <div class="mt-4 flex flex-wrap items-center gap-3">
-                            <h1 class="text-5xl font-black tracking-[-0.04em]">{{ claim.claimReference }}</h1>
-                            <span class="rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em]" :class="statusTone">{{ claim.status.label }}</span>
-                        </div>
-                        <p class="mt-3 text-base text-[#9ed1bd]">
-                            Filed on {{ claim.claimDate || 'Not recorded' }}
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col gap-3 sm:flex-row">
-                        <Link v-if="urls.farmerShow" :href="urls.farmerShow" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/20">
-                            Open Farmer Record
-                        </Link>
+        <div class="mx-auto max-w-[1536px] space-y-4">
+            <!-- Sleek Top Header Row -->
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <h1 class="text-xl font-bold tracking-tight text-[#0f172a] sm:text-2xl">{{ claim.claimReference }}</h1>
+                        <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold" :class="statusTone">
+                            {{ claim.status.label }}
+                        </span>
                     </div>
                 </div>
-            </section>
 
-            <section v-if="flashSuccess" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
-                {{ flashSuccess }}
-            </section>
-
-            <section v-if="pageErrors.mortuary || pageErrors.remarks" class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
-                {{ pageErrors.mortuary || pageErrors.remarks }}
-            </section>
-
-            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                <article class="flex items-center gap-4 rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#c0f190] text-[#466f1e]">P</div>
-                    <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Claim Amount</p>
-                        <p class="mt-2 text-2xl font-black text-[#191c1c]">PHP {{ Number(claim.claimAmount || 0).toFixed(2) }}</p>
-                    </div>
-                </article>
-                <article class="flex items-center gap-4 rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#c9eadf] text-[#2f4c44]">R</div>
-                    <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Reference</p>
-                        <p class="mt-2 text-2xl font-black text-[#191c1c]">{{ claim.claimReference }}</p>
-                    </div>
-                </article>
-                <article class="flex items-center gap-4 rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#baeed9] text-[#1d4f40]">F</div>
-                    <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Filed By</p>
-                        <p class="mt-2 text-2xl font-black text-[#191c1c]">{{ claim.filedBy }}</p>
-                    </div>
-                </article>
-                <article class="flex items-center gap-4 rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#a5d577] text-[#2a5000]">Y</div>
-                    <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Ledger Year</p>
-                        <p class="mt-2 text-2xl font-black text-[#191c1c]">{{ claim.ledger.year || 'N/A' }} <span class="text-base font-bold text-[#5f6c67]">({{ claim.ledger.paymentStatusLabel }})</span></p>
-                    </div>
-                </article>
+                <div class="flex items-center gap-2">
+                    <Link
+                        :href="urls.queue"
+                        class="inline-flex h-9 items-center justify-center rounded-lg border border-[#dde4de] bg-white px-3.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f1f5f3] hover:text-[#0f172a]"
+                    >
+                        Back to Queue
+                    </Link>
+                    <Link
+                        v-if="urls.farmerShow"
+                        :href="urls.farmerShow"
+                        class="inline-flex h-9 items-center justify-center rounded-lg bg-[#014d3c] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.97]"
+                    >
+                        Open Farmer Profile
+                    </Link>
+                </div>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-3">
-                <div class="space-y-6 lg:col-span-2">
-                    <section class="overflow-hidden rounded-xl border border-[#c0c9c3] bg-white shadow-sm">
-                        <div class="flex items-center gap-2 border-b border-[#c0c9c3] bg-[#f2f4f3] px-6 py-4">
-                            <h2 class="text-xl font-black text-[#191c1c]">Claim & Ledger Information</h2>
-                        </div>
-                        <div class="grid gap-8 px-6 py-6 md:grid-cols-2">
-                            <div class="space-y-4">
-                                <h3 class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Claim Particulars</h3>
-                                <div class="grid grid-cols-2 gap-y-4 text-sm">
-                                    <div class="text-[#707974]">Ref Number</div>
-                                    <div class="font-semibold text-[#191c1c]">{{ claim.claimReference }}</div>
-                                    <div class="text-[#707974]">Application Date</div>
-                                    <div class="text-[#191c1c]">{{ claim.claimDate || 'Not recorded' }}</div>
-                                    <div class="text-[#707974]">Status</div>
-                                    <div class="font-semibold text-[#191c1c]">{{ claim.status.label }}</div>
-                                    <div class="text-[#707974]">Remarks</div>
-                                    <div class="text-[#191c1c]">{{ claim.remarks || 'No remarks recorded.' }}</div>
-                                </div>
-                            </div>
+            <!-- Flash & Error alerts -->
+            <div v-if="flashSuccess" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+                {{ flashSuccess }}
+            </div>
 
-                            <div class="space-y-4">
-                                <h3 class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Deceased Member Details</h3>
-                                <div class="grid grid-cols-2 gap-y-4 text-sm">
-                                    <div class="text-[#707974]">Farmer Name</div>
-                                    <div class="font-semibold text-[#191c1c]">{{ claim.farmer.fullName }}</div>
-                                    <div class="text-[#707974]">Registry Code</div>
-                                    <div class="text-[#191c1c]">{{ claim.farmer.farmerCode }}</div>
-                                    <div class="text-[#707974]">Farmer Status</div>
-                                    <div class="text-[#191c1c]">{{ claim.farmer.statusLabel || 'Not recorded' }}</div>
-                                    <div class="text-[#707974]">Eligibility</div>
-                                    <div class="font-bold text-[#416918]">{{ claim.ledger.mortuaryEligible ? 'QUALIFIED' : 'NOT QUALIFIED' }}</div>
-                                </div>
-                            </div>
+            <div v-if="pageErrors.mortuary || pageErrors.remarks" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+                {{ pageErrors.mortuary || pageErrors.remarks }}
+            </div>
+
+            <!-- 4 Clean Compact Summary Cards -->
+            <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <article class="rounded-xl border border-[#dde4de] bg-white p-3.5 shadow-xs">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Claim Amount</span>
+                    <p class="mt-1 font-mono text-base font-extrabold text-[#014d3c]">
+                        PHP {{ Number(claim.claimAmount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+                    </p>
+                </article>
+
+                <article class="rounded-xl border border-[#dde4de] bg-white p-3.5 shadow-xs">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Claim Reference</span>
+                    <p class="mt-1 font-mono text-base font-bold text-[#0f172a] truncate">{{ claim.claimReference }}</p>
+                </article>
+
+                <article class="rounded-xl border border-[#dde4de] bg-white p-3.5 shadow-xs">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Filed By</span>
+                    <p class="mt-1 text-base font-bold text-[#0f172a] truncate">{{ claim.filedBy || 'Staff' }}</p>
+                </article>
+
+                <article class="rounded-xl border border-[#dde4de] bg-white p-3.5 shadow-xs">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Ledger Year &amp; Status</span>
+                    <p class="mt-1 text-xs font-bold text-[#0f172a] truncate">
+                        {{ claim.ledger.year || 'N/A' }} <span class="font-normal text-[#64748b]">({{ claim.ledger.paymentStatusLabel }})</span>
+                    </p>
+                </article>
+            </section>
+
+            <!-- Main Content Grid -->
+            <div class="grid gap-4 lg:grid-cols-3">
+                <!-- Left 2 Columns: Claim Particulars & Document Checklist -->
+                <div class="space-y-4 lg:col-span-2">
+                    <!-- Claim & Member Particulars Card -->
+                    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+                        <div class="flex items-center justify-between border-b border-[#f1f5f9] px-4 py-3">
+                            <h2 class="text-xs font-bold text-[#0f172a]">Claim &amp; Deceased Member Information</h2>
+                            <span class="rounded-md bg-[#e6f5ec] px-2 py-0.5 text-[0.68rem] font-bold text-[#0f6b45]">
+                                {{ claim.ledger.mortuaryEligible ? 'Qualified Benefit' : 'Non-Qualified' }}
+                            </span>
                         </div>
-                        <div class="mx-6 mb-6 rounded-lg border-l-4 border-[#707974] bg-[#f2f4f3] p-4">
-                            <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#707974]">Officer Remarks</p>
-                            <p class="mt-2 text-sm italic text-[#191c1c]">{{ claim.remarks || 'No remarks recorded.' }}</p>
+
+                        <div class="grid gap-3 p-4 sm:grid-cols-2">
+                            <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
+                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Deceased Farmer</span>
+                                <p class="mt-0.5 text-xs font-bold text-[#0f172a]">{{ claim.farmer.fullName }}</p>
+                                <p class="font-mono text-[0.68rem] text-[#64748b]">{{ claim.farmer.farmerCode }}</p>
+                            </div>
+                            <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
+                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Farmer Status</span>
+                                <p class="mt-0.5 text-xs font-semibold text-[#0f172a]">{{ claim.farmer.statusLabel || 'Registered' }}</p>
+                                <p class="text-[0.68rem] text-[#64748b]">Active masterlist registry record</p>
+                            </div>
+                            <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
+                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Application Date</span>
+                                <p class="mt-0.5 text-xs font-semibold text-[#0f172a]">{{ claim.claimDate || 'Not recorded' }}</p>
+                            </div>
+                            <div class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
+                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Approved &amp; Released By</span>
+                                <p class="mt-0.5 text-xs font-semibold text-[#0f172a]">{{ claim.releasedBy || claim.approvedBy || 'Pending Release' }}</p>
+                            </div>
+                            <div v-if="claim.remarks" class="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3 sm:col-span-2">
+                                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Officer Remarks</span>
+                                <p class="mt-0.5 text-xs italic text-[#475569]">{{ claim.remarks }}</p>
+                            </div>
                         </div>
                     </section>
 
-                    <div class="grid gap-6 md:grid-cols-2">
-                        <section class="rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-xl font-black text-[#191c1c]">Document Checklist</h2>
-                                <span class="rounded-full px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em]" :class="claim.approvalRequirementsComplete ? 'bg-[#eef7e3] text-[#416918]' : 'bg-[#fff3dc] text-[#a86100]'">
-                                    {{ claim.approvalRequirementsComplete ? 'Complete' : 'Incomplete' }}
+                    <!-- Document Checklist Section -->
+                    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+                        <div class="flex items-center justify-between border-b border-[#f1f5f9] px-4 py-3">
+                            <h2 class="text-xs font-bold text-[#0f172a]">Document Checklist Verification</h2>
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-0.5 text-[0.62rem] font-bold"
+                                :class="claim.approvalRequirementsComplete ? 'bg-[#f0fdf4] text-[#15803d] border border-[#bbf7d0]' : 'bg-[#fefce8] text-[#854d0e] border border-[#fef08a]'"
+                            >
+                                {{ claim.approvalRequirementsComplete ? 'All Requirements Met' : 'Incomplete Documents' }}
+                            </span>
+                        </div>
+
+                        <div class="p-4 space-y-2">
+                            <div
+                                v-for="item in claim.checklist.items"
+                                :key="item.code"
+                                class="flex items-center justify-between rounded-xl border border-[#f1f5f9] bg-[#f8fafc] px-3.5 py-2.5 text-xs"
+                            >
+                                <span class="font-medium text-[#0f172a]">{{ item.label }}</span>
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-0.5 text-[0.62rem] font-bold"
+                                    :class="item.received ? 'bg-[#f0fdf4] text-[#15803d]' : 'bg-[#f1f5f9] text-[#64748b]'"
+                                >
+                                    {{ item.received ? '✓ Verified' : 'Missing' }}
                                 </span>
                             </div>
-                            <div class="mt-6 space-y-3">
-                                <div
-                                    v-for="item in claim.checklist.items"
-                                    :key="item.code"
-                                    class="flex items-center justify-between rounded-lg border border-[#c0c9c3] bg-[#f2f4f3] p-4"
-                                >
-                                    <span class="text-sm font-medium text-[#191c1c]">{{ item.label }}</span>
-                                    <span class="text-xs font-black uppercase tracking-[0.12em]" :class="item.received ? 'text-[#416918]' : 'text-[#707974]'">
-                                        {{ item.received ? 'Verified' : 'Missing' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="rounded-xl border border-[#c0c9c3] bg-white p-6 shadow-sm">
-                            <h2 class="text-xl font-black text-[#191c1c]">Beneficiary Details</h2>
-                            <div class="mt-6 flex items-center gap-4">
-                                <div class="flex h-16 w-16 items-center justify-center rounded-full border border-[#c0c9c3] bg-[#f2f4f3] text-xl font-black text-[#2f4c44]">
-                                    {{ claim.claimer.name?.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'CL' }}
-                                </div>
-                                <div>
-                                    <p class="text-xl font-black text-[#191c1c]">{{ claim.claimer.name || 'Not recorded' }}</p>
-                                    <p class="text-sm font-bold text-[#416918]">{{ claim.claimer.relationship || 'Relationship not recorded' }}</p>
-                                </div>
-                            </div>
-                            <div class="mt-6 space-y-4 border-t border-[#c0c9c3] pt-6">
-                                <div class="text-sm text-[#191c1c]">{{ claim.claimer.contactNumber || 'No contact number' }}</div>
-                                <div class="text-sm text-[#191c1c]">{{ claim.claimer.address || 'No address recorded' }}</div>
-                                <div class="text-sm text-[#191c1c]">Released By: {{ claim.releasedBy || 'No staff recorded' }}</div>
-                            </div>
-                        </section>
-                    </div>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="space-y-6">
-                    <section class="rounded-xl border border-[#c0c9c3] bg-[#eef5f1] p-6 shadow-sm">
-                        <h2 class="text-xl font-black text-[#416918]">Claim Released</h2>
-                        <p class="mt-3 text-sm leading-7 text-[#2f4c44]">
-                            This claim was automatically approved and released during filing after the required documents and beneficiary details were completed.
-                        </p>
+                <!-- Right 1 Column: Beneficiary Details & Audit Trail -->
+                <div class="space-y-4">
+                    <!-- Beneficiary Details Card -->
+                    <section class="rounded-2xl border border-[#dde4de] bg-white p-4 shadow-xs">
+                        <div class="border-b border-[#f1f5f9] pb-3">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Beneficiary Information</span>
+                            <div class="mt-2 flex items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f5ec] text-xs font-bold text-[#0f6b45]">
+                                    {{ claim.claimer.name?.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'CL' }}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="truncate text-xs font-bold text-[#0f172a]">{{ claim.claimer.name || 'Not recorded' }}</p>
+                                    <p class="text-[0.68rem] font-semibold text-[#014d3c]">{{ claim.claimer.relationship || 'Relationship not recorded' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 space-y-2 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[#64748b]">Contact Number</span>
+                                <span class="font-semibold text-[#0f172a]">{{ claim.claimer.contactNumber || 'None' }}</span>
+                            </div>
+                            <div class="flex items-start justify-between gap-2">
+                                <span class="text-[#64748b]">Address</span>
+                                <span class="font-semibold text-right text-[#0f172a]">{{ claim.claimer.address || 'None' }}</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-[#f1f5f9] pt-2">
+                                <span class="text-[#64748b]">Released By</span>
+                                <span class="font-semibold text-[#0f172a]">{{ claim.releasedBy || 'Pending' }}</span>
+                            </div>
+                        </div>
                     </section>
 
-                    <section class="rounded-xl border border-[#c0c9c3] bg-[#eceeed] p-6 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-sm font-black uppercase tracking-[0.18em] text-[#191c1c]">Audit Trail</h2>
-                            <span class="text-xs text-[#707974]">Real-time</span>
+                    <!-- Audit Trail Timeline Card -->
+                    <section class="rounded-2xl border border-[#dde4de] bg-white p-4 shadow-xs">
+                        <div class="border-b border-[#f1f5f9] pb-2.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Audit History</span>
                         </div>
-                        <div class="relative mt-6 space-y-6 before:absolute before:bottom-2 before:left-[9px] before:top-2 before:w-[2px] before:bg-[#c0c9c3] before:content-['']">
-                            <div v-for="item in auditItems" :key="item.title" class="relative pl-8">
-                                <div class="absolute left-0 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#eceeed]" :class="item.tone === 'secondary' ? 'bg-[#c0f190] text-[#466f1e]' : 'bg-[#baeed9] text-[#1d4f40]'">
-                                    <span class="text-[10px] font-black">{{ item.tone === 'secondary' ? 'OK' : 'IN' }}</span>
-                                </div>
-                                <p class="text-sm font-semibold text-[#191c1c]">{{ item.title }}</p>
-                                <p class="text-[11px] text-[#707974]">{{ item.subtitle }}</p>
+
+                        <div class="mt-3 relative pl-5 space-y-3 before:absolute before:bottom-1 before:left-2 before:top-1.5 before:w-0.5 before:bg-[#e2e8f0]">
+                            <div v-for="item in auditItems" :key="item.title" class="relative text-xs">
+                                <div
+                                    class="absolute -left-5 top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white"
+                                    :class="item.tone === 'secondary' ? 'bg-[#15803d]' : 'bg-[#014d3c]'"
+                                ></div>
+                                <p class="font-bold text-[#0f172a]">{{ item.title }}</p>
+                                <p class="text-[0.68rem] text-[#64748b]">{{ item.subtitle }}</p>
                             </div>
                         </div>
                     </section>
@@ -219,28 +232,3 @@ const statusTone = computed(() => {
         </div>
     </AdminLayout>
 </template>
-
-<style scoped>
-.claim-view-hero > div:not(.relative) { display: none; }
-.claim-view-hero > .relative { max-width: none; align-items: center; gap: 0.75rem; }
-.claim-view-hero a { font-size: 0.68rem; font-weight: 600; }
-.claim-view-hero h1 { font-size: 1.25rem; line-height: 1.5rem; font-weight: 600; }
-.claim-view-hero h1 + span { padding: 0.2rem 0.55rem; font-size: 0.58rem; font-weight: 600; }
-.claim-view-hero p { margin-top: 0.2rem; font-size: 0.65rem; }
-.claim-view-hero div > a:last-child { min-height: 2rem; border-radius: 0.375rem; padding: 0 0.75rem; }
-.mortuary-claim-view > .grid { gap: 0.75rem; }
-.mortuary-claim-view > .grid:nth-of-type(1) article { gap: 0.6rem; border-radius: 0.5rem; padding: 0.75rem; box-shadow: none; }
-.mortuary-claim-view > .grid:nth-of-type(1) article > div:first-child { width: 2rem; height: 2rem; font-size: 0.68rem; }
-.mortuary-claim-view > .grid:nth-of-type(1) article p:first-child { font-size: 0.55rem; letter-spacing: 0.08em; }
-.mortuary-claim-view > .grid:nth-of-type(1) article p:last-child { margin-top: 0.15rem; font-size: 0.9rem; line-height: 1.15rem; font-weight: 600; }
-.mortuary-claim-view section { border-radius: 0.5rem; box-shadow: none; }
-.mortuary-claim-view section > div:first-child { padding: 0.75rem 1rem; }
-.mortuary-claim-view section h2 { font-size: 0.875rem; font-weight: 600; }
-.mortuary-claim-view section h3 { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.08em; }
-.mortuary-claim-view .space-y-6 { gap: 0.75rem; }
-.mortuary-claim-view .p-6 { padding: 1rem; }
-.mortuary-claim-view .px-6 { padding-left: 1rem; padding-right: 1rem; }
-.mortuary-claim-view .py-6 { padding-top: 1rem; padding-bottom: 1rem; }
-.mortuary-claim-view .text-xl { font-size: 0.875rem; line-height: 1.25rem; }
-.mortuary-claim-view .text-sm { font-size: 0.7rem; line-height: 1.1rem; }
-</style>

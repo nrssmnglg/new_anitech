@@ -270,26 +270,12 @@ const activeFilterCount = () => [form.search, form.barangay_id, form.status].fil
 
                 <!-- Pagination -->
                 <div v-if="associations.last_page > 1" class="flex flex-col gap-2 border-t border-[#edf2ee] bg-gradient-to-b from-[#fbfcfb] to-[#f8faf9] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-[0.68rem] text-[#6b7280]">
-                        Page <span class="font-semibold text-[#334155]">{{ associations.current_page }}</span> of <span class="font-semibold text-[#334155]">{{ associations.last_page }}</span>
-                    </p>
-                    <div class="flex items-center gap-2">
-                        <Link
-                            :href="associations.prev_page_url || '#'"
-                            class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border px-3 text-[0.68rem] font-semibold transition-all duration-200"
-                            :class="associations.prev_page_url ? 'border-[#dbe3dd] text-[#334155] hover:border-[#b9c5bc] hover:bg-[#f4f7f5]' : 'pointer-events-none cursor-not-allowed border-[#eef2ee] text-[#cbd5e1]'"
-                        >
-                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z" clip-rule="evenodd"/></svg>
-                            Previous
-                        </Link>
-                        <Link
-                            :href="associations.next_page_url || '#'"
-                            class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border px-3 text-[0.68rem] font-semibold transition-all duration-200"
-                            :class="associations.next_page_url ? 'border-[#014d3c] bg-[#014d3c] text-white shadow-sm hover:bg-[#01392d] hover:shadow-md' : 'pointer-events-none cursor-not-allowed border-[#eef2ee] bg-[#eef2ee] text-[#cbd5e1]'"
-                        >
-                            Next
-                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd"/></svg>
-                        </Link>
+                    <p class="text-[0.68rem] text-[#64748b]">Showing <span class="font-semibold text-[#334155]">{{ associations.from || 0 }}</span>–<span class="font-semibold text-[#334155]">{{ associations.to || 0 }}</span> of <span class="font-semibold text-[#334155]">{{ associations.total }}</span></p>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <template v-for="link in associations.links" :key="link.label">
+                            <span v-if="!link.url" class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2.5 text-[0.68rem] text-[#cbd5e1]" v-html="link.label" />
+                            <Link v-else :href="link.url" class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2.5 text-[0.68rem] font-semibold transition-all duration-200" :class="link.active ? 'bg-[#014d3c] text-white shadow-sm' : 'text-[#64748b] hover:bg-[#f1f5f9]'" preserve-scroll preserve-state v-html="link.label" />
+                        </template>
                     </div>
                 </div>
             </section>

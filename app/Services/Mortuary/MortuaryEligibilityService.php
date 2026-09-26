@@ -31,8 +31,8 @@ class MortuaryEligibilityService
                 $reasons[] = 'Membership payment is not settled.';
             }
 
-            if (isset($ledgerData['year']) && (int) $ledgerData['year'] !== $claimYear) {
-                $reasons[] = 'Ledger year does not match the claim year.';
+            if (isset($ledgerData['year']) && (int) $ledgerData['year'] > $claimYear) {
+                $reasons[] = 'Ledger year cannot be later than the claim year.';
             }
         }
 

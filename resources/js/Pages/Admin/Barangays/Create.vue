@@ -58,10 +58,7 @@ function submit() {
                             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#e6f5ec] to-[#d4eddd]">
                                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f6b45]" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
                             </div>
-                            <div>
-                                <h2 class="text-sm font-bold text-[#0f172a]">Barangay Information</h2>
-                                <p class="mt-0.5 text-[0.68rem] text-[#94a3b8]">Enter the details for the new barangay.</p>
-                            </div>
+                            <h2 class="text-sm font-bold text-[#0f172a]">Barangay Information</h2>
                         </div>
                         <FormFields :form="form" :status-options="statusOptions" />
                     </div>

@@ -19,12 +19,20 @@ const initials = computed(() => String(user.value?.name || 'A').trim().charAt(0)
 const firstName = computed(() => String(user.value?.name || '').trim().split(/\s+/)[0] || 'Admin');
 const showLogoutConfirm = ref(false);
 const showNotifications = ref(false);
+const notificationTab = ref('all');
 const search = ref('');
 const notifications = ref([]);
 const notificationSummary = ref({ total: 0, unread: 0, read: 0 });
 const unreadCount = ref(0);
 const loadingNotifications = ref(false);
 const hasLoadedNotifications = ref(false);
+
+const filteredNotifications = computed(() => {
+    if (notificationTab.value === 'unread') {
+        return notifications.value.filter((n) => n.hasRecipient && !n.isRead);
+    }
+    return notifications.value;
+});
 let notificationsPollTimer = null;
 let searchDebounceTimer = null;
 let syncingSearchFromPage = false;
@@ -225,62 +233,95 @@ onBeforeUnmount(() => {
         />
 
         <div class="min-h-screen lg:pl-[256px]">
-            <header class="sticky top-0 z-30 border-b border-[#dde6e1] bg-white/95 backdrop-blur">
-                <div class="flex min-h-[60px] items-center justify-between gap-3 px-4 py-2 sm:px-5 lg:px-6">
+            <header class="sticky top-0 z-30 border-b border-[#dde4de] bg-white/95 backdrop-blur-md transition-shadow">
+                <div class="flex min-h-[64px] items-center justify-between gap-3 px-4 py-2 sm:px-6">
                     <div class="min-w-0 flex-1 pl-14 lg:pl-0">
-                        <form class="flex max-w-[460px] items-center gap-2.5 rounded-md border border-[#e3e8e5] bg-[#f3f5f4] px-3.5 py-2 text-stone-500" @submit.prevent="submitSearch">
-                            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-none" fill="none" stroke="currentColor" stroke-width="2">
+                        <form class="group relative flex max-w-[440px] items-center gap-2.5 rounded-xl border border-[#dde4de] bg-[#f8faf9] px-3.5 py-2 text-stone-500 transition-all duration-200 focus-within:border-[#014d3c] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#014d3c]/10 focus-within:shadow-xs" @submit.prevent="submitSearch">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-none text-stone-400 transition-colors group-focus-within:text-[#014d3c]" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="7" />
-                                <path d="m20 20-3.5-3.5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m20 20-3.5-3.5" />
                             </svg>
                             <input
                                 v-model="search"
                                 type="search"
-                                :placeholder="shell?.searchPlaceholder || 'Search...'"
-                                class="w-full border-0 bg-transparent p-0 text-sm text-stone-700 outline-none ring-0 placeholder:text-stone-400 focus:ring-0"
+                                :placeholder="shell?.searchPlaceholder || 'Search directory, farmers, requests...'"
+                                class="w-full border-0 bg-transparent p-0 text-xs text-stone-800 outline-none ring-0 placeholder:text-stone-400 focus:ring-0"
                             >
+                            <button
+                                v-if="search"
+                                type="button"
+                                class="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200 hover:text-stone-700"
+                                @click="search = ''; submitSearch()"
+                            >
+                                <span class="text-xs leading-none">&times;</span>
+                            </button>
+                            <kbd v-else class="hidden rounded border border-[#dde4de] bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-stone-400 sm:inline-block">
+                                /
+                            </kbd>
                         </form>
                     </div>
 
-                    <div v-if="shell && user" class="flex items-center gap-1.5 sm:gap-2.5">
-                        <button type="button" class="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-stone-600 transition hover:bg-stone-100" @click="openNotifications">
+                    <div v-if="shell && user" class="flex items-center gap-2 sm:gap-2.5">
+                        <!-- Notifications Button -->
+                        <button
+                            type="button"
+                            class="relative inline-flex h-9 w-9 items-center justify-center rounded-xl text-stone-600 transition-all duration-200 hover:bg-[#f0faf5] hover:text-[#014d3c] active:scale-95"
+                            title="Notifications"
+                            @click="openNotifications"
+                        >
                             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
-                                <path d="M10 21a2 2 0 0 0 4 0" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 21a2 2 0 0 0 4 0" />
                             </svg>
-                            <span v-if="unreadCount > 0" class="absolute -right-0.5 top-0 inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-red-600 px-1 text-center text-[0.52rem] font-semibold leading-none text-white">
+                            <span
+                                v-if="unreadCount > 0"
+                                class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-center text-[0.55rem] font-bold leading-none text-white ring-2 ring-white"
+                            >
                                 {{ unreadCount > 99 ? '99+' : unreadCount }}
                             </span>
                         </button>
 
-                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-stone-600 transition hover:bg-stone-100" @click="openQueries">
+                        <!-- Farmer Inquiries Button -->
+                        <button
+                            type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-stone-600 transition-all duration-200 hover:bg-[#f0faf5] hover:text-[#014d3c] active:scale-95"
+                            title="Farmer Inquiries"
+                            @click="openQueries"
+                        >
                             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 5h16v14H4z" />
-                                <path d="m4 7 8 6 8-6" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6" />
                             </svg>
                         </button>
 
-                        <div class="hidden h-7 w-px bg-[#d9dfdc] sm:block"></div>
+                        <!-- Separator -->
+                        <div class="hidden h-6 w-px bg-[#e4ebe6] sm:block mx-0.5"></div>
 
-                        <div class="hidden items-center gap-3 sm:flex">
-                            <div class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f3f39_0%,#35675a_100%)] text-sm font-semibold text-white">
+                        <!-- User Profile Chip -->
+                        <div class="hidden items-center gap-2.5 rounded-xl py-1 pl-1.5 pr-2.5 transition-all duration-200 hover:bg-stone-50 sm:flex">
+                            <div class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] text-xs font-bold text-white shadow-xs">
                                 {{ initials }}
                             </div>
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-stone-900">{{ firstName }}</p>
-                                <p class="truncate text-xs text-stone-500">{{ shell.topbar.roleLabel }}</p>
+                                <p class="truncate text-xs font-bold text-stone-900 leading-tight">{{ firstName }}</p>
+                                <div class="flex items-center gap-1 text-[0.62rem] font-medium text-stone-500">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    <span class="truncate">{{ shell.topbar.roleLabel }}</span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Logout Button -->
                         <button
                             type="button"
-                            class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-[#177136] transition hover:bg-[#f3f7f4] hover:text-[#0f5a2b]"
+                            class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-stone-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+                            title="Sign out of AniTech"
                             @click="showLogoutConfirm = true"
                         >
                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path d="M10 5H5v14h5" />
-                                <path d="M14 8l4 4-4 4" />
-                                <path d="M8 12h10" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 5H5v14h5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 8l4 4-4 4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h10" />
                             </svg>
                             <span class="hidden sm:inline">Logout</span>
                         </button>
@@ -293,105 +334,239 @@ onBeforeUnmount(() => {
             </main>
         </div>
 
-        <div v-if="showLogoutConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/35 px-4">
-            <div class="w-full max-w-md rounded-[1.6rem] bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
-                <h2 class="text-xl font-bold text-stone-900">Confirm Logout</h2>
-                <p class="mt-3 text-sm leading-6 text-stone-600">
-                    Are you sure you want to log out?
-                </p>
-                <div class="mt-6 flex justify-end gap-3">
+        <!-- Confirm Logout Modal -->
+        <div v-if="showLogoutConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/50 p-4 backdrop-blur-sm" @click.self="showLogoutConfirm = false">
+            <div class="w-full max-w-sm overflow-hidden rounded-2xl border border-[#dde4de] bg-white p-6 shadow-2xl transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-[#0f172a]">Confirm Logout</h2>
+                        <p class="text-xs text-[#64748b]">Are you sure you want to end your session?</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2.5">
                     <button
                         type="button"
-                        class="inline-flex h-11 items-center justify-center rounded-xl border border-[#d7e0db] px-4 text-sm font-bold text-stone-600 transition hover:bg-[#f4f7f5]"
+                        class="inline-flex h-9 items-center justify-center rounded-xl border border-[#dde4de] bg-white px-4 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
                         @click="showLogoutConfirm = false"
                     >
                         Cancel
                     </button>
                     <button
                         type="button"
-                        class="inline-flex h-11 items-center justify-center rounded-xl bg-[#0f3f39] px-4 text-sm font-bold text-white transition hover:bg-[#174f47]"
+                        class="inline-flex h-9 items-center justify-center rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 px-4 text-xs font-bold text-white shadow-sm transition hover:from-rose-700 hover:to-rose-800 active:scale-95"
                         @click="showLogoutConfirm = false; logout()"
                     >
-                        Logout
+                        Log Out
                     </button>
                 </div>
             </div>
         </div>
 
-        <div v-if="showNotifications" class="fixed inset-0 z-50 bg-[#08130f]/32 backdrop-blur-[2px]" @click="showNotifications = false">
-            <aside class="admin-notification-panel absolute right-0 top-0 flex h-full w-full max-w-[420px] flex-col border-l border-[#dfe7e2] bg-[#fcfdfc] shadow-[0_18px_55px_rgba(15,23,42,0.16)]" @click.stop>
-                <div class="border-b border-[#e4ebe7] bg-white px-4 py-3">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="min-w-0">
-                            <h2 class="text-base font-semibold text-stone-900">Notifications</h2>
-                            <p class="mt-0.5 text-xs text-stone-500">{{ unreadCount }} unread</p>
-                        </div>
-                        <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-500 transition hover:bg-stone-100" @click="showNotifications = false">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="m6 6 12 12" />
-                            <path d="M18 6 6 18" />
-                        </svg>
-                        </button>
-                    </div>
-                </div>
+        <!-- Slide-over Notification Panel -->
+        <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="showNotifications"
+                class="fixed inset-0 z-50 bg-[#09110d]/50 backdrop-blur-sm"
+                @click="showNotifications = false"
+            >
+                <aside
+                    class="admin-notification-panel absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[#dbe3dd] bg-[#f9fbfa] shadow-2xl transition-transform duration-300"
+                    @click.stop
+                >
+                    <!-- Gradient Hero Header -->
+                    <div class="relative overflow-hidden bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-5 py-4 text-white shadow-md">
+                        <div class="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/[0.05]"></div>
+                        <div class="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/[0.04]"></div>
 
-                <div class="flex items-center justify-between border-b border-[#e8edea] bg-[#fcfdfc] px-4 py-2.5">
-                    <div class="flex items-center gap-3">
-                        <button type="button" class="text-xs font-semibold text-[#0f5b46] transition hover:text-[#0b4636]" @click="refreshNotifications">
-                            Refresh
-                        </button>
-                        <span v-if="loadingNotifications && hasLoadedNotifications" class="text-[0.72rem] font-semibold text-stone-400">
-                            Syncing...
-                        </span>
-                    </div>
-                    <button type="button" class="text-xs font-semibold text-[#0f5b46] transition hover:text-[#0b4636] disabled:cursor-not-allowed disabled:text-stone-300" :disabled="notificationSummary.unread <= 0" @click="markAllNotificationsRead">
-                        Mark all read
-                    </button>
-                </div>
-
-                <div class="flex-1 overflow-y-auto p-3">
-                    <div v-if="loadingNotifications && !hasLoadedNotifications" class="rounded-2xl bg-[#f8faf9] px-4 py-8 text-center text-[0.82rem] text-stone-500">
-                        Loading notifications...
-                    </div>
-
-                    <div v-else-if="notifications.length" class="space-y-2">
-                        <article
-                            v-for="notification in notifications"
-                            :key="notification.recipientId || `history-${notification.notificationId}`"
-                            role="button"
-                            tabindex="0"
-                            class="cursor-pointer rounded-lg border border-[#e4ebe7] bg-white p-3 transition hover:border-[#b9cec4] hover:bg-[#f8fbf9] focus:outline-none focus:ring-2 focus:ring-[#0f5b46]/20"
-                            @click="openNotification(notification)"
-                            @keydown.enter.prevent="openNotification(notification)"
-                            @keydown.space.prevent="openNotification(notification)"
-                        >
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-1.5">
-                                        <span class="rounded-md bg-[#edf3ef] px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em] text-[#4e655a]">
-                                            {{ notification.moduleLabel }}
-                                        </span>
-                                        <span v-if="notification.sourceLabel" class="rounded-md bg-[#f4f6f5] px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em] text-stone-500">
-                                            {{ notification.sourceLabel }}
-                                        </span>
-                                        <span :class="notification.hasRecipient && !notification.isRead ? 'bg-[#ccefe1] text-[#0f5b46]' : 'bg-stone-200 text-stone-600'" class="rounded-md px-1.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-[0.05em]">
-                                            {{ notification.hasRecipient ? (notification.isRead ? 'Read' : 'Unread') : 'History' }}
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.12] backdrop-blur-sm">
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#7ddfb8]" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                                        <path d="M10 21a2 2 0 0 0 4 0" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h2 class="text-sm font-bold tracking-tight text-white">Notifications</h2>
+                                        <span v-if="unreadCount > 0" class="rounded-full bg-[#7ddfb8]/20 px-2 py-0.5 text-[0.6rem] font-bold text-[#7ddfb8] border border-[#7ddfb8]/30">
+                                            {{ unreadCount }} new
                                         </span>
                                     </div>
-                                    <h3 class="mt-2 text-xs font-semibold leading-4 text-stone-900">{{ notification.subject }}</h3>
-                                    <p class="mt-1 text-[0.68rem] leading-4 text-stone-600">{{ notification.message }}</p>
-                                    <p class="mt-1.5 text-[0.58rem] font-medium uppercase tracking-[0.05em] text-stone-400">{{ notification.createdAt }}</p>
                                 </div>
                             </div>
-                        </article>
+
+                            <button
+                                type="button"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/80 transition hover:bg-white/20 hover:text-white"
+                                aria-label="Close notification panel"
+                                @click="showNotifications = false"
+                            >
+                                <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Panel Filter & Action Ribbon -->
+                        <div class="relative z-10 mt-3.5 flex items-center justify-between border-t border-white/10 pt-3 text-xs">
+                            <!-- Tab filters -->
+                            <div class="inline-flex rounded-lg bg-black/20 p-0.5">
+                                <button
+                                    type="button"
+                                    class="rounded-md px-2.5 py-1 text-[0.65rem] font-bold transition"
+                                    :class="notificationTab === 'all' ? 'bg-white text-[#003629] shadow-xs' : 'text-white/70 hover:text-white'"
+                                    @click="notificationTab = 'all'"
+                                >
+                                    All ({{ notifications.length }})
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded-md px-2.5 py-1 text-[0.65rem] font-bold transition"
+                                    :class="notificationTab === 'unread' ? 'bg-white text-[#003629] shadow-xs' : 'text-white/70 hover:text-white'"
+                                    @click="notificationTab = 'unread'"
+                                >
+                                    Unread ({{ unreadCount }})
+                                </button>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    class="text-[0.65rem] font-semibold text-white/80 transition hover:text-[#7ddfb8] disabled:cursor-not-allowed disabled:opacity-40"
+                                    :disabled="notificationSummary.unread <= 0"
+                                    @click="markAllNotificationsRead"
+                                >
+                                    Mark all read
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div v-else class="rounded-2xl bg-[#f8faf9] px-4 py-8 text-center text-[0.82rem] text-stone-500">
-                        No notifications found for this account.
+                    <!-- Notification Items Container -->
+                    <div class="flex-1 overflow-y-auto p-3.5 space-y-2.5">
+                        <div v-if="loadingNotifications && !hasLoadedNotifications" class="flex flex-col items-center justify-center rounded-xl bg-white p-8 text-center border border-[#e4ebe7]">
+                            <svg class="h-6 w-6 animate-spin text-[#014d3c]" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="mt-2 text-xs font-semibold text-[#64748b]">Loading notification feed...</p>
+                        </div>
+
+                        <template v-else-if="filteredNotifications.length">
+                            <article
+                                v-for="notification in filteredNotifications"
+                                :key="notification.recipientId || `history-${notification.notificationId}`"
+                                role="button"
+                                tabindex="0"
+                                class="group relative cursor-pointer rounded-xl border p-3.5 transition-all duration-200 outline-none focus:ring-2 focus:ring-[#014d3c]/20"
+                                :class="notification.hasRecipient && !notification.isRead ? 'border-[#c3dfce] bg-[#f2f8f4] hover:bg-[#eaf4ed] shadow-xs' : 'border-[#e3e9e5] bg-white hover:border-[#b8c9c0] hover:bg-[#fbfcfb]'"
+                                @click="openNotification(notification)"
+                                @keydown.enter.prevent="openNotification(notification)"
+                                @keydown.space.prevent="openNotification(notification)"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#014d3c]/10 text-[#014d3c] transition-colors group-hover:bg-[#014d3c] group-hover:text-white">
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                        </svg>
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <span class="rounded bg-[#014d3c]/10 px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wider text-[#014d3c]">
+                                                {{ notification.moduleLabel }}
+                                            </span>
+                                            <span v-if="notification.sourceLabel" class="rounded bg-[#f1f5f3] px-1.5 py-0.5 text-[0.58rem] font-semibold text-[#64748b]">
+                                                {{ notification.sourceLabel }}
+                                            </span>
+                                            <span
+                                                v-if="notification.hasRecipient && !notification.isRead"
+                                                class="ml-auto inline-flex items-center gap-1 text-[0.58rem] font-bold text-[#15803d]"
+                                            >
+                                                <span class="h-1.5 w-1.5 rounded-full bg-[#22c55e]"></span>
+                                                New
+                                            </span>
+                                        </div>
+
+                                        <h3 class="mt-1.5 text-xs font-bold leading-snug text-[#0f172a] group-hover:text-[#014d3c] transition-colors">
+                                            {{ notification.subject }}
+                                        </h3>
+                                        <p class="mt-1 text-[0.68rem] leading-relaxed text-[#64748b] line-clamp-2">
+                                            {{ notification.message }}
+                                        </p>
+
+                                        <div class="mt-2 flex items-center justify-between border-t border-[#edf2ee] pt-1.5">
+                                            <span class="inline-flex items-center gap-1 text-[0.6rem] text-[#94a3b8]">
+                                                <svg viewBox="0 0 20 20" class="h-3 w-3" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+                                                </svg>
+                                                {{ notification.createdAt }}
+                                            </span>
+                                            <span v-if="notification.targetUrl" class="inline-flex items-center gap-0.5 text-[0.62rem] font-bold text-[#014d3c] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Open
+                                                <svg viewBox="0 0 20 20" class="h-3 w-3" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </template>
+
+                        <!-- Empty State -->
+                        <div v-else class="flex flex-col items-center justify-center rounded-xl bg-white p-8 text-center border border-[#e4ebe7] shadow-xs">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#014d3c]/10 text-[#014d3c]">
+                                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <path d="M22 4L12 14.01l-3-3" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-3 text-xs font-bold text-[#0f172a]">
+                                {{ notificationTab === 'unread' ? 'No unread notifications' : 'No notifications found' }}
+                            </h3>
+                            <p class="mt-1 text-[0.68rem] text-[#64748b]">
+                                {{ notificationTab === 'unread' ? 'You are completely caught up on all alerts.' : 'New activity and updates will appear here.' }}
+                            </p>
+                        </div>
                     </div>
-                </div>
-            </aside>
-        </div>
+
+                    <!-- Panel Footer -->
+                    <div class="border-t border-[#e2e8e4] bg-white px-5 py-3 flex items-center justify-between">
+                        <span class="text-[0.68rem] text-[#64748b]">
+                            {{ notificationSummary.total }} total notifications
+                        </span>
+                        <a
+                            v-if="shell?.topbar?.notificationsUrl"
+                            :href="shell.topbar.notificationsUrl"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-[#014d3c] transition hover:text-[#002a20]"
+                            @click="showNotifications = false"
+                        >
+                            Notification Center
+                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.25 5.5a.75.75 0 0 1 0 1.08l-5.25 5.5a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </aside>
+            </div>
+        </Transition>
     </div>
 </template>
 

@@ -38,7 +38,7 @@ function submit() {
         forceFormData: true,
         onError: async () => {
             await nextTick();
-            document.querySelector('.advisory-form .text-red-600, .advisory-form [role="alert"]')
+            document.querySelector('.advisory-form .text-red-600, .advisory-form .text-rose-600, .advisory-form [role="alert"]')
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         },
         onFinish: () => {
@@ -65,37 +65,15 @@ function removeAttachment(attachment) {
     <Head title="Edit Advisory" />
 
     <AdminLayout title="Edit Advisory">
-        <div class="space-y-3">
-            <AdvisoryForm
-                :form="form"
-                :reference="reference"
-                heading="Edit Advisory"
-                description=""
-                submit-label="Save Changes"
-                :cancel-href="urls.show"
-                :disabled="submitting || form.processing"
-                @submit="submit"
-            />
-
-            <section v-if="form.existingAttachments.length" class="overflow-hidden rounded-lg border border-[#0f5b46]/12 bg-white">
-                <div class="border-b border-[#0f5b46]/10 px-4 py-3">
-                    <h2 class="text-sm font-semibold text-primary">Current attachments</h2>
-                </div>
-                <div class="space-y-2 p-4">
-                    <article v-for="attachment in form.existingAttachments" :key="attachment.id" class="flex flex-col gap-2 rounded-md border border-[#0f5b46]/10 bg-[#f8fbf9] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p class="font-bold text-primary">{{ attachment.name }}</p>
-                            <p class="text-xs text-on-surface-variant">{{ attachment.uploadedAt || 'No upload timestamp' }}</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <a :href="attachment.downloadUrl" target="_blank" rel="noopener" class="font-semibold text-[#2f7d5e] transition hover:underline">Open</a>
-                            <button type="button" class="font-semibold text-[#a83d2a] transition hover:underline" @click="removeAttachment(attachment)">
-                                Remove
-                            </button>
-                        </div>
-                    </article>
-                </div>
-            </section>
-        </div>
+        <AdvisoryForm
+            :form="form"
+            :reference="reference"
+            heading="Edit Advisory"
+            submit-label="Save Changes"
+            :cancel-href="urls.show"
+            :disabled="submitting || form.processing"
+            @submit="submit"
+            @remove-attachment="removeAttachment"
+        />
     </AdminLayout>
 </template>

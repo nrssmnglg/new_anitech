@@ -4,26 +4,43 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
     activeSection: { type: String, required: true },
     urls: { type: Object, required: true },
+    summary: { type: Object, default: () => ({}) },
 });
 </script>
 
 <template>
-    <section class="border-b border-[#dfe5e1]">
-        <div class="flex items-center gap-5">
-            <Link
-                :href="urls.queue"
-                class="inline-flex border-b-2 px-1 py-2 text-xs font-semibold transition"
-                :class="activeSection === 'queue' ? 'border-[#003629] text-[#003629]' : 'border-transparent text-[#66756f] hover:text-[#1a2420]'"
+    <div class="flex items-center gap-2 border-b border-[#dde4de] pb-1">
+        <Link
+            :href="urls.queue"
+            class="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-200"
+            :class="activeSection === 'queue'
+                ? 'bg-[#014d3c] text-white shadow-xs'
+                : 'text-[#64748b] hover:bg-[#f1f5f3] hover:text-[#0f172a]'"
+        >
+            <span>Claim Queue</span>
+            <span
+                v-if="summary?.queueCount !== undefined"
+                class="rounded-full px-1.5 py-0.2 text-[0.62rem] font-bold"
+                :class="activeSection === 'queue' ? 'bg-white/20 text-white' : 'bg-[#e2e8f0] text-[#475569]'"
             >
-                Claim Queue
-            </Link>
-            <Link
-                :href="urls.records"
-                class="inline-flex border-b-2 px-1 py-2 text-xs font-semibold transition"
-                :class="activeSection === 'records' ? 'border-[#003629] text-[#003629]' : 'border-transparent text-[#66756f] hover:text-[#1a2420]'"
+                {{ summary.queueCount }}
+            </span>
+        </Link>
+        <Link
+            :href="urls.records"
+            class="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-200"
+            :class="activeSection === 'records'
+                ? 'bg-[#014d3c] text-white shadow-xs'
+                : 'text-[#64748b] hover:bg-[#f1f5f3] hover:text-[#0f172a]'"
+        >
+            <span>Mortuary Records</span>
+            <span
+                v-if="summary?.recordsCount !== undefined"
+                class="rounded-full px-1.5 py-0.2 text-[0.62rem] font-bold"
+                :class="activeSection === 'records' ? 'bg-white/20 text-white' : 'bg-[#e2e8f0] text-[#475569]'"
             >
-                Mortuary Records
-            </Link>
-        </div>
-    </section>
+                {{ summary.recordsCount }}
+            </span>
+        </Link>
+    </div>
 </template>

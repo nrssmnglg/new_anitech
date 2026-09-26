@@ -30,33 +30,42 @@ function formatDate(value) {
 
 function deliveryTone(label) {
     if (label === 'Failed') {
-        return 'bg-[#ffe6ea] text-[#b42341]';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
     }
-
     if (label === 'Delivered') {
-        return 'bg-[#e7f7ea] text-[#166534]';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
+    if (label === 'Read') {
+        return 'bg-sky-50 text-sky-700 border-sky-200';
+    }
+    return 'bg-amber-50 text-amber-700 border-amber-200';
+}
 
-    return 'bg-[#fff4db] text-[#b56a00]';
+function deliveryDotTone(label) {
+    if (label === 'Failed') return 'bg-rose-500';
+    if (label === 'Delivered') return 'bg-emerald-500';
+    if (label === 'Read') return 'bg-sky-500';
+    return 'bg-amber-500';
 }
 
 function recipientTone(status) {
     if (status === 'failed') {
-        return 'bg-[#ffe6ea] text-[#b42341]';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
     }
-
     if (status === 'delivered') {
-        return 'bg-[#e7f7ea] text-[#166534]';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
-
     if (status === 'read') {
-        return 'bg-[#e8f0ff] text-[#1d4ed8]';
+        return 'bg-sky-50 text-sky-700 border-sky-200';
     }
-
-    return 'bg-[#fff4db] text-[#b56a00]';
+    return 'bg-amber-50 text-amber-700 border-amber-200';
 }
 
 function resendDispatch() {
+    if (!window.confirm('Resend this notification dispatch?')) {
+        return;
+    }
+
     router.post(props.dispatch.resend_url, {}, {
         preserveScroll: true,
     });
@@ -67,111 +76,144 @@ function resendDispatch() {
     <Head title="Notification Detail" />
 
     <AdminLayout title="Notification Detail">
-        <div class="notification-show space-y-3">
-            <section class="notification-show-hero relative overflow-hidden rounded-xl bg-[#003629] px-4 py-3.5 text-white">
-                <div class="absolute inset-0 bg-[radial-gradient(at_0%_0%,_#1b4d3e_0%,_transparent_50%),radial-gradient(at_100%_0%,_#376757_0%,_transparent_48%),radial-gradient(at_100%_100%,_#16332c_0%,_transparent_50%),radial-gradient(at_0%_100%,_#003629_0%,_transparent_48%)]"></div>
-                <div class="absolute -right-14 top-[-52px] h-60 w-60 rounded-full bg-[#a5d577]/10 blur-[90px]"></div>
-                <div class="absolute -bottom-24 left-[18%] h-72 w-72 rounded-full bg-white/10 blur-[110px]"></div>
+        <div class="notification-show space-y-4">
+            <!-- Hero Header -->
+            <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-5 py-5 text-white shadow-lg shadow-[#003629]/15">
+                <div class="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/[0.04]"></div>
+                <div class="pointer-events-none absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-white/[0.03]"></div>
+                <div class="pointer-events-none absolute right-24 top-6 h-24 w-24 rounded-full bg-white/[0.02]"></div>
 
-                <div class="relative z-10 space-y-6">
-                    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                        <div class="max-w-3xl">
-                            <div class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                                <span class="h-2.5 w-2.5 rounded-full bg-[#c0f190] shadow-[0_0_16px_rgba(192,241,144,0.8)]"></span>
-                                <span class="text-[0.68rem] font-black uppercase tracking-[0.28em] text-white/85">Dispatch Overview</span>
+                <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.12] backdrop-blur-sm">
+                            <svg viewBox="0 0 24 24" class="h-5 w-5 text-[#7ddfb8]" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                                <path d="M10 21a2 2 0 0 0 4 0" />
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <p class="text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[#7ddfb8]/80">Dispatch Record</p>
+                                <span class="rounded bg-[#7ddfb8]/20 px-2 py-0.5 text-[0.6rem] font-bold text-[#7ddfb8] border border-[#7ddfb8]/30">
+                                    {{ dispatch.module_label }}
+                                </span>
                             </div>
-
-                            <h1 class="mt-4 text-4xl font-black tracking-[-0.045em] sm:text-[2.5rem]">{{ dispatch.type_label }}</h1>
-                            <p class="mt-3 max-w-2xl text-sm text-white/75">{{ dispatch.subject }}</p>
-                        </div>
-
-                        <div class="flex flex-col gap-3 sm:flex-row">
-                            <Link :href="urls.index" class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-extrabold text-white backdrop-blur transition hover:bg-white/15">
-                                Back to Notifications
-                            </Link>
-                            <button type="button" class="inline-flex items-center justify-center rounded-full bg-[#c0f190] px-5 py-3 text-sm font-extrabold text-[#2a5000] transition hover:scale-[1.02]" @click="resendDispatch">
-                                Resend Notification
-                            </button>
+                            <h1 class="mt-0.5 truncate text-xl font-bold tracking-[-0.02em]">{{ dispatch.type_label }}</h1>
+                            <p class="mt-0.5 truncate text-xs text-white/70">{{ dispatch.subject }}</p>
                         </div>
                     </div>
 
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                        <article class="rounded-[1.7rem] border border-[#d9e2dc] bg-[#fbfcfb] p-5">
-                            <p class="text-[0.72rem] font-black uppercase tracking-[0.16em] text-[#52626b]">Module</p>
-                            <p class="mt-3 text-lg font-black text-[#111827]">{{ dispatch.module_label }}</p>
-                        </article>
-                        <article class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
-                            <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Recipients</p>
-                            <p class="mt-3 text-3xl font-black tracking-[-0.04em]">{{ dispatch.recipient_count }}</p>
-                        </article>
-                        <article class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
-                            <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Delivered</p>
-                            <p class="mt-3 text-3xl font-black tracking-[-0.04em]">{{ dispatch.delivered_count }}</p>
-                        </article>
-                        <article class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
-                            <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Failed</p>
-                            <p class="mt-3 text-3xl font-black tracking-[-0.04em]">{{ dispatch.failed_count }}</p>
-                        </article>
-                        <article class="rounded-[1.7rem] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
-                            <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-white/60">Read</p>
-                            <p class="mt-3 text-3xl font-black tracking-[-0.04em]">{{ dispatch.read_count }}</p>
-                        </article>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <Link
+                            :href="urls.index"
+                            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3.5 text-xs font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 active:scale-[0.98]"
+                        >
+                            <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
+                            </svg>
+                            Back to Center
+                        </Link>
+                        <button
+                            type="button"
+                            class="group inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3.5 text-xs font-bold text-[#003629] shadow-sm transition-all duration-200 hover:bg-[#f0faf5] hover:shadow-md active:scale-[0.97]"
+                            @click="resendDispatch"
+                        >
+                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5 text-[#003629]" fill="currentColor">
+                                <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0-.75.75v4.482a.75.75 0 0 0 1.5 0v-2.09l.348.347a7 7 0 0 0 11.705-3.136.75.75 0 0 0-1.241-.508ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311H11.77a.75.75 0 0 0 0 1.5h4.48a.75.75 0 0 0 .75-.75V2.689a.75.75 0 0 0-1.5 0v2.09l-.348-.347A7 7 0 0 0 3.447 7.568a.75.75 0 1 0 1.241.508Z" clip-rule="evenodd" />
+                            </svg>
+                            Resend Dispatch
+                        </button>
                     </div>
                 </div>
             </section>
 
-            <section class="notification-message rounded-lg border border-[#d9e2dc] bg-white p-3">
-                <div class="flex flex-wrap items-center gap-3">
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.08em]" :class="deliveryTone(dispatch.delivery_label)">
-                        {{ dispatch.delivery_label }}
-                    </span>
-                    <span class="text-sm text-[#64748b]">Queued {{ formatDate(dispatch.queued_at || dispatch.created_at) }}</span>
-                </div>
+            <!-- Metrics Cards Grid -->
+            <section class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <article class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-4 shadow-sm">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Total Recipients</span>
+                    <p class="mt-2 text-xl font-bold text-[#0f172a]">{{ dispatch.recipient_count }}</p>
+                    <p class="mt-0.5 text-[0.68rem] text-[#64748b]">Total targeted</p>
+                </article>
 
-                <div v-if="dispatch.message" class="mt-5 rounded-[1.6rem] border border-[#d9e2dc] bg-[#fbfcfb] p-5">
-                    <p class="text-[0.72rem] font-black uppercase tracking-[0.16em] text-[#52626b]">Message</p>
-                    <p class="mt-3 text-sm leading-6 text-[#334155]">{{ dispatch.message }}</p>
+                <article class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-4 shadow-sm">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Delivered</span>
+                    <p class="mt-2 text-xl font-bold text-emerald-700">{{ dispatch.delivered_count }}</p>
+                    <p class="mt-0.5 text-[0.68rem] text-[#64748b]">Confirmed arrival</p>
+                </article>
+
+                <article class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-4 shadow-sm">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Failed</span>
+                    <p class="mt-2 text-xl font-bold text-rose-700">{{ dispatch.failed_count }}</p>
+                    <p class="mt-0.5 text-[0.68rem] text-[#64748b]">Undelivered</p>
+                </article>
+
+                <article class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-4 shadow-sm">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Read / Opened</span>
+                    <p class="mt-2 text-xl font-bold text-sky-700">{{ dispatch.read_count }}</p>
+                    <p class="mt-0.5 text-[0.68rem] text-[#64748b]">Opened by user</p>
+                </article>
+
+                <article class="overflow-hidden rounded-xl border border-[#dde4de] bg-white p-4 shadow-sm">
+                    <span class="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Delivery State</span>
+                    <div class="mt-2">
+                        <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[0.65rem] font-bold" :class="deliveryTone(dispatch.delivery_label)">
+                            <span class="h-1.5 w-1.5 rounded-full" :class="deliveryDotTone(dispatch.delivery_label)"></span>
+                            {{ dispatch.delivery_label }}
+                        </span>
+                    </div>
+                    <p class="mt-1 text-[0.68rem] text-[#64748b]">Queued {{ formatDate(dispatch.queued_at || dispatch.created_at) }}</p>
+                </article>
+            </section>
+
+            <!-- Message Card -->
+            <section v-if="dispatch.message" class="overflow-hidden rounded-xl border border-[#dde4de] bg-white shadow-sm">
+                <div class="border-b border-[#edf2ee] px-5 py-3.5">
+                    <h2 class="text-sm font-bold text-[#0f172a]">Broadcast Message Content</h2>
+                </div>
+                <div class="p-5">
+                    <p class="text-xs sm:text-sm leading-relaxed text-[#334155] whitespace-pre-wrap">{{ dispatch.message }}</p>
                 </div>
             </section>
 
-            <section class="notification-recipients overflow-hidden rounded-lg border border-[#d9e2dc] bg-white">
-                <div class="border-b border-[#e6ece8] px-5 py-5 sm:px-6">
-                    <h2 class="text-[1.55rem] font-black tracking-[-0.04em] text-[#0f172a]">Recipients</h2>
-                    <p class="mt-2 text-sm text-[#64748b]">Per-recipient delivery state, read activity, and failure details.</p>
+            <!-- Recipients Table Card -->
+            <section class="overflow-hidden rounded-xl border border-[#dde4de] bg-white shadow-sm">
+                <div class="border-b border-[#edf2ee] px-5 py-3.5">
+                    <h2 class="text-[0.8rem] font-bold text-[#0f172a]">Recipient Breakdown ({{ recipients.length }})</h2>
+                    <p class="mt-0.5 text-[0.68rem] text-[#64748b]">Per-recipient delivery status, timestamps, and failure logs</p>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full border-collapse">
-                        <thead>
-                            <tr class="border-b border-[#e6ece8] text-left text-[0.78rem] font-black uppercase tracking-[0.08em] text-[#334155]">
-                                <th class="px-5 py-4 sm:px-6">Recipient</th>
-                                <th class="px-5 py-4 sm:px-6">Address</th>
-                                <th class="px-5 py-4 sm:px-6">Status</th>
-                                <th class="px-5 py-4 sm:px-6">Delivered</th>
-                                <th class="px-5 py-4 sm:px-6">Read</th>
-                                <th class="px-5 py-4 sm:px-6">Failed</th>
-                                <th class="px-5 py-4 sm:px-6">Failure Reason</th>
+                    <table class="w-full text-left text-xs">
+                        <thead class="border-b border-[#edf2ee] bg-[#f8faf9] text-[0.65rem] font-bold uppercase tracking-wider text-[#64748b]">
+                            <tr>
+                                <th class="px-5 py-3">Recipient</th>
+                                <th class="px-5 py-3">Address</th>
+                                <th class="px-5 py-3">Status</th>
+                                <th class="px-5 py-3">Delivered</th>
+                                <th class="px-5 py-3">Read</th>
+                                <th class="px-5 py-3">Failed</th>
+                                <th class="px-5 py-3">Failure Reason</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr v-for="recipient in recipients" :key="recipient.id" class="border-b border-[#edf2ee] align-top transition hover:bg-[#fbfdfc]">
-                                <td class="px-5 py-5 sm:px-6">
-                                    <p class="font-black text-[#0f172a]">{{ recipient.user_name || recipient.farmer_code || `Recipient #${recipient.id}` }}</p>
-                                    <p v-if="recipient.farmer_code" class="mt-1 text-sm text-[#64748b]">{{ recipient.farmer_code }}</p>
+                        <tbody class="divide-y divide-[#edf2ee] text-[#0f172a]">
+                            <tr v-for="recipient in recipients" :key="recipient.id" class="transition hover:bg-[#f8fbf9]">
+                                <td class="px-5 py-3.5">
+                                    <p class="font-bold text-[#0f172a]">{{ recipient.user_name || recipient.farmer_code || `Recipient #${recipient.id}` }}</p>
+                                    <p v-if="recipient.farmer_code" class="text-[0.65rem] text-[#64748b] font-mono">{{ recipient.farmer_code }}</p>
                                 </td>
-                                <td class="px-5 py-5 text-sm text-[#52626b] sm:px-6">{{ recipient.recipient_address || 'No address' }}</td>
-                                <td class="px-5 py-5 sm:px-6">
-                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.08em]" :class="recipientTone(recipient.status)">
+                                <td class="px-5 py-3.5 text-[#64748b] font-mono">{{ recipient.recipient_address || 'No address' }}</td>
+                                <td class="px-5 py-3.5 whitespace-nowrap">
+                                    <span class="inline-flex rounded-full border px-2.5 py-0.5 text-[0.65rem] font-bold" :class="recipientTone(recipient.status)">
                                         {{ recipient.status_label }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-5 text-sm text-[#52626b] sm:px-6">{{ formatDate(recipient.delivered_at) }}</td>
-                                <td class="px-5 py-5 text-sm text-[#52626b] sm:px-6">{{ formatDate(recipient.read_at) }}</td>
-                                <td class="px-5 py-5 text-sm text-[#52626b] sm:px-6">{{ formatDate(recipient.failed_at) }}</td>
-                                <td class="px-5 py-5 text-sm text-[#52626b] sm:px-6">{{ recipient.failure_reason || '-' }}</td>
+                                <td class="px-5 py-3.5 text-[#64748b] whitespace-nowrap">{{ formatDate(recipient.delivered_at) }}</td>
+                                <td class="px-5 py-3.5 text-[#64748b] whitespace-nowrap">{{ formatDate(recipient.read_at) }}</td>
+                                <td class="px-5 py-3.5 text-[#64748b] whitespace-nowrap">{{ formatDate(recipient.failed_at) }}</td>
+                                <td class="px-5 py-3.5 text-xs text-rose-700 max-w-xs">{{ recipient.failure_reason || '-' }}</td>
                             </tr>
                             <tr v-if="recipients.length === 0">
-                                <td colspan="7" class="px-6 py-14 text-center text-sm text-[#71808b]">
+                                <td colspan="7" class="py-12 text-center text-xs text-[#94a3b8]">
                                     No recipients found for this notification.
                                 </td>
                             </tr>
@@ -182,118 +224,3 @@ function resendDispatch() {
         </div>
     </AdminLayout>
 </template>
-
-<style scoped>
-.notification-show-hero > div:not(.relative) {
-    display: none;
-}
-.notification-show-hero .relative.space-y-6 {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-}
-.notification-show-hero .relative > div:first-child {
-    align-items: center;
-    gap: 0.75rem;
-}
-.notification-show-hero .inline-flex.rounded-full:first-child {
-    border: 0;
-    background: transparent;
-    padding: 0;
-}
-.notification-show-hero .inline-flex.rounded-full:first-child > span:first-child {
-    display: none;
-}
-.notification-show-hero .inline-flex.rounded-full:first-child > span:last-child {
-    font-size: 0.58rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: rgb(255 255 255 / 60%);
-}
-.notification-show-hero h1 {
-    margin-top: 0.125rem;
-    font-size: 1.25rem;
-    line-height: 1.5rem;
-    font-weight: 600;
-}
-.notification-show-hero h1 + p {
-    margin-top: 0.125rem;
-    font-size: 0.68rem;
-}
-.notification-show-hero a,
-.notification-show-hero button {
-    min-height: 2rem;
-    border-radius: 0.375rem;
-    padding: 0 0.75rem;
-    font-size: 0.68rem;
-    font-weight: 600;
-}
-.notification-show-hero .grid {
-    gap: 0.5rem;
-}
-.notification-show-hero .grid article {
-    border-radius: 0.375rem;
-    padding: 0.6rem 0.75rem;
-    background: rgb(255 255 255 / 10%);
-    color: white;
-}
-.notification-show-hero .grid article p:first-child {
-    font-size: 0.58rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: rgb(255 255 255 / 60%);
-}
-.notification-show-hero .grid article p:last-child {
-    margin-top: 0.2rem;
-    font-size: 1.1rem;
-    line-height: 1.25rem;
-    font-weight: 600;
-    color: white;
-}
-.notification-message > div:first-child {
-    gap: 0.5rem;
-}
-.notification-message > div:first-child span {
-    font-size: 0.62rem;
-}
-.notification-message > div:last-child {
-    margin-top: 0.65rem;
-    border-radius: 0.375rem;
-    padding: 0.75rem;
-}
-.notification-message > div:last-child p:first-child {
-    font-size: 0.58rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-}
-.notification-message > div:last-child p:last-child {
-    margin-top: 0.35rem;
-    font-size: 0.75rem;
-    line-height: 1.25rem;
-}
-.notification-recipients > div:first-child {
-    padding: 0.75rem 1rem;
-}
-.notification-recipients h2 {
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-.notification-recipients h2 + p {
-    margin-top: 0.2rem;
-    font-size: 0.65rem;
-}
-.notification-recipients th {
-    padding: 0.625rem 1rem;
-    font-size: 0.58rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-}
-.notification-recipients td {
-    padding: 0.75rem 1rem;
-    font-size: 0.68rem;
-}
-.notification-recipients td p,
-.notification-recipients td span {
-    font-size: inherit;
-}
-</style>

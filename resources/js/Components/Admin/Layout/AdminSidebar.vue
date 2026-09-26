@@ -73,13 +73,11 @@ const iconPaths = {
     <div class="lg:hidden">
         <button
             type="button"
-            class="fixed left-3 top-3 z-50 inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#173e34] text-white shadow-md"
+            class="fixed left-3.5 top-3.5 z-50 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95"
             @click="isMobileOpen = true"
         >
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18" />
-                <path d="M3 12h18" />
-                <path d="M3 18h18" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
         </button>
 

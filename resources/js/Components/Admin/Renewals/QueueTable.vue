@@ -39,10 +39,10 @@ function initials(name) {
 }
 
 function statusBadge(value) {
-    if (value === 'needs_renewal' || value === 'pending') return 'bg-[#fff3dc] text-[#a86100]';
-    if (value === 'approved' || value === 'completed') return 'bg-[#eef7e3] text-[#416918]';
-    if (value === 'rejected' || value === 'cancelled') return 'bg-[#ffdad6] text-[#93000a]';
-    return 'bg-[#eef3f1] text-[#47625a]';
+    if (value === 'needs_renewal' || value === 'pending') return 'border-amber-200 bg-amber-50 text-amber-800';
+    if (value === 'approved' || value === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    if (value === 'rejected' || value === 'cancelled') return 'border-rose-200 bg-rose-50 text-rose-800';
+    return 'border-slate-200 bg-slate-100 text-slate-700';
 }
 
 function memberTypeLabel(memberType) {
@@ -85,93 +85,161 @@ const sortedRenewals = computed(() => {
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-lg border border-[#dfe5e1] bg-white">
-        <div class="flex flex-col gap-2 border-b border-[#e4ebe7] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+        <!-- Table Header Bar -->
+        <div class="flex flex-col gap-2 border-b border-[#f1f5f9] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-sm font-semibold text-[#191c1c]">Farmers due for renewal</h2>
-                <p class="mt-0.5 text-[0.68rem] text-[#697772]">{{ renewals.total }} farmer{{ renewals.total === 1 ? '' : 's' }} awaiting renewal</p>
+                <h2 class="text-sm font-bold text-[#0f172a]">Farmers Due for Renewal</h2>
+                <p class="text-[0.68rem] text-slate-500">{{ renewals.total }} farmer{{ renewals.total === 1 ? '' : 's' }} awaiting renewal</p>
             </div>
-            <div class="flex items-center gap-2 text-[0.68rem] text-[#697772]">
-                <span>Showing {{ renewals.data.length }}</span>
-                <button type="button" class="inline-flex h-8 items-center rounded-md border border-[#d9e2dc] px-2.5 text-[0.65rem] font-semibold text-[#334155] transition hover:bg-[#f4f7f5]" @click="$emit('toggle-compact')">
-                    {{ compactMode ? 'Comfortable' : 'Compact' }}
+            <div class="flex items-center gap-2 text-xs text-slate-500">
+                <span class="text-[0.68rem]">Showing {{ renewals.data.length }} of {{ renewals.total }}</span>
+                <button
+                    type="button"
+                    class="inline-flex h-7 items-center gap-1 rounded-md border border-[#dde4de] bg-white px-2 text-[0.65rem] font-bold text-slate-600 transition hover:bg-slate-50 active:scale-95"
+                    @click="$emit('toggle-compact')"
+                >
+                    <svg viewBox="0 0 20 20" class="h-3.5 w-3.5 text-slate-400" fill="currentColor">
+                        <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ compactMode ? 'Comfortable' : 'Compact' }}</span>
                 </button>
             </div>
         </div>
 
+        <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-[#e5ece8] text-xs">
-                <thead class="bg-[#f2f4f3]">
-                    <tr class="text-left text-[0.58rem] font-semibold uppercase tracking-[0.08em] text-[#6d7873]">
-                        <th class="px-4 py-2.5"><button type="button" @click="toggleSort('farmer')">Farmer</button></th>
-                        <th class="px-4 py-2.5">Member Type</th>
-                        <th class="px-4 py-2.5"><button type="button" @click="toggleSort('year')">Year</button></th>
-                        <th class="px-4 py-2.5"><button type="button" @click="toggleSort('status')">Status</button></th>
-                        <th class="px-4 py-2.5">Reminder</th>
-                        <th class="px-4 py-2.5 text-right">Action</th>
+            <table class="min-w-full divide-y divide-[#f1f5f9] text-xs">
+                <thead class="bg-[#f8faf9]">
+                    <tr class="text-left text-[0.62rem] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="px-4 py-3">
+                            <button type="button" class="inline-flex items-center gap-1 font-bold hover:text-slate-800" @click="toggleSort('farmer')">
+                                <span>Farmer</span>
+                                <span v-if="sortKey === 'farmer'" class="text-[#003629]">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">Member Type</th>
+                        <th class="px-4 py-3">
+                            <button type="button" class="inline-flex items-center gap-1 font-bold hover:text-slate-800" @click="toggleSort('year')">
+                                <span>Year</span>
+                                <span v-if="sortKey === 'year'" class="text-[#003629]">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">
+                            <button type="button" class="inline-flex items-center gap-1 font-bold hover:text-slate-800" @click="toggleSort('status')">
+                                <span>Status</span>
+                                <span v-if="sortKey === 'status'" class="text-[#003629]">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">Reminder</th>
+                        <th class="px-4 py-3 text-right">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#edf2ef]">
-                    <tr v-for="renewal in sortedRenewals" :key="renewal.id" class="transition hover:bg-[#fbfdfc]">
-                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-2.5'">
-                            <div class="flex items-center gap-2.5">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#e4f0e9] text-[0.62rem] font-semibold text-[#245444]">
+                <tbody class="divide-y divide-[#f1f5f9]">
+                    <tr v-for="renewal in sortedRenewals" :key="renewal.id" class="transition hover:bg-[#fbfcfb]">
+                        <!-- Farmer Identity -->
+                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-3'">
+                            <div class="flex items-center gap-3">
+                                <div class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-100 font-bold text-xs text-[#003629]">
                                     {{ initials(renewal.farmer.fullName) }}
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-[#191c1c]">{{ renewal.farmer.fullName }}</p>
-                                    <p class="mt-0.5 text-[0.62rem] text-[#7b8882]">{{ renewal.farmer.farmerCode || 'Not assigned' }}</p>
+                                    <p class="font-bold text-[#0f172a]">{{ renewal.farmer.fullName }}</p>
+                                    <p class="text-[0.65rem] font-mono text-slate-500">{{ renewal.farmer.farmerCode || 'Not assigned' }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 text-[#34423d]" :class="compactMode ? 'py-2' : 'py-2.5'">{{ memberTypeLabel(renewal.farmer.memberType) }}</td>
-                        <td class="px-4 font-semibold text-[#191c1c]" :class="compactMode ? 'py-2' : 'py-2.5'">{{ renewal.year }}</td>
-                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-2.5'">
-                            <span class="inline-flex rounded-md px-2 py-1 text-[0.58rem] font-semibold" :class="statusBadge(renewal.status.value)">
+
+                        <!-- Member Type -->
+                        <td class="px-4 text-slate-700" :class="compactMode ? 'py-2' : 'py-3'">
+                            <span class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.68rem] font-medium text-slate-700">
+                                {{ memberTypeLabel(renewal.farmer.memberType) }}
+                            </span>
+                        </td>
+
+                        <!-- Year -->
+                        <td class="px-4 font-mono font-bold text-slate-900" :class="compactMode ? 'py-2' : 'py-3'">
+                            {{ renewal.year }}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-3'">
+                            <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider" :class="statusBadge(renewal.status.value)">
+                                <span class="h-1.5 w-1.5 rounded-full" :class="renewal.status.value === 'approved' || renewal.status.value === 'completed' ? 'bg-emerald-500' : renewal.status.value === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'"></span>
                                 {{ renewal.status.label }}
                             </span>
                         </td>
-                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-2.5'">
-                            <div v-if="renewal.reminder?.hasSent" class="space-y-1">
-                                <span class="inline-flex rounded-md bg-[#edf7f2] px-2 py-1 text-[0.58rem] font-semibold text-[#1f6a49]">
+
+                        <!-- Reminder -->
+                        <td class="px-4" :class="compactMode ? 'py-2' : 'py-3'">
+                            <div v-if="renewal.reminder?.hasSent" class="space-y-0.5">
+                                <span class="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-bold text-emerald-800">
+                                    <svg viewBox="0 0 20 20" class="h-3 w-3 text-emerald-600" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                    </svg>
                                     Email sent
                                 </span>
-                                <p class="text-[0.6rem] text-[#6c7b75]">{{ renewal.reminder.sentAt }}</p>
+                                <p class="text-[0.6rem] text-slate-400 font-mono">{{ renewal.reminder.sentAt }}</p>
                             </div>
                             <button
                                 v-else-if="renewal.reminder?.emailAvailable"
                                 type="button"
-                                class="inline-flex h-8 items-center rounded-md border border-[#cfe0d6] bg-white px-2.5 text-[0.62rem] font-semibold text-[#0f5b46] transition hover:bg-[#edf7f2] disabled:cursor-wait disabled:opacity-60"
+                                class="inline-flex h-7 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 text-[0.65rem] font-bold text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
                                 :disabled="sendingReminderId !== null"
                                 @click="sendReminderEmail(renewal)"
                             >
-                                {{ sendingReminderId === renewal.id ? 'Sending...' : 'Send Email' }}
+                                <svg v-if="sendingReminderId === renewal.id" class="h-3 w-3 animate-spin text-emerald-700" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                                <svg v-else viewBox="0 0 20 20" class="h-3 w-3 text-emerald-700" fill="currentColor">
+                                    <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
+                                    <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
+                                </svg>
+                                <span>{{ sendingReminderId === renewal.id ? 'Sending…' : 'Send Email' }}</span>
                             </button>
-                            <span v-else class="text-[0.65rem] text-[#9a6b23]">No email</span>
+                            <span v-else class="text-[0.65rem] text-slate-400 italic">No email</span>
                         </td>
-                        <td class="px-4 text-right" :class="compactMode ? 'py-2' : 'py-2.5'">
-                            <Link :href="renewal.actions.createUrl" class="inline-flex h-8 items-center rounded-md bg-[#003629] px-3 text-[0.65rem] font-semibold text-white transition hover:bg-[#0d4637]">
-                                Start Renewal
+
+                        <!-- Action -->
+                        <td class="px-4 text-right" :class="compactMode ? 'py-2' : 'py-3'">
+                            <Link
+                                :href="renewal.actions.createUrl"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#003629] text-white shadow-xs transition hover:bg-[#00483a] active:scale-95"
+                                title="Start Renewal"
+                                aria-label="Start Renewal"
+                            >
+                                <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.31V15a.75.75 0 0 1-1.5 0v-3.75A.75.75 0 0 1 5 10.5h3.75a.75.75 0 0 1 0 1.5H6.862l.248.248a4 4 0 0 0 6.69-1.785.75.75 0 0 1 1.512.461Zm-10.624-2.848a5.5 5.5 0 0 1 9.201-2.466l.312.31V5a.75.75 0 0 1 1.5 0v3.75A.75.75 0 0 1 15 9.5h-3.75a.75.75 0 0 1 0-1.5h1.888l-.248-.248a4 4 0 0 0-6.69 1.785.75.75 0 0 1-1.512-.461Z" clip-rule="evenodd" />
+                                </svg>
                             </Link>
                         </td>
                     </tr>
+
+                    <!-- Empty State -->
                     <tr v-if="renewals.data.length === 0">
-                        <td colspan="6" class="px-6 py-16 text-center text-sm text-[#6a7872]">All active farmers already have a recorded renewal for the current year.</td>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                <svg viewBox="0 0 20 20" class="h-5 w-5" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="mt-2 text-xs font-bold text-slate-800">All caught up!</p>
+                            <p class="mt-0.5 text-[0.7rem] text-slate-500">All active farmers already have a recorded renewal for the selected year.</p>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="flex flex-col gap-2 border-t border-[#e4ebe7] bg-[#f8faf9] px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <span class="text-[0.68rem] text-[#65736d]">Page {{ renewals.current_page }} of {{ renewals.last_page || 1 }}</span>
-            <div class="flex flex-wrap items-center gap-2">
+        <!-- Pagination -->
+        <div class="flex flex-col gap-2 border-t border-[#f1f5f9] bg-[#f8faf9] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <span class="text-[0.68rem] text-slate-500">Page {{ renewals.current_page }} of {{ renewals.last_page || 1 }}</span>
+            <div class="flex flex-wrap items-center gap-1.5">
                 <template v-for="link in renewals.links" :key="link.label">
-                    <span v-if="!link.url" class="inline-flex h-8 items-center rounded-md border border-[#dbe2de] px-2.5 text-[0.68rem] text-[#9aa6a1]" v-html="link.label" />
+                    <span v-if="!link.url" class="inline-flex h-7 items-center rounded-md border border-slate-200 px-2 text-[0.68rem] text-slate-400" v-html="link.label" />
                     <Link
                         v-else
                         :href="link.url"
-                        class="inline-flex h-8 items-center rounded-md border px-2.5 text-[0.68rem] font-semibold transition"
-                        :class="link.active ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#dbe2de] text-[#5f6b66] hover:bg-white'"
+                        class="inline-flex h-7 items-center rounded-md border px-2.5 text-[0.68rem] font-bold transition"
+                        :class="link.active ? 'border-[#003629] bg-[#003629] text-white shadow-xs' : 'border-slate-200 text-slate-600 hover:bg-white'"
                         preserve-scroll
                         preserve-state
                         v-html="link.label"
