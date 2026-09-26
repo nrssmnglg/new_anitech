@@ -126,9 +126,9 @@ const summaryCards = computed(() => {
             label: 'Registered Farmers',
             value: props.dashboard.summary.totalFarmers,
             icon: 'agriculture',
-            iconBg: 'bg-[#c9f4db]',
+            iconBg: 'bg-gradient-to-br from-[#c9f4db] to-[#a8e8c6]',
             iconColor: 'text-[#006c57]',
-            progress: 'bg-[#c7f0db]',
+            progress: 'bg-[#22c55e]',
             meta: `All registry records${selectedBarangayName.value !== 'All barangays' ? ` in ${selectedBarangayName.value}` : ''}`,
             href: props.dashboard.summaryCardLinks?.totalFarmers ?? null,
         },
@@ -137,9 +137,9 @@ const summaryCards = computed(() => {
             label: 'Active Farmers',
             value: props.dashboard.summary.activeFarmers,
             icon: 'check',
-            iconBg: 'bg-[#e8f7b9]',
+            iconBg: 'bg-gradient-to-br from-[#e8f7b9] to-[#d4ed91]',
             iconColor: 'text-[#5d8e16]',
-            progress: 'bg-[#dff2a5]',
+            progress: 'bg-[#84cc16]',
             meta: 'Current members with active status',
             href: props.dashboard.summaryCardLinks?.activeFarmers ?? null,
         },
@@ -148,9 +148,9 @@ const summaryCards = computed(() => {
             label: 'Pending Applications',
             value: props.dashboard.summary.pendingApplications,
             icon: 'pending',
-            iconBg: 'bg-[#ffefb8]',
+            iconBg: 'bg-gradient-to-br from-[#ffefb8] to-[#ffe08a]',
             iconColor: 'text-[#c76900]',
-            progress: 'bg-[#ffe59a]',
+            progress: 'bg-[#f59e0b]',
             meta: `Queued application reviews for ${selectedYearLabel.value.toLowerCase()}`,
             href: props.dashboard.summaryCardLinks?.pendingApplications ?? null,
         },
@@ -159,9 +159,9 @@ const summaryCards = computed(() => {
             label: 'Inactive Farmers',
             value: props.dashboard.summary.inactiveFarmers,
             icon: 'inactive',
-            iconBg: 'bg-[#ffd9dd]',
+            iconBg: 'bg-gradient-to-br from-[#ffd9dd] to-[#ffc0c7]',
             iconColor: 'text-[#d81f46]',
-            progress: 'bg-[#ffd7dc]',
+            progress: 'bg-[#ef4444]',
             meta: 'Registry records marked inactive or deceased',
             href: props.dashboard.summaryCardLinks?.inactiveFarmers ?? null,
         },
@@ -174,9 +174,9 @@ const summaryCards = computed(() => {
                 label: 'Active Barangays',
                 value: props.dashboard.summary.activeBarangays,
                 icon: 'map',
-                iconBg: 'bg-[#dff0ff]',
+                iconBg: 'bg-gradient-to-br from-[#dff0ff] to-[#bde0ff]',
                 iconColor: 'text-[#0270b8]',
-                progress: 'bg-[#d4ebff]',
+                progress: 'bg-[#3b82f6]',
                 meta: selectedBarangayName.value === 'All barangays' ? 'Barangays with active master records' : `Selected barangay: ${selectedBarangayName.value}`,
                 href: props.dashboard.summaryCardLinks?.activeBarangays ?? null,
             },
@@ -185,9 +185,9 @@ const summaryCards = computed(() => {
                 label: 'Active Associations',
                 value: props.dashboard.summary.activeAssociations,
                 icon: 'groups',
-                iconBg: 'bg-[#ece3ff]',
+                iconBg: 'bg-gradient-to-br from-[#ece3ff] to-[#d9ccff]',
                 iconColor: 'text-[#6f3cf0]',
-                progress: 'bg-[#e3d8ff]',
+                progress: 'bg-[#8b5cf6]',
                 meta: 'Associations currently marked active',
                 href: props.dashboard.summaryCardLinks?.activeAssociations ?? null,
             },
@@ -196,9 +196,9 @@ const summaryCards = computed(() => {
                 label: 'Office Users',
                 value: props.dashboard.summary.activeOfficeUsers,
                 icon: 'office',
-                iconBg: 'bg-[#f2f2f2]',
+                iconBg: 'bg-gradient-to-br from-[#f2f2f2] to-[#e5e5e5]',
                 iconColor: 'text-[#384152]',
-                progress: 'bg-[#ececec]',
+                progress: 'bg-[#6b7280]',
                 meta: 'Active admin and staff accounts',
                 href: props.dashboard.summaryCardLinks?.activeOfficeUsers ?? null,
             },
@@ -219,7 +219,7 @@ const feeScheduleRows = computed(() => props.dashboard.breakdowns.feeSchedules.s
 const memberTypeRows = computed(() => {
     const labels = ['High', 'Stable', 'High', 'Steady', 'Tracking'];
     const icons = ['agriculture', 'groups', 'map', 'chart', 'pie'];
-    const bgColors = ['bg-[#ecfbf3]', 'bg-[#fff7e5]', 'bg-[#ebf7ff]', 'bg-[#eef0ff]', 'bg-[#f0f5ec]'];
+    const bgColors = ['bg-gradient-to-br from-[#ecfbf3] to-[#dcf5e7]', 'bg-gradient-to-br from-[#fff7e5] to-[#ffefc4]', 'bg-gradient-to-br from-[#ebf7ff] to-[#d4edff]', 'bg-gradient-to-br from-[#eef0ff] to-[#dde0ff]', 'bg-gradient-to-br from-[#f0f5ec] to-[#e2ebd9]'];
     const textColors = ['text-[#06a06e]', 'text-[#d88400]', 'text-[#0c7cc2]', 'text-[#4a56ff]', 'text-[#507d1f]'];
 
     return props.dashboard.breakdowns.memberTypes.slice(0, 4).map((row, index) => ({
@@ -318,34 +318,38 @@ function renewalChangeLabel(row) {
 
 function renewalChangeTone(direction) {
     return {
-        increased: 'bg-[#e2f6e9] text-[#08724f]',
-        decreased: 'bg-[#ffe5e7] text-[#b5364e]',
-        unchanged: 'bg-[#eef1ef] text-[#5f6d67]',
-        baseline: 'bg-[#e8eef6] text-[#536a82]',
-    }[direction] ?? 'bg-[#eef1ef] text-[#5f6d67]';
+        increased: 'bg-[#dcfce7] text-[#15803d]',
+        decreased: 'bg-[#fef2f2] text-[#dc2626]',
+        unchanged: 'bg-[#f1f5f9] text-[#64748b]',
+        baseline: 'bg-[#eff6ff] text-[#2563eb]',
+    }[direction] ?? 'bg-[#f1f5f9] text-[#64748b]';
 }
 
 function operationTone(tone) {
     const tones = {
         emerald: {
-            badge: 'bg-[#dff6ea] text-[#0c7a58]',
-            value: 'text-[#0b5c46]',
-            border: 'border-[#d7ebe1]',
+            badge: 'bg-[#dcfce7] text-[#15803d]',
+            value: 'text-[#166534]',
+            border: 'border-[#bbf7d0]',
+            bg: 'hover:bg-[#f0fdf4]',
         },
         lime: {
-            badge: 'bg-[#eef7d6] text-[#5f8418]',
-            value: 'text-[#486814]',
-            border: 'border-[#e0e9ca]',
+            badge: 'bg-[#ecfccb] text-[#4d7c0f]',
+            value: 'text-[#3f6212]',
+            border: 'border-[#d9f99d]',
+            bg: 'hover:bg-[#f7fee7]',
         },
         sky: {
-            badge: 'bg-[#e3f2ff] text-[#0c7cc2]',
-            value: 'text-[#0b649e]',
-            border: 'border-[#d7e8f4]',
+            badge: 'bg-[#e0f2fe] text-[#0369a1]',
+            value: 'text-[#075985]',
+            border: 'border-[#bae6fd]',
+            bg: 'hover:bg-[#f0f9ff]',
         },
         rose: {
-            badge: 'bg-[#ffe4e7] text-[#cf3657]',
-            value: 'text-[#ae1d44]',
-            border: 'border-[#edd8dc]',
+            badge: 'bg-[#ffe4e6] text-[#be123c]',
+            value: 'text-[#9f1239]',
+            border: 'border-[#fecdd3]',
+            bg: 'hover:bg-[#fff1f2]',
         },
     };
 
@@ -379,202 +383,207 @@ const linePoints = computed(() => {
 </script>
 
 <template>
-    <div class="dashboard-compact mx-auto w-full max-w-[1536px] space-y-4 pb-6">
-        <section class="overflow-hidden rounded-[10px] bg-[#00513f] px-5 py-4 text-white sm:px-7">
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div class="flex max-w-3xl flex-wrap items-center gap-4">
-                    <h2 class="text-[1.65rem] font-semibold tracking-tight text-white">Registry Overview for {{ selectedYearLabel }}</h2>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-white px-4 text-xs font-semibold text-[#003e32] transition hover:bg-[#f3f7f5]" @click="openExportModal">
-                            Generate Report
-                        </button>
+    <div class="dashboard-compact mx-auto w-full max-w-[1536px] space-y-4 pb-8">
+        <!-- Hero header -->
+        <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-6 py-5 text-white shadow-lg shadow-[#003629]/15">
+            <div class="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/[0.04]"></div>
+            <div class="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-white/[0.03]"></div>
+            <div class="pointer-events-none absolute right-32 top-6 h-24 w-24 rounded-full bg-white/[0.02]"></div>
+
+            <div class="relative flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.12] backdrop-blur-sm">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6 text-[#7ddfb8]" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[#7ddfb8]/80">Registry Overview</p>
+                        <h2 class="mt-0.5 text-xl font-bold tracking-[-0.02em]">Dashboard for {{ selectedYearLabel }}</h2>
                     </div>
                 </div>
 
-                <form class="grid w-full max-w-[480px] gap-2 rounded-lg border border-white/15 bg-[#004534] p-2.5 md:grid-cols-[1fr_1.2fr_auto]" @submit.prevent="apply">
-                    <label class="space-y-1">
-                        <span class="ml-1 block text-xs font-semibold text-white">Select Year</span>
-                        <select v-model="state.year" class="w-full rounded-md border-0 bg-white/10 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/15">
-                            <option value="" class="text-stone-900">All years</option>
-                            <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-stone-900">{{ year }}</option>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button type="button" class="group inline-flex h-9 items-center gap-1.5 rounded-lg bg-white px-3.5 text-[0.7rem] font-bold text-[#003629] shadow-sm transition-all duration-200 hover:bg-[#f0faf5] hover:shadow-md active:scale-[0.97]" @click="openExportModal">
+                        <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor"><path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"/><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/></svg>
+                        Generate Report
+                    </button>
+
+                    <form class="flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.06] p-2 backdrop-blur-sm" @submit.prevent="apply">
+                        <select v-model="state.year" class="h-8 rounded-lg border-0 bg-white/10 px-3 text-xs font-medium text-white outline-none ring-1 ring-white/[0.12] transition-colors focus:ring-white/30">
+                            <option value="" class="text-[#0f172a]">All years</option>
+                            <option v-for="year in dashboard.filters.availableYears" :key="year" :value="String(year)" class="text-[#0f172a]">{{ year }}</option>
                         </select>
-                    </label>
-                    <label class="space-y-1">
-                        <span class="ml-1 block text-xs font-semibold text-white">Barangay</span>
-                        <select v-model="state.barangayId" class="w-full rounded-md border-0 bg-white/10 px-3 py-2 text-xs font-medium text-white outline-none ring-1 ring-white/15">
-                            <option value="" class="text-stone-900">All Barangays</option>
-                            <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-stone-900">
+                        <select v-model="state.barangayId" class="h-8 rounded-lg border-0 bg-white/10 px-3 text-xs font-medium text-white outline-none ring-1 ring-white/[0.12] transition-colors focus:ring-white/30">
+                            <option value="" class="text-[#0f172a]">All Barangays</option>
+                            <option v-for="barangay in dashboard.filters.barangays" :key="barangay.id" :value="String(barangay.id)" class="text-[#0f172a]">
                                 {{ barangay.name }}
                             </option>
                         </select>
-                    </label>
-                    <button type="submit" class="flex h-9 w-10 items-center justify-center self-end rounded-md bg-[#718700] text-white transition hover:bg-[#829900]">
-                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 6h16" />
-                            <path d="M7 12h10" />
-                            <path d="M10 18h4" />
-                        </svg>
-                    </button>
-                </form>
+                        <button type="submit" class="flex h-8 w-9 items-center justify-center rounded-lg bg-[#7ddfb8] text-[#003629] transition-all duration-200 hover:bg-[#a0e8cc] active:scale-95">
+                            <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor"><path fill-rule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 0 1 .628.74v2.288a2.25 2.25 0 0 1-.659 1.59l-4.682 4.683a2.25 2.25 0 0 0-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 0 1 8 18.25v-5.757a2.25 2.25 0 0 0-.659-1.591L2.659 6.22A2.25 2.25 0 0 1 2 4.629V2.34a.75.75 0 0 1 .628-.74Z" clip-rule="evenodd"/></svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <span class="text-xs font-semibold uppercase tracking-wide text-[#344654]">Active Filters:</span>
-            <span class="inline-flex items-center gap-1.5 rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f5b46]" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="5" width="18" height="16" rx="2" />
-                    <path d="M16 3v4M8 3v4M3 11h18" />
-                </svg>
+        <!-- Active filters -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Filters:</span>
+            <span class="inline-flex items-center gap-1.5 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-2.5 py-1.5 text-xs font-medium text-[#334155]">
+                <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 text-[#014d3c]" fill="currentColor"><path d="M5.75 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM5 3.75a.75.75 0 0 0 1.5 0V2.75a.75.75 0 0 0-1.5 0v1ZM5.75 12a.75.75 0 0 0-.75.75v1.5a.75.75 0 0 0 1.5 0v-1.5a.75.75 0 0 0-.75-.75ZM10.25 7.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM9.5 3.75a.75.75 0 0 0 1.5 0V2.75a.75.75 0 0 0-1.5 0v1ZM10.25 12a.75.75 0 0 0-.75.75v1.5a.75.75 0 0 0 1.5 0v-1.5a.75.75 0 0 0-.75-.75Z"/></svg>
                 {{ selectedYearLabel }}
             </span>
-            <span class="inline-flex items-center gap-1.5 rounded-md border border-[#d9dfdc] bg-[#eef1ef] px-2.5 py-1 text-xs font-normal text-[#102533]">
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#0f5b46]" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" />
-                    <circle cx="12" cy="10" r="2.5" />
-                </svg>
+            <span class="inline-flex items-center gap-1.5 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-2.5 py-1.5 text-xs font-medium text-[#334155]">
+                <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 text-[#014d3c]" fill="currentColor"><path fill-rule="evenodd" d="M8 1a4.5 4.5 0 0 0-4.5 4.5c0 1.657.895 3.592 2.072 5.187.59.8 1.214 1.477 1.716 1.948.252.237.457.403.605.503.073.05.119.074.14.084.022-.01.068-.035.141-.084a8.898 8.898 0 0 0 .605-.503c.502-.47 1.126-1.148 1.716-1.948C11.605 9.092 12.5 7.157 12.5 5.5A4.5 4.5 0 0 0 8 1ZM8 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd"/></svg>
                 {{ selectedBarangayName }}
             </span>
-            <button type="button" class="ml-auto text-xs font-medium text-[#6c8900] hover:underline" @click="resetFilters">
-                Clear All Filters
+            <button type="button" class="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-[#014d3c] transition-colors hover:text-[#01362a] hover:underline" @click="resetFilters">
+                <svg viewBox="0 0 16 16" class="h-3 w-3" fill="currentColor"><path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z"/></svg>
+                Clear Filters
             </button>
         </div>
 
-        <section class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <!-- Summary cards -->
+        <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
             <component
                 :is="card.href ? Link : 'article'"
                 v-for="card in summaryCards"
                 :key="card.key"
                 :href="card.href || undefined"
-                class="rounded-lg border border-[#e4e9e6] bg-white p-3 transition"
-                :class="card.href ? 'group block hover:-translate-y-0.5 hover:border-[#cdd8d3] hover:shadow-[0_18px_48px_rgba(0,54,41,0.1)] focus:outline-none focus:ring-2 focus:ring-[#b8d9cf]' : ''"
+                class="group relative overflow-hidden rounded-xl border border-[#e2e8f0] bg-white p-3.5 shadow-sm transition-all duration-200"
+                :class="card.href ? 'cursor-pointer hover:-translate-y-0.5 hover:border-[#cbd5e1] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#014d3c]/20' : ''"
             >
+                <div class="pointer-events-none absolute -right-3 -top-3 h-16 w-16 rounded-full opacity-30" :class="card.iconBg"></div>
                 <div class="flex items-start justify-between gap-3">
-                    <div :class="['flex h-8 w-8 items-center justify-center rounded-md', card.iconBg]">
+                    <div :class="['flex h-9 w-9 items-center justify-center rounded-lg', card.iconBg]">
                         <svg viewBox="0 0 24 24" :class="['h-4 w-4', card.iconColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path v-for="path in iconPath(card.icon)" :key="path" :d="path" />
                         </svg>
                     </div>
                 </div>
-                <p class="mt-2 min-h-8 text-[0.68rem] font-normal leading-4 text-[#44515d]">{{ card.label }}</p>
-                <p class="mt-0.5 text-lg font-medium tracking-tight text-[#14202c]">{{ formatNumber(card.value) }}</p>
-                <div class="mt-2 h-1 rounded-full bg-[#e8ece9]">
-                    <div :class="['h-1 rounded-full', card.progress]" :style="{ width: card.value > 0 ? '100%' : '12%' }"></div>
+                <p class="mt-2.5 min-h-8 text-[0.68rem] font-medium leading-4 text-[#64748b]">{{ card.label }}</p>
+                <p class="mt-1 text-xl font-bold tracking-tight text-[#0f172a]">{{ formatNumber(card.value) }}</p>
+                <div class="mt-2.5 h-1 overflow-hidden rounded-full bg-[#f1f5f9]">
+                    <div :class="['h-1 rounded-full transition-all duration-500', card.progress]" :style="{ width: card.value > 0 ? '100%' : '8%', opacity: card.value > 0 ? 1 : 0.3 }"></div>
                 </div>
             </component>
         </section>
 
-        <section class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.2fr_0.8fr]">
-            <article class="rounded-lg border border-[#dce7e2] bg-white p-3.5">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <h3 class="text-sm font-semibold text-[#142c24]">Renewal performance for CY {{ renewalStatistics.year }}</h3>
-                        <p class="mt-1 max-w-2xl text-xs leading-5 text-[#62716a]">{{ renewalDecisionMessage }}</p>
+        <!-- Renewal performance + Priority barangays -->
+        <section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="border-b border-[#f1f5f9] px-5 py-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Renewal Performance for CY {{ renewalStatistics.year }}</h3>
+                            <p class="mt-1 max-w-2xl text-xs leading-5 text-[#64748b]">{{ renewalDecisionMessage }}</p>
+                        </div>
+                        <Link :href="renewalStatistics.links.records || dashboard.actions.viewRenewalsUrl" class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-[#014d3c] px-3 text-[0.68rem] font-bold text-white shadow-sm transition-all duration-200 hover:bg-[#01362a] hover:shadow-md active:scale-[0.97]">
+                            View Renewals
+                        </Link>
                     </div>
-                    <Link :href="renewalStatistics.links.records || dashboard.actions.viewRenewalsUrl" class="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-[#064f40] px-3 text-xs font-medium text-white transition hover:bg-[#003e32]">
-                        View Renewal Records
-                    </Link>
                 </div>
 
-                <div class="mt-3 grid gap-2 sm:grid-cols-3">
-                    <div class="rounded-md bg-[#edf8f2] px-3 py-2.5">
-                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#547067]">Compliance</p>
-                        <p class="mt-1.5 text-xl font-semibold text-[#075a46]">{{ renewalStatistics.complianceRate }}%</p>
-                        <p class="mt-1 text-xs text-[#64736c]">{{ renewalStatistics.yearOverYearChange >= 0 ? '+' : '' }}{{ renewalStatistics.yearOverYearChange }} points vs previous year</p>
+                <div class="grid gap-px bg-[#f1f5f9] sm:grid-cols-3">
+                    <div class="bg-white px-5 py-4">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Compliance</p>
+                        <p class="mt-2 text-2xl font-bold text-[#15803d]">{{ renewalStatistics.complianceRate }}%</p>
+                        <p class="mt-1.5 text-[0.68rem] text-[#94a3b8]">{{ renewalStatistics.yearOverYearChange >= 0 ? '+' : '' }}{{ renewalStatistics.yearOverYearChange }} pts vs previous</p>
                     </div>
-                    <div class="rounded-md bg-[#f4f7f5] px-3 py-2.5">
-                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#68756f]">Renewed</p>
-                        <p class="mt-1.5 text-xl font-semibold text-[#172b24]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</p>
-                        <p class="mt-1 text-xs text-[#64736c]">of {{ formatNumber(renewalStatistics.eligibleFarmers) }} eligible farmers</p>
+                    <div class="bg-white px-5 py-4">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Renewed</p>
+                        <p class="mt-2 text-2xl font-bold text-[#0f172a]">{{ formatNumber(renewalStatistics.renewedFarmers) }}</p>
+                        <p class="mt-1.5 text-[0.68rem] text-[#94a3b8]">of {{ formatNumber(renewalStatistics.eligibleFarmers) }} eligible</p>
                     </div>
-                    <Link :href="renewalStatistics.links.queue" class="rounded-md bg-[#fff5df] px-3 py-2.5 transition hover:bg-[#ffefd0]">
-                        <p class="text-xs font-black uppercase tracking-[0.12em] text-[#8a681d]">Still Unrenewed</p>
-                        <p class="mt-1.5 text-xl font-semibold text-[#9b5f00]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</p>
-                        <p class="mt-1 text-xs text-[#7c6b45]">Farmers requiring follow-up</p>
+                    <Link :href="renewalStatistics.links.queue" class="bg-white px-5 py-4 transition-colors hover:bg-[#fffbeb]">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#b45309]">Still Unrenewed</p>
+                        <p class="mt-2 text-2xl font-bold text-[#d97706]">{{ formatNumber(renewalStatistics.unrenewedFarmers) }}</p>
+                        <p class="mt-1.5 text-[0.68rem] text-[#94a3b8]">Need follow-up</p>
                     </Link>
                 </div>
-
             </article>
 
-            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
-                <div>
-                    <h3 class="text-sm font-semibold text-[#142c24]">Barangays needing follow-up</h3>
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="border-b border-[#f1f5f9] px-5 py-3.5">
+                    <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Barangays Needing Follow-up</h3>
                 </div>
 
-                <div v-if="renewalPriorityBarangays.length" class="mt-3 space-y-2">
-                    <Link v-for="row in renewalPriorityBarangays" :key="row.id" :href="row.href" class="block rounded-md border border-[#e5eae7] px-3 py-2.5 transition hover:border-[#cbd9d2] hover:bg-[#f8fbf9]">
+                <div v-if="renewalPriorityBarangays.length" class="divide-y divide-[#f1f5f9]">
+                    <Link v-for="row in renewalPriorityBarangays" :key="row.id" :href="row.href" class="block px-5 py-3.5 transition-colors hover:bg-[#f8fafc]">
                         <div class="flex items-start justify-between gap-4">
                             <div class="min-w-0">
-                                <p class="truncate text-[1rem] font-semibold text-[#172b24]">{{ row.barangay }}</p>
-                                <p class="mt-1 text-xs text-[#6a7771]">{{ formatNumber(row.renewed) }} of {{ formatNumber(row.eligible) }} renewed</p>
+                                <p class="truncate text-sm font-bold text-[#0f172a]">{{ row.barangay }}</p>
+                                <p class="mt-1 text-[0.68rem] text-[#94a3b8]">{{ formatNumber(row.renewed) }} of {{ formatNumber(row.eligible) }} renewed</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-[1.05rem] font-black text-[#8c6100]">{{ row.complianceRate }}%</p>
-                                <p class="mt-1 text-xs font-semibold text-[#a35f37]">{{ formatNumber(row.unrenewed) }} pending</p>
+                                <p class="text-sm font-black text-[#d97706]">{{ row.complianceRate }}%</p>
+                                <p class="mt-1 text-[0.68rem] font-semibold text-[#ea580c]">{{ formatNumber(row.unrenewed) }} pending</p>
                             </div>
                         </div>
-                        <div class="mt-3 h-2 overflow-hidden rounded-full bg-[#ecefeb]">
-                            <div class="h-full rounded-full bg-[#91a85b]" :style="{ width: `${Math.min(Math.max(Number(row.complianceRate || 0), 0), 100)}%` }"></div>
+                        <div class="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#f1f5f9]">
+                            <div class="h-full rounded-full bg-gradient-to-r from-[#86efac] to-[#22c55e] transition-all" :style="{ width: `${Math.min(Math.max(Number(row.complianceRate || 0), 0), 100)}%` }"></div>
                         </div>
                     </Link>
                 </div>
-                <div v-else class="mt-7 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
-                    No barangay renewal workload is available for this filter.
+                <div v-else class="px-5 py-12 text-center">
+                    <div class="mx-auto flex max-w-xs flex-col items-center">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0fdf4]">
+                            <svg viewBox="0 0 24 24" class="h-6 w-6 text-[#86efac]" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </div>
+                        <p class="mt-2 text-xs text-[#94a3b8]">No barangay renewal workload available.</p>
+                    </div>
                 </div>
             </article>
         </section>
 
-        <section class="rounded-lg border border-[#e1e8e4] bg-white p-3.5">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <h3 class="text-sm font-semibold text-[#142c24]">Renewal increase or decrease by year</h3>
-                </div>
-                <span class="inline-flex w-fit rounded-md bg-[#edf4f0] px-2.5 py-1 text-xs font-medium text-[#315448]">
-                    Through CY {{ renewalStatistics.year }}
-                </span>
+        <!-- Renewal yearly trend -->
+        <section class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+            <div class="flex flex-col gap-3 border-b border-[#f1f5f9] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Renewal Trend by Year</h3>
+                <span class="inline-flex w-fit items-center rounded-lg bg-[#f0fdf4] px-2.5 py-1 text-[0.68rem] font-semibold text-[#15803d]">Through CY {{ renewalStatistics.year }}</span>
             </div>
 
-            <div v-if="renewalYearlyTrend.length" class="mt-3 overflow-x-auto">
-                <table class="min-w-[820px] w-full text-left">
-                    <thead class="border-b border-[#dfe7e2] text-xs font-black uppercase tracking-[0.1em] text-[#66756e]">
-                        <tr>
-                            <th class="px-3 py-2">Year</th>
-                            <th class="px-3 py-2">Renewal Volume</th>
-                            <th class="px-3 py-2 text-center">Eligible</th>
-                            <th class="px-3 py-2 text-center">Renewed</th>
-                            <th class="px-3 py-2 text-center">Unrenewed</th>
-                            <th class="px-3 py-2 text-center">Compliance</th>
-                            <th class="px-3 py-2 text-right">Yearly Change</th>
+            <div v-if="renewalYearlyTrend.length" class="overflow-x-auto">
+                <table class="min-w-[820px] w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-[#e2e8f0] bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">
+                            <th class="px-5 py-3">Year</th>
+                            <th class="px-5 py-3">Volume</th>
+                            <th class="px-5 py-3 text-center">Eligible</th>
+                            <th class="px-5 py-3 text-center">Renewed</th>
+                            <th class="px-5 py-3 text-center">Unrenewed</th>
+                            <th class="px-5 py-3 text-center">Compliance</th>
+                            <th class="px-5 py-3 text-right">Change</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#edf1ee]">
-                        <tr v-for="row in renewalYearlyTrend" :key="row.year" class="transition hover:bg-[#f9fbfa]">
-                            <td class="px-3 py-2.5">
-                                <span class="text-[1.05rem] font-black text-[#18342b]">{{ row.year }}</span>
+                    <tbody class="divide-y divide-[#f1f5f9]">
+                        <tr v-for="row in renewalYearlyTrend" :key="row.year" class="transition-colors hover:bg-[#f8fafc]">
+                            <td class="px-5 py-3">
+                                <span class="text-sm font-bold text-[#0f172a]">{{ row.year }}</span>
                             </td>
-                            <td class="px-3 py-2.5">
+                            <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-2.5 min-w-[130px] flex-1 overflow-hidden rounded-full bg-[#e9eeeb]">
+                                    <div class="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-[#f1f5f9]">
                                         <div
-                                            class="h-full rounded-full"
-                                            :class="row.direction === 'decreased' ? 'bg-[#d77a82]' : 'bg-[#4c8c70]'"
+                                            class="h-full rounded-full transition-all"
+                                            :class="row.direction === 'decreased' ? 'bg-gradient-to-r from-[#fca5a5] to-[#ef4444]' : 'bg-gradient-to-r from-[#86efac] to-[#22c55e]'"
                                             :style="{ width: `${Math.max((Number(row.renewed || 0) / maximumYearlyRenewals) * 100, row.renewed > 0 ? 8 : 0)}%` }"
                                         ></div>
                                     </div>
-                                    <span class="w-10 text-right text-sm font-bold text-[#31443d]">{{ formatNumber(row.renewed) }}</span>
+                                    <span class="w-10 text-right text-xs font-bold text-[#334155]">{{ formatNumber(row.renewed) }}</span>
                                 </div>
                             </td>
-                            <td class="px-3 py-2.5 text-center font-semibold text-[#3f4e48]">{{ formatNumber(row.eligible) }}</td>
-                            <td class="px-3 py-2.5 text-center font-bold text-[#0b684f]">{{ formatNumber(row.renewed) }}</td>
-                            <td class="px-3 py-2.5 text-center font-bold text-[#a36420]">{{ formatNumber(row.unrenewed) }}</td>
-                            <td class="px-3 py-2.5 text-center">
-                                <span class="font-black text-[#244b3f]">{{ row.complianceRate }}%</span>
-                                <span v-if="row.complianceChange !== null" class="ml-1 text-xs" :class="row.complianceChange >= 0 ? 'text-[#16805e]' : 'text-[#bd4658]'">
+                            <td class="px-5 py-3 text-center font-semibold text-[#475569]">{{ formatNumber(row.eligible) }}</td>
+                            <td class="px-5 py-3 text-center font-bold text-[#15803d]">{{ formatNumber(row.renewed) }}</td>
+                            <td class="px-5 py-3 text-center font-bold text-[#d97706]">{{ formatNumber(row.unrenewed) }}</td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="font-bold text-[#0f172a]">{{ row.complianceRate }}%</span>
+                                <span v-if="row.complianceChange !== null" class="ml-1 text-[0.65rem]" :class="row.complianceChange >= 0 ? 'text-[#15803d]' : 'text-[#dc2626]'">
                                     ({{ row.complianceChange >= 0 ? '+' : '' }}{{ row.complianceChange }} pts)
                                 </span>
                             </td>
-                            <td class="px-3 py-2.5 text-right">
-                                <span :class="['inline-flex rounded-full px-3 py-1.5 text-xs font-black', renewalChangeTone(row.direction)]">
+                            <td class="px-5 py-3 text-right">
+                                <span :class="['inline-flex rounded-lg px-2.5 py-1 text-[0.62rem] font-bold', renewalChangeTone(row.direction)]">
                                     {{ renewalChangeLabel(row) }}
                                 </span>
                             </td>
@@ -582,303 +591,306 @@ const linePoints = computed(() => {
                     </tbody>
                 </table>
             </div>
-            <div v-else class="mt-7 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+            <div v-else class="px-5 py-12 text-center text-xs text-[#94a3b8]">
                 No annual renewal history is available.
             </div>
         </section>
 
-        <section v-if="isAdmin" class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3">
-                <div class="grid grid-cols-2 gap-2 xl:grid-cols-4">
+        <!-- Admin operations + Collections today -->
+        <section v-if="isAdmin" class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="border-b border-[#f1f5f9] px-5 py-3.5">
+                    <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Pending Queues</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-px bg-[#f1f5f9] xl:grid-cols-4">
                     <Link
                         v-for="item in adminQueueCards"
                         :key="item.key"
                         :href="item.href"
-                        :class="['rounded-md border bg-white p-2.5 transition hover:bg-[#fafcfb]', operationTone(item.tone).border]"
+                        :class="['bg-white p-4 transition-colors', operationTone(item.tone).bg]"
                     >
-                        <span :class="['inline-flex rounded px-2 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.05em]', operationTone(item.tone).badge]">
+                        <span :class="['inline-flex rounded-lg px-2 py-1 text-[0.55rem] font-bold uppercase tracking-[0.05em]', operationTone(item.tone).badge]">
                             {{ item.label }}
                         </span>
-                        <p :class="['mt-2 text-lg font-medium leading-none', operationTone(item.tone).value]">
+                        <p :class="['mt-2.5 text-xl font-bold leading-none', operationTone(item.tone).value]">
                             {{ formatNumber(item.value) }}
                         </p>
                     </Link>
                 </div>
             </article>
 
-            <div class="space-y-3">
-                <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-[0.78rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Collections Today</p>
-                            <h3 class="mt-1 text-lg font-medium text-[#14202c]">{{ currencyFormatter.format(Number(todayCollectionTotal || 0)) }}</h3>
-                        </div>
-                        <Link :href="adminOperations.recentPayments?.href" class="text-xs font-medium text-[#003e32] transition hover:underline">
-                            View Analytics
-                        </Link>
-                    </div>
-
-                    <div v-if="recentPayments.length" class="mt-3 space-y-2">
-                        <div v-for="payment in recentPayments" :key="payment.id" class="rounded-md bg-[#f4f7f5] px-3 py-2.5">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="min-w-0">
-                                    <p class="truncate text-[1rem] font-semibold text-[#14202c]">{{ payment.farmerName }}</p>
-                                    <p class="text-sm text-[#5d6973]">{{ payment.farmerCode || 'No farmer code' }}</p>
-                                    <p class="mt-1 text-xs font-medium text-[#7a8781]">{{ payment.paidAt }}</p>
-                                </div>
-                                <span class="text-[1rem] font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(payment.amount || 0)) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="mt-3 rounded-md border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-4 py-5 text-center text-xs text-[#6c757d]">
-                        No payments collected yet today.
-                    </div>
-                </article>
-
-            </div>
-        </section>
-
-        <section class="grid grid-cols-1 items-start gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
-                <div class="flex items-center justify-between gap-4">
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-3.5">
                     <div>
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Filtered Collections</p>
-                        <h3 class="mt-2 text-[1.2rem] font-medium text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.overall || 0)) }}</h3>
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Collections Today</p>
+                        <h3 class="mt-1 text-lg font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(todayCollectionTotal || 0)) }}</h3>
                     </div>
-                    <Link :href="collections.links.analytics" class="text-xs font-medium text-[#003e32] transition hover:underline">
+                    <Link :href="adminOperations.recentPayments?.href" class="text-[0.68rem] font-semibold text-[#014d3c] transition-colors hover:underline">
                         View Analytics
                     </Link>
                 </div>
 
-                <div class="mt-3 grid gap-2 md:grid-cols-3">
-                    <Link :href="collections.links.applications" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Applications</p>
-                        <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.applications || 0)) }}</p>
-                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.applicationPayments) }} payment records</p>
+                <div v-if="recentPayments.length" class="divide-y divide-[#f1f5f9]">
+                    <div v-for="payment in recentPayments" :key="payment.id" class="flex items-start justify-between gap-4 px-5 py-3">
+                        <div class="min-w-0">
+                            <p class="truncate text-xs font-bold text-[#0f172a]">{{ payment.farmerName }}</p>
+                            <p class="mt-0.5 text-[0.65rem] text-[#94a3b8]">{{ payment.farmerCode || 'No code' }} · {{ payment.paidAt }}</p>
+                        </div>
+                        <span class="shrink-0 text-xs font-bold text-[#15803d]">{{ currencyFormatter.format(Number(payment.amount || 0)) }}</span>
+                    </div>
+                </div>
+                <div v-else class="px-5 py-10 text-center text-xs text-[#94a3b8]">
+                    No payments collected yet today.
+                </div>
+            </article>
+        </section>
+
+        <!-- Collections + Payment breakdown -->
+        <section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-4">
+                    <div>
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Filtered Collections</p>
+                        <h3 class="mt-1 text-lg font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(collections.totals.overall || 0)) }}</h3>
+                    </div>
+                    <Link :href="collections.links.analytics" class="text-[0.68rem] font-semibold text-[#014d3c] transition-colors hover:underline">
+                        View Analytics
                     </Link>
-                    <Link :href="collections.links.renewals" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Renewals</p>
-                        <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.renewals || 0)) }}</p>
-                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.renewalPayments) }} payment records</p>
+                </div>
+
+                <div class="grid gap-px bg-[#f1f5f9] md:grid-cols-3">
+                    <Link :href="collections.links.applications" class="bg-white px-5 py-4 transition-colors hover:bg-[#f8fafc]">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Applications</p>
+                        <p class="mt-2 text-lg font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(collections.totals.applications || 0)) }}</p>
+                        <p class="mt-1 text-[0.68rem] text-[#94a3b8]">{{ formatNumber(collections.counts.applicationPayments) }} payment records</p>
                     </Link>
-                    <Link :href="collections.links.mortuary" class="rounded-md border border-[#dce5df] bg-[#f7faf8] px-3 py-2.5 transition hover:bg-[#f1f7f3]">
-                        <p class="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#6c7a74]">Mortuary</p>
-                        <p class="mt-2 text-[1.25rem] font-semibold text-[#14202c]">{{ currencyFormatter.format(Number(collections.totals.mortuary || 0)) }}</p>
-                        <p class="mt-1 text-xs text-[#5d6973]">{{ formatNumber(collections.counts.mortuaryClaims) }} claim records</p>
+                    <Link :href="collections.links.renewals" class="bg-white px-5 py-4 transition-colors hover:bg-[#f8fafc]">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Renewals</p>
+                        <p class="mt-2 text-lg font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(collections.totals.renewals || 0)) }}</p>
+                        <p class="mt-1 text-[0.68rem] text-[#94a3b8]">{{ formatNumber(collections.counts.renewalPayments) }} payment records</p>
+                    </Link>
+                    <Link :href="collections.links.mortuary" class="bg-white px-5 py-4 transition-colors hover:bg-[#f8fafc]">
+                        <p class="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Mortuary</p>
+                        <p class="mt-2 text-lg font-bold text-[#0f172a]">{{ currencyFormatter.format(Number(collections.totals.mortuary || 0)) }}</p>
+                        <p class="mt-1 text-[0.68rem] text-[#94a3b8]">{{ formatNumber(collections.counts.mortuaryClaims) }} claim records</p>
                     </Link>
                 </div>
             </article>
 
-            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
-                <h3 class="text-[1.1rem] font-medium text-[#14202c]">Payment Breakdown</h3>
-
-                <div class="mt-3 space-y-2">
-                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
-                        <span class="text-sm font-semibold text-[#33424d]">Membership Fees</span>
-                        <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.membershipFee || 0)) }}</span>
+            <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                <div class="border-b border-[#f1f5f9] px-5 py-4">
+                    <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Payment Breakdown</h3>
+                </div>
+                <div class="divide-y divide-[#f1f5f9]">
+                    <div class="flex items-center justify-between px-5 py-3.5">
+                        <span class="text-xs font-semibold text-[#475569]">Membership Fees</span>
+                        <span class="text-xs font-bold text-[#15803d]">{{ currencyFormatter.format(Number(collections.breakdown.membershipFee || 0)) }}</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
-                        <span class="text-sm font-semibold text-[#33424d]">Annual Due</span>
-                        <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.annualDue || 0)) }}</span>
+                    <div class="flex items-center justify-between px-5 py-3.5">
+                        <span class="text-xs font-semibold text-[#475569]">Annual Due</span>
+                        <span class="text-xs font-bold text-[#15803d]">{{ currencyFormatter.format(Number(collections.breakdown.annualDue || 0)) }}</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-md bg-[#f4f7f5] px-3 py-2">
-                        <span class="text-sm font-semibold text-[#33424d]">Mortuary Contribution</span>
-                        <span class="text-sm font-bold text-[#0f5b46]">{{ currencyFormatter.format(Number(collections.breakdown.mortuaryContribution || 0)) }}</span>
+                    <div class="flex items-center justify-between px-5 py-3.5">
+                        <span class="text-xs font-semibold text-[#475569]">Mortuary Contribution</span>
+                        <span class="text-xs font-bold text-[#15803d]">{{ currencyFormatter.format(Number(collections.breakdown.mortuaryContribution || 0)) }}</span>
                     </div>
                 </div>
             </article>
         </section>
 
-        <section>
-            <article class="rounded-lg border border-[#e4e9e6] bg-white p-3.5">
-                <div class="flex items-center justify-between gap-4">
-                    <h3 class="flex items-center gap-2 text-sm font-medium text-[#14202c]">
-                        <span class="h-5 w-1.5 rounded-full bg-[#003e32]"></span>
-                        Farmer Registration Activity
-                    </h3>
-                    <div class="flex items-center gap-2 text-sm font-medium text-[#4d5963]">
-                        <span>Monthly ({{ selectedYearLabel }})</span>
-                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 17 9 11l4 4 8-10" />
-                        </svg>
-                    </div>
+        <!-- Registration trend -->
+        <section class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+            <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="h-5 w-1.5 rounded-full bg-gradient-to-b from-[#014d3c] to-[#22c55e]"></div>
+                    <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Farmer Registration Activity</h3>
                 </div>
+                <span class="text-[0.68rem] font-medium text-[#64748b]">Monthly ({{ selectedYearLabel }})</span>
+            </div>
 
-                <div class="relative mt-3 h-36">
+            <div class="relative px-5 pb-3 pt-4">
+                <div class="h-36">
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="h-full w-full">
                         <defs>
                             <linearGradient id="dashboard-trend-fill" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#1b4d3e" stop-opacity="0.14" />
-                                <stop offset="100%" stop-color="#1b4d3e" stop-opacity="0" />
+                                <stop offset="0%" stop-color="#014d3c" stop-opacity="0.15" />
+                                <stop offset="100%" stop-color="#014d3c" stop-opacity="0" />
                             </linearGradient>
                         </defs>
-                        <polyline :points="linePoints" fill="none" stroke="#1d5f4f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline :points="linePoints" fill="none" stroke="#014d3c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                         <path :d="`M${linePoints} L100,100 L0,100 Z`" fill="url(#dashboard-trend-fill)" />
                     </svg>
-                    <div class="absolute inset-x-0 bottom-0 flex justify-between px-3 text-[0.72rem] font-bold tracking-[0.18em] text-[#a1a7a3]">
-                        <span v-for="row in registrationTrend.series.filter((_, index) => [0, 2, 5, 8, 11].includes(index))" :key="row.month">
-                            {{ row.label.toUpperCase() }}
-                        </span>
-                    </div>
                 </div>
-
-                <div class="mt-3 flex items-center gap-3">
-                    <div class="flex items-center gap-2 text-xs font-medium text-[#14202c]">
-                        <span class="h-2.5 w-2.5 rounded-full bg-[#003e32]"></span>
-                        New Registrations
-                    </div>
-                    <span class="ml-auto text-xs font-semibold" :class="registrationTrend.yearOverYearPercent >= 0 ? 'text-[#678b1b]' : 'text-[#b44f4f]'">
-                        {{ registrationTrend.yearOverYearPercent >= 0 ? '+' : '' }}{{ registrationTrend.yearOverYearPercent }}% vs LY
+                <div class="flex justify-between px-1 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#94a3b8]">
+                    <span v-for="row in registrationTrend.series.filter((_, index) => [0, 2, 5, 8, 11].includes(index))" :key="row.month">
+                        {{ row.label.toUpperCase() }}
                     </span>
                 </div>
-            </article>
+            </div>
 
+            <div class="flex items-center gap-4 border-t border-[#f1f5f9] px-5 py-3">
+                <div class="flex items-center gap-2 text-[0.68rem] font-medium text-[#334155]">
+                    <span class="h-2.5 w-2.5 rounded-full bg-[#014d3c]"></span>
+                    New Registrations
+                </div>
+                <span class="ml-auto text-[0.68rem] font-bold" :class="registrationTrend.yearOverYearPercent >= 0 ? 'text-[#15803d]' : 'text-[#dc2626]'">
+                    {{ registrationTrend.yearOverYearPercent >= 0 ? '+' : '' }}{{ registrationTrend.yearOverYearPercent }}% vs LY
+                </span>
+            </div>
         </section>
 
+        <!-- Member types + Recent farmers + Top barangays + Fee schedules -->
         <section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
             <div class="space-y-4 xl:col-span-8">
-                <article class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
-                    <div class="flex items-center justify-between gap-4">
-                        <h3 class="flex items-center gap-2.5 text-sm font-semibold text-[#14202c]">
-                            <span class="h-5 w-1.5 rounded-full bg-[#5f8418]"></span>
-                            Farmers by Member Type
-                        </h3>
-                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-[#65716c]" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19h16" />
-                            <path d="M7 15v-5" />
-                            <path d="M12 15V8" />
-                            <path d="M17 15V5" />
-                        </svg>
+                <!-- Member types -->
+                <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-3.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="h-5 w-1.5 rounded-full bg-gradient-to-b from-[#84cc16] to-[#22c55e]"></div>
+                            <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Farmers by Member Type</h3>
+                        </div>
                     </div>
 
-                    <div v-if="memberTypeRows.length" class="mt-3 grid gap-2.5 sm:grid-cols-2">
-                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-2.5 rounded-md bg-[#f7f9f8] px-3 py-2.5">
-                            <div :class="['flex h-8 w-8 shrink-0 items-center justify-center rounded-md', row.bgColor]">
+                    <div v-if="memberTypeRows.length" class="grid gap-px bg-[#f1f5f9] sm:grid-cols-2">
+                        <div v-for="row in memberTypeRows" :key="row.label" class="flex items-center gap-3 bg-white px-5 py-3.5">
+                            <div :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', row.bgColor]">
                                 <svg viewBox="0 0 24 24" :class="['h-4 w-4', row.textColor]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path v-for="path in iconPath(row.icon)" :key="path" :d="path" />
                                 </svg>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="truncate text-xs font-semibold text-[#14202c]">{{ row.label }}</p>
-                                <p class="text-[0.68rem] text-[#596671]">{{ formatNumber(row.total) }} registered</p>
+                                <p class="truncate text-xs font-bold text-[#0f172a]">{{ row.label }}</p>
+                                <p class="text-[0.68rem] text-[#94a3b8]">{{ formatNumber(row.total) }} registered</p>
                             </div>
-                            <span class="rounded-md bg-[#eef0ee] px-2 py-1 text-[0.62rem] font-semibold text-[#39433f]">{{ row.badge }}</span>
+                            <span class="rounded-lg bg-[#f1f5f9] px-2 py-1 text-[0.6rem] font-bold text-[#475569]">{{ row.badge }}</span>
                         </div>
                     </div>
-                    <div v-else class="mt-10 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    <div v-else class="px-5 py-12 text-center text-xs text-[#94a3b8]">
                         No member type distribution available.
                     </div>
                 </article>
 
-                <article class="overflow-hidden rounded-lg border border-[#dfe6e2] bg-white p-3.5">
-                    <div class="flex items-center justify-between gap-3 border-b border-[#e5ebe8] pb-2.5">
-                        <h3 class="text-sm font-semibold text-[#14202c]">Recent Farmer Registry Entries</h3>
-                        <Link :href="dashboard.actions.viewFarmersUrl" class="text-xs font-medium text-[#003e32] transition hover:underline">
-                            View All Entries
+                <!-- Recent farmers -->
+                <article class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-3.5">
+                        <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Recent Farmer Registry Entries</h3>
+                        <Link :href="dashboard.actions.viewFarmersUrl" class="text-[0.68rem] font-semibold text-[#014d3c] transition-colors hover:underline">
+                            View All
                         </Link>
                     </div>
 
-                    <div v-if="recentFarmers.length" class="mt-2 overflow-x-auto">
-                        <table class="min-w-[680px] w-full table-fixed text-left">
-                            <thead class="border-b border-[#e2e7e4] text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-[#65736d]">
-                                <tr>
-                                    <th class="w-[46%] px-3 py-2">Farmer Name</th>
-                                    <th class="w-[18%] px-3 py-2">Barangay</th>
-                                    <th class="w-[20%] px-3 py-2">Status</th>
-                                    <th class="w-[16%] px-3 py-2 text-right">Date Applied</th>
+                    <div v-if="recentFarmers.length" class="overflow-x-auto">
+                        <table class="min-w-[680px] w-full table-fixed text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-[#e2e8f0] bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">
+                                    <th class="w-[46%] px-5 py-2.5">Farmer Name</th>
+                                    <th class="w-[18%] px-5 py-2.5">Barangay</th>
+                                    <th class="w-[20%] px-5 py-2.5">Status</th>
+                                    <th class="w-[16%] px-5 py-2.5 text-right">Date Applied</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-[#edf1ee]">
-                                <tr v-for="farmer in recentFarmers" :key="farmer.id" class="transition hover:bg-[#f9fbfa]">
-                                    <td class="px-3 py-2.5">
+                            <tbody class="divide-y divide-[#f1f5f9]">
+                                <tr v-for="farmer in recentFarmers" :key="farmer.id" class="transition-colors hover:bg-[#f8fafc]">
+                                    <td class="px-5 py-3">
                                         <div class="flex min-w-0 items-center gap-2.5">
-                                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#e8ebea] text-[0.68rem] font-semibold text-[#003e32]">
+                                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#e6f5ec] to-[#d4eddd] text-[0.6rem] font-bold text-[#0f6b45]">
                                                 {{ initials(farmer.fullName) }}
                                             </span>
-                                            <span class="truncate text-xs font-medium text-[#12202b]" :title="farmer.fullName">{{ farmer.fullName }}</span>
+                                            <span class="truncate text-xs font-semibold text-[#0f172a]" :title="farmer.fullName">{{ farmer.fullName }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2.5 text-xs text-[#52615b]">{{ farmer.barangay || '-' }}</td>
-                                    <td class="px-3 py-2.5">
+                                    <td class="px-5 py-3 text-[#64748b]">{{ farmer.barangay || '-' }}</td>
+                                    <td class="px-5 py-3">
                                         <span
-                                            class="inline-flex whitespace-nowrap rounded-md px-2 py-1 text-[0.65rem] font-medium"
+                                            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[0.62rem] font-bold"
                                             :class="{
-                                                'bg-[#c9f6dd] text-[#006c57]': farmer.farmerStatus === 'active',
-                                                'bg-[#ffeaa8] text-[#c56d00]': farmer.membershipStatus === 'pending_application' || farmer.membershipStatus === 'pending_documents',
-                                                'bg-[#d8ecff] text-[#0b75ba]': farmer.membershipStatus === 'pending_verification' || farmer.membershipStatus === 'pending_payment',
-                                                'bg-[#ffd8dd] text-[#d12249]': farmer.farmerStatus === 'inactive' || farmer.farmerStatus === 'deceased',
+                                                'bg-[#dcfce7] text-[#15803d]': farmer.farmerStatus === 'active',
+                                                'bg-[#fef3c7] text-[#b45309]': farmer.membershipStatus === 'pending_application' || farmer.membershipStatus === 'pending_documents',
+                                                'bg-[#dbeafe] text-[#2563eb]': farmer.membershipStatus === 'pending_verification' || farmer.membershipStatus === 'pending_payment',
+                                                'bg-[#fef2f2] text-[#dc2626]': farmer.farmerStatus === 'inactive' || farmer.farmerStatus === 'deceased',
                                             }"
                                         >
+                                            <span class="h-1.5 w-1.5 rounded-full" :class="{
+                                                'bg-[#22c55e]': farmer.farmerStatus === 'active',
+                                                'bg-[#f59e0b]': farmer.membershipStatus === 'pending_application' || farmer.membershipStatus === 'pending_documents',
+                                                'bg-[#3b82f6]': farmer.membershipStatus === 'pending_verification' || farmer.membershipStatus === 'pending_payment',
+                                                'bg-[#ef4444]': farmer.farmerStatus === 'inactive' || farmer.farmerStatus === 'deceased',
+                                            }"></span>
                                             {{ farmer.membershipStatusLabel || 'Not set' }}
                                         </span>
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-2.5 text-right text-xs text-[#52615b]">{{ farmer.shortDate }}</td>
+                                    <td class="whitespace-nowrap px-5 py-3 text-right text-[#64748b]">{{ farmer.shortDate }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div v-else class="mt-8 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    <div v-else class="px-5 py-12 text-center text-xs text-[#94a3b8]">
                         No recent farmer records found for this filter.
                     </div>
                 </article>
-
             </div>
 
             <div class="space-y-4 xl:col-span-4">
-                <article v-if="isAdmin" class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
-                    <h3 class="text-sm font-semibold text-[#14202c]">Top Barangays</h3>
-                    <div v-if="topBarangays.length" class="mt-3 space-y-3">
-                        <div v-for="row in topBarangays" :key="row.label">
-                            <div class="mb-1.5 flex items-center justify-between">
-                                <span class="text-xs font-medium text-[#14202c]">{{ row.label }}</span>
-                                <span class="text-xs font-semibold text-[#003e32]">{{ formatNumber(row.total) }}</span>
+                <!-- Top barangays -->
+                <article v-if="isAdmin" class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                    <div class="border-b border-[#f1f5f9] px-5 py-3.5">
+                        <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Top Barangays</h3>
+                    </div>
+                    <div v-if="topBarangays.length" class="divide-y divide-[#f1f5f9]">
+                        <div v-for="row in topBarangays" :key="row.label" class="px-5 py-3.5">
+                            <div class="mb-2 flex items-center justify-between">
+                                <span class="text-xs font-semibold text-[#0f172a]">{{ row.label }}</span>
+                                <span class="text-xs font-bold text-[#014d3c]">{{ formatNumber(row.total) }}</span>
                             </div>
-                            <div class="relative h-6 overflow-hidden rounded-md bg-[#edf0ee]">
-                                <div class="h-full bg-[#becbc6]" :style="{ width: row.width }"></div>
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.6rem] font-semibold uppercase tracking-wide text-[#66736e]">Rank #{{ row.rank }}</span>
+                            <div class="relative h-5 overflow-hidden rounded-lg bg-[#f1f5f9]">
+                                <div class="h-full rounded-lg bg-gradient-to-r from-[#bef2d6] to-[#86cfac] transition-all" :style="{ width: row.width }"></div>
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.55rem] font-bold uppercase tracking-wider text-[#475569]">Rank #{{ row.rank }}</span>
                             </div>
                         </div>
                     </div>
-                    <div v-else class="mt-8 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    <div v-else class="px-5 py-12 text-center text-xs text-[#94a3b8]">
                         No barangay totals available.
                     </div>
                 </article>
 
-                <article v-if="isAdmin" class="rounded-lg border border-[#dfe6e2] bg-white p-3.5">
-                    <div class="flex items-center justify-between gap-4">
-                        <h3 class="text-sm font-semibold text-[#14202c]">Fee Schedules</h3>
-                        <span class="rounded-md bg-[#1d5f4f] px-2.5 py-1 text-[0.68rem] font-semibold text-white">{{ selectedYearLabel }}</span>
+                <!-- Fee schedules -->
+                <article v-if="isAdmin" class="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-3.5">
+                        <h3 class="text-[0.8rem] font-bold text-[#0f172a]">Fee Schedules</h3>
+                        <span class="rounded-lg bg-[#014d3c] px-2.5 py-1 text-[0.62rem] font-bold text-white">{{ selectedYearLabel }}</span>
                     </div>
 
-                    <div v-if="feeScheduleRows.length" class="mt-3 space-y-2">
-                        <div v-for="row in feeScheduleRows" :key="row.name" class="rounded-md bg-[#f3f5f4] px-3 py-2.5">
+                    <div v-if="feeScheduleRows.length" class="divide-y divide-[#f1f5f9]">
+                        <div v-for="row in feeScheduleRows" :key="row.name" class="px-5 py-3.5">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="truncate text-xs font-semibold text-[#14202c]">{{ row.name }}</p>
-                                    <p class="mt-0.5 text-[0.68rem] leading-4 text-[#55616b]">{{ row.description }}</p>
-                                    <p class="text-[0.65rem] text-[#79847d]">Mortuary {{ row.secondaryAmount }}</p>
+                                    <p class="truncate text-xs font-bold text-[#0f172a]">{{ row.name }}</p>
+                                    <p class="mt-0.5 text-[0.68rem] leading-4 text-[#94a3b8]">{{ row.description }}</p>
+                                    <p class="text-[0.62rem] text-[#94a3b8]">Mortuary {{ row.secondaryAmount }}</p>
                                 </div>
                                 <div class="shrink-0 text-right">
-                                    <p class="text-xs font-semibold text-[#507d1f]">{{ row.amount }}</p>
-                                    <p class="mt-0.5 text-[0.58rem] font-semibold uppercase tracking-wide text-[#59645f]">{{ row.frequency }}</p>
+                                    <p class="text-xs font-bold text-[#15803d]">{{ row.amount }}</p>
+                                    <p class="mt-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-[#94a3b8]">{{ row.frequency }}</p>
                                 </div>
                             </div>
                         </div>
-                        <Link :href="dashboard.actions.manageFeeSchedulesUrl" class="mt-2 block w-full rounded-md bg-[#e4e8e6] px-3 py-2 text-center text-xs font-semibold text-[#003e32] transition hover:bg-[#d7ddda]">
-                            Manage Schedules
-                        </Link>
+                        <div class="bg-[#f8fafc] px-5 py-3">
+                            <Link :href="dashboard.actions.manageFeeSchedulesUrl" class="block w-full rounded-lg border border-[#e2e8f0] bg-white py-2 text-center text-[0.68rem] font-bold text-[#014d3c] transition-all duration-200 hover:border-[#cbd5e1] hover:bg-[#f8fafc]">
+                                Manage Schedules
+                            </Link>
+                        </div>
                     </div>
-                    <div v-else class="mt-8 rounded-[1.5rem] border border-dashed border-[#d8dfdb] bg-[#f8faf9] px-5 py-10 text-center text-sm text-[#6c757d]">
+                    <div v-else class="px-5 py-12 text-center text-xs text-[#94a3b8]">
                         No fee schedules exist for this year.
                     </div>
                 </article>
-
             </div>
         </section>
 
+        <!-- FAB -->
         <Link
             :href="dashboard.actions.createMembershipApplicationUrl"
-            class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#003e32] text-white shadow-[0_12px_28px_rgba(0,62,50,0.24)] transition hover:scale-105 hover:bg-[#0b5645] focus:outline-none focus:ring-4 focus:ring-[#b8d9cf]"
+            class="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#014d3c] to-[#003629] text-white shadow-lg shadow-[#003629]/30 transition-all duration-200 hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#014d3c]/20"
         >
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14" />
@@ -886,22 +898,23 @@ const linePoints = computed(() => {
             </svg>
         </Link>
 
-        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09110d]/45 px-4 py-5" @click.self="closeExportModal">
-            <section class="w-full max-w-2xl rounded-lg border border-[#dbe2de] bg-white p-4 shadow-[0_20px_55px_rgba(15,23,42,0.2)]">
-                <div class="flex items-start justify-between gap-3 border-b border-[#e4ebe7] pb-3">
+        <!-- Export modal -->
+        <div v-if="exportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/50 px-4 py-5 backdrop-blur-sm" @click.self="closeExportModal">
+            <section class="w-full max-w-2xl overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white shadow-2xl">
+                <div class="flex items-start justify-between gap-3 border-b border-[#f1f5f9] px-6 py-4">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#40534b]">Dashboard Export</p>
-                        <p class="mt-1 text-xs text-[#697772]">Select sections for {{ selectedYearLabel }} and {{ selectedBarangayName }}.</p>
+                        <h2 class="text-sm font-bold text-[#0f172a]">Dashboard Export</h2>
+                        <p class="mt-1 text-xs text-[#94a3b8]">Select sections for {{ selectedYearLabel }} and {{ selectedBarangayName }}.</p>
                     </div>
-                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-[#66756f] transition hover:bg-[#f5f8f6]" aria-label="Close export dialog" @click="closeExportModal">
-                        <span class="text-base leading-none">&times;</span>
+                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition-colors hover:bg-[#f1f5f9] hover:text-[#64748b]" aria-label="Close export dialog" @click="closeExportModal">
+                        <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
                     </button>
                 </div>
 
-                <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                    <label v-for="(enabled, key) in exportSections" :key="key" class="flex min-h-10 items-center gap-2.5 rounded-md border border-[#d7e0db] bg-[#f8faf9] px-3 py-2 text-xs text-[#1a2420] transition hover:bg-[#f3f7f5]">
-                        <input v-model="exportSections[key]" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-[#003629] focus:ring-[#003629]">
-                        <span class="font-medium leading-4">
+                <div class="grid gap-2 px-6 py-4 sm:grid-cols-2">
+                    <label v-for="(enabled, key) in exportSections" :key="key" class="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] px-3.5 py-2.5 text-xs text-[#0f172a] transition-all hover:border-[#cbd5e1] hover:bg-[#f1f5f9]">
+                        <input v-model="exportSections[key]" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]">
+                        <span class="font-semibold leading-4">
                             {{
                                 key === 'summary' ? 'Summary cards'
                                     : key === 'collections' ? 'Collections totals'
@@ -917,11 +930,12 @@ const linePoints = computed(() => {
                     </label>
                 </div>
 
-                <div class="mt-4 flex justify-end gap-2 border-t border-[#e8edea] pt-3">
-                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-4 text-xs font-semibold text-[#697772] transition hover:bg-[#f4f7f5]" @click="closeExportModal">
+                <div class="flex justify-end gap-2 border-t border-[#f1f5f9] bg-[#f8fafc] px-6 py-3.5">
+                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-white px-4 text-xs font-semibold text-[#64748b] transition-all duration-200 hover:bg-[#f1f5f9]" @click="closeExportModal">
                         Cancel
                     </button>
-                    <button type="button" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" @click="exportDashboardReport">
+                    <button type="button" class="inline-flex h-9 items-center gap-1.5 justify-center rounded-lg bg-[#014d3c] px-4 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:bg-[#01362a] hover:shadow-md active:scale-[0.97]" @click="exportDashboardReport">
+                        <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor"><path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"/><path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/></svg>
                         Export CSV
                     </button>
                 </div>

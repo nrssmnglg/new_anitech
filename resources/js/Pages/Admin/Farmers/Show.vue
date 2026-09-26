@@ -6,7 +6,7 @@ import ProfileIdentityPanel from '../../../Components/Admin/Farmers/ProfileIdent
 import ProfileSidebar from '../../../Components/Admin/Farmers/ProfileSidebar.vue';
 import ProfileTimeline from '../../../Components/Admin/Farmers/ProfileTimeline.vue';
 
-const props = defineProps({
+defineProps({
     farmer: { type: Object, required: true },
     summary: { type: Object, required: true },
     latestApplication: { type: Object, default: null },
@@ -23,22 +23,21 @@ const props = defineProps({
     renewal: { type: Object, required: true },
     recoverySnapshots: { type: Array, required: true },
 });
-
 </script>
 
 <template>
-    <Head :title="farmer.fullName" />
+    <Head :title="`${farmer.fullName} - Farmer Record`" />
 
     <AdminLayout title="Farmer Record">
         <div class="space-y-4">
-            <ProfileHero :farmer="farmer" />
+            <ProfileHero :farmer="farmer" :urls="urls" :renewal="renewal" />
 
-            <section class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+            <section class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
                 <ProfileIdentityPanel :farmer="farmer" :summary="summary" />
 
                 <ProfileSidebar
                     :farmer="farmer"
-                    :activities="timeline.slice(0, 3)"
+                    :activities="timeline.slice(0, 4)"
                     :latest-application="latestApplication"
                     :latest-payment="latestPayment"
                     :latest-ledger="latestLedger"

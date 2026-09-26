@@ -66,6 +66,7 @@ class MembershipApplicationController extends Controller
         $requestedStatus = $request->query->has('status') ? $request->query('status') : 'pending';
 
         $filters = [
+            'search' => trim((string) $request->query('search', '')),
             'source' => $request->query('source'),
             'status' => $requestedStatus === 'submitted' ? 'pending' : $requestedStatus,
             'year' => $request->integer('year') ?: null,
@@ -161,6 +162,7 @@ class MembershipApplicationController extends Controller
         return Inertia::render('Admin/MembershipApplications/Index', [
             'applications' => $applications,
             'filters' => [
+                'search' => (string) ($filters['search'] ?? ''),
                 'source' => $filters['source'] ? (string) $filters['source'] : '',
                 'status' => $filters['status'] ? (string) $filters['status'] : '',
                 'year' => $filters['year'] ? (string) $filters['year'] : '',
@@ -585,6 +587,7 @@ class MembershipApplicationController extends Controller
             ],
             'farmer' => [
                 'id' => $membershipApplication->farmer?->id,
+                'showUrl' => $membershipApplication->farmer ? route('admin.farmers.show', $membershipApplication->farmer) : null,
                 'fullName' => $membershipApplication->farmer?->full_name,
                 'farmerCode' => $membershipApplication->farmer?->farmer_code,
                 'memberType' => $membershipApplication->farmer?->memberType ? [
@@ -931,6 +934,19 @@ class MembershipApplicationController extends Controller
                     $activeQueue->where('status', '!=', $this->databaseStatusValue(ApplicationStatus::REJECTED))
                         ->orWhereNull('rejection_reason')
                         ->orWhere('rejection_reason', '!=', MembershipApplicationRejectionReason::UNABLE_TO_FOLLOW_UP->value);
+                });
+            })
+            ->when($filters['search'] ?? null, function (Builder $query, string $search): void {
+                $query->where(function (Builder $subQuery) use ($search): void {
+                    $subQuery->where('application_no', 'like', "%{$search}%")
+                        ->orWhereHas('farmer', function (Builder $farmerQuery) use ($search): void {
+                            $farmerQuery->where('farmer_code', 'like', "%{$search}%")
+                                ->orWhereHas('profile', function (Builder $profileQuery) use ($search): void {
+                                    $profileQuery->where('first_name', 'like', "%{$search}%")
+                                        ->orWhere('last_name', 'like', "%{$search}%")
+                                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                                });
+                        });
                 });
             })
             ->when($filters['source'] ?? null, fn (Builder $query, string $sourceValue) => $query->where('source', $sourceValue))

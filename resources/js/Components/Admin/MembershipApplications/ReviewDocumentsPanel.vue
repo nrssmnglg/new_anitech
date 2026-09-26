@@ -74,23 +74,21 @@ function openPreviewInNewTab() {
     if (!previewUrl.value) {
         return;
     }
-
     window.open(previewUrl.value, '_blank', 'noopener');
 }
 
 onBeforeUnmount(clearPreviewTimer);
 
 function documentBadge(value) {
-    if (value === 'verified') return 'bg-[#eef7e3] text-[#416918]';
-    if (value === 'rejected') return 'bg-[#ffdad6] text-[#93000a]';
-    return 'bg-[#fff3dc] text-[#a86100]';
+    if (value === 'verified') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    if (value === 'rejected') return 'bg-rose-50 text-rose-800 border-rose-200';
+    return 'bg-amber-50 text-amber-800 border-amber-200';
 }
 
 function verificationLabel(document) {
     if (document.verificationStatus.value === 'pending' && document.uploadPresent) {
         return 'Pending Review';
     }
-
     return document.verificationStatus.label;
 }
 
@@ -98,17 +96,15 @@ function alertBadge(document) {
     if (document.needsResubmission) {
         return {
             label: 'Re-submission Required',
-            className: 'bg-[#ffe6ea] text-[#b42341]',
+            className: 'bg-rose-50 text-rose-700 border border-rose-200',
         };
     }
-
     if (document.isExpired) {
         return {
             label: 'Expired',
-            className: 'bg-[#fff3dc] text-[#a86100]',
+            className: 'bg-amber-50 text-amber-700 border border-amber-200',
         };
     }
-
     return null;
 }
 
@@ -120,30 +116,47 @@ function visibleValidationNotes(document) {
 </script>
 
 <template>
-    <section class="rounded-lg border border-[#dbe2de] bg-white">
-        <div class="flex items-center justify-between border-b border-[#e4ebe7] bg-[#f6f8f7] px-4 py-2.5">
-            <div>
-                <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#7a8781]">Step 2</p>
-                <h2 class="mt-0.5 text-xs font-semibold text-[#1a2420]">Document checklist</h2>
+    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+        <div class="flex items-center justify-between border-b border-[#dde4de] bg-[#f9fbfa] px-4 py-3">
+            <div class="flex items-center gap-2">
+                <div class="flex h-6 w-6 items-center justify-center rounded-md bg-[#003629]/10 text-[#003629]">
+                    <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Zm2.25 8.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xs font-bold text-[#0f172a]">Document Checklist & Verification</h2>
+                </div>
             </div>
-            <span class="inline-flex rounded-md px-2 py-1 text-[0.62rem] font-semibold" :class="flow.documentsComplete ? 'bg-[#eef7e3] text-[#416918]' : 'bg-[#fff3dc] text-[#a86100]'">
-                {{ flow.verifiedCount }}/{{ flow.requiredCount }} verified
-            </span>
+
+            <div class="flex items-center gap-2">
+                <span class="rounded bg-[#003629]/10 px-2 py-0.5 text-[0.6rem] font-bold text-[#003629]">
+                    Step 2
+                </span>
+                <span
+                    class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[0.65rem] font-bold"
+                    :class="flow.documentsComplete ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'"
+                >
+                    <span class="h-1.5 w-1.5 rounded-full" :class="flow.documentsComplete ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'"></span>
+                    {{ flow.verifiedCount }} / {{ flow.requiredCount }} verified
+                </span>
+            </div>
         </div>
 
-        <div class="space-y-2 p-2.5">
+        <div class="space-y-3 p-4">
+            <!-- Checklist initialization if needed -->
             <div
                 v-if="flow.canInitializeChecklist"
-                class="rounded-md border border-[#dbe2de] bg-[#fbfdfc] px-3 py-2.5"
+                class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4"
             >
-                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-[#1a2420]">Document checklist has not started yet.</p>
-                        <p class="mt-0.5 text-[0.68rem] text-[#5f6c67]">Start intake to generate the required document rows.</p>
+                        <p class="text-xs font-bold text-[#003629]">Document checklist has not been initialized yet.</p>
+                        <p class="mt-0.5 text-xs text-slate-600">Start intake to generate the required document verification entries.</p>
                     </div>
                     <button
                         type="button"
-                        class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-3 text-xs font-semibold text-white transition hover:bg-[#0d4637]"
+                        class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a]"
                         @click="$emit('initialize-checklist')"
                     >
                         Start Intake Checklist
@@ -151,132 +164,139 @@ function visibleValidationNotes(document) {
                 </div>
             </div>
 
-            <div
-                v-if="(flow.missingCount || 0) > 0 || (flow.expiredCount || 0) > 0 || (flow.resubmissionCount || 0) > 0"
-                class="rounded-md border border-[#f0d9aa] bg-[#fffaf0] px-3 py-2.5 text-xs text-[#7a5a16]"
-            >
-                Resolve all missing, expired, or rejected documents before final approval or payment completion.
-            </div>
-
+            <!-- Documents List -->
             <article
                 v-for="document in documents"
                 v-show="flow.checklistInitialized"
                 :key="document.id"
-                class="rounded-md border border-[#e3eae6] bg-[#fafcfb] p-2.5"
+                class="rounded-xl border border-[#dde4de] bg-[#f9fbfa] p-3.5 transition hover:border-[#b5c7bd] hover:bg-white"
             >
-                <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            <p class="text-xs font-semibold text-[#191c1c]">{{ document.label }}</p>
-                            <span class="inline-flex rounded-md bg-[#edf1ef] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.05em] text-[#697772]">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-xs font-bold text-[#0f172a]">{{ document.label }}</h3>
+                            <span class="inline-flex rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600">
                                 {{ document.isRequired ? 'Required' : 'Optional' }}
                             </span>
-                            <span class="inline-flex rounded-md px-1.5 py-0.5 text-[0.58rem] font-semibold" :class="documentBadge(document.verificationStatus.value)">
+                            <span class="inline-flex rounded-full border px-2 py-0.5 text-[0.6rem] font-bold" :class="documentBadge(document.verificationStatus.value)">
                                 {{ verificationLabel(document) }}
                             </span>
                             <span
                                 v-if="alertBadge(document)"
-                                class="inline-flex rounded-md px-1.5 py-0.5 text-[0.58rem] font-semibold"
+                                class="inline-flex rounded-full px-2 py-0.5 text-[0.6rem] font-bold"
                                 :class="alertBadge(document).className"
                             >
                                 {{ alertBadge(document).label }}
                             </span>
                         </div>
-                        <p v-if="document.verificationStatus.value === 'verified'" class="mt-1 text-[0.62rem] text-[#65736d]">
-                            Verified by {{ document.verifierName || 'staff member not recorded' }}<span v-if="document.verifiedAt"> · {{ document.verifiedAt }}</span>
+
+                        <p v-if="document.verificationStatus.value === 'verified'" class="mt-1 text-[0.68rem] text-slate-500">
+                            Verified by <strong>{{ document.verifierName || 'Staff' }}</strong><span v-if="document.verifiedAt"> on {{ document.verifiedAt }}</span>
                         </p>
-                        <div v-if="document.remarks || visibleValidationNotes(document).length" class="mt-1 space-y-0.5">
-                            <p v-if="document.remarks" class="text-[0.62rem] text-[#78857f]">{{ document.remarks }}</p>
-                            <ul v-if="visibleValidationNotes(document).length" class="space-y-0.5 text-[0.62rem] text-[#5f6c67]">
+
+                        <div v-if="document.remarks || visibleValidationNotes(document).length" class="mt-1.5 space-y-0.5">
+                            <p v-if="document.remarks" class="text-[0.68rem] italic text-slate-600">Note: {{ document.remarks }}</p>
+                            <ul v-if="visibleValidationNotes(document).length" class="text-[0.68rem] text-rose-600">
                                 <li v-for="(note, index) in visibleValidationNotes(document)" :key="`${document.id}-note-${index}`">
-                                    {{ note }}
+                                    • {{ note }}
                                 </li>
                             </ul>
                         </div>
                     </div>
 
-                    <div class="flex w-full gap-1.5 lg:max-w-[430px] lg:items-center">
+                    <!-- Action Controls -->
+                    <div class="flex flex-wrap items-center gap-2 lg:justify-end">
                         <input
                             v-model="documentRemarks[document.id]"
                             type="text"
-                            placeholder="Optional remarks"
-                            class="h-8 min-w-0 flex-1 rounded-md border border-[#d7e0db] bg-[#f8faf9] px-2.5 text-[0.68rem] text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"
+                            placeholder="Optional remarks..."
+                            class="h-8 min-w-[140px] flex-1 rounded-lg border border-[#dde4de] bg-white px-2.5 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] sm:w-48 sm:flex-initial"
                         >
-                        <div class="flex shrink-0 flex-wrap gap-1.5">
-                            <button
-                                type="button"
-                                class="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md bg-[#003629] px-2.5 text-[0.65rem] font-semibold text-white transition hover:bg-[#0d4637]"
-                                :disabled="application.source !== 'walk_in' && !document.uploadPresent"
-                                @click="$emit('document-action', document, document.verificationStatus.value === 'verified' ? 'unreceive' : 'receive')"
-                            >
-                                {{ document.verificationStatus.value === 'verified' ? 'Undo Confirmation' : 'Confirm Document' }}
-                            </button>
-                            <button
-                                v-if="document.uploadPresent"
-                                type="button"
-                                class="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md border border-[#f4cfd6] bg-[#fff7f8] px-2.5 text-[0.65rem] font-semibold text-[#b42341] transition hover:bg-[#fff0f2]"
-                                @click="$emit('document-action', document, 'reject')"
-                            >
-                                Reject Document
-                            </button>
-                            <button
-                                v-if="features.walkInAttachScanEnabled && application.source === 'walk_in'"
-                                type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-md border border-[#d7e0db] px-2.5 text-[0.65rem] font-semibold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
-                            >
-                                Attach Scan
-                            </button>
-                            <button
-                                v-if="document.actions.viewUrl"
-                                type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-md border border-[#d7e0db] px-2.5 text-[0.65rem] font-semibold text-[#5f6c67] transition hover:bg-[#f4f7f5]"
-                                @click="openPreview(document)"
-                            >
-                                View File
-                            </button>
-                        </div>
-                        <p
-                            v-if="application.source !== 'walk_in' && !document.uploadPresent"
-                            class="text-xs font-medium text-[#8a5b16]"
+
+                        <button
+                            type="button"
+                            class="inline-flex h-8 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-3 text-xs font-bold transition shadow-2xs"
+                            :class="document.verificationStatus.value === 'verified'
+                                ? 'border border-[#dde4de] bg-white text-slate-700 hover:bg-slate-50'
+                                : 'bg-[#003629] text-white hover:bg-[#00483a]'"
+                            :disabled="application.source !== 'walk_in' && !document.uploadPresent"
+                            @click="$emit('document-action', document, document.verificationStatus.value === 'verified' ? 'unreceive' : 'receive')"
                         >
-                            Wait for the farmer to upload this file before confirming it.
-                        </p>
+                            <svg v-if="document.verificationStatus.value !== 'verified'" viewBox="0 0 16 16" class="h-3 w-3" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>{{ document.verificationStatus.value === 'verified' ? 'Undo Confirmation' : 'Confirm Document' }}</span>
+                        </button>
+
+                        <button
+                            v-if="document.uploadPresent"
+                            type="button"
+                            class="inline-flex h-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                            @click="$emit('document-action', document, 'reject')"
+                        >
+                            Reject
+                        </button>
+
+                        <button
+                            v-if="document.actions?.viewUrl"
+                            type="button"
+                            class="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-[#dde4de] bg-white px-2.5 text-xs font-medium text-slate-700 shadow-2xs transition hover:bg-slate-50"
+                            @click="openPreview(document)"
+                        >
+                            <svg viewBox="0 0 16 16" class="h-3 w-3 text-slate-500" fill="currentColor">
+                                <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+                                <path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.42 4.98 5.04 3 8 3s5.58 1.98 6.62 4.72c.07.18.07.38 0 .56C13.58 11.02 10.96 13 8 13s-5.58-1.98-6.62-4.72ZM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>View</span>
+                        </button>
                     </div>
                 </div>
             </article>
         </div>
 
+        <!-- Preview Modal -->
         <div
             v-if="previewDocument"
-            class="fixed inset-0 z-[90] flex items-center justify-center bg-[#09110d]/65 p-4"
+            class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs"
             @click.self="closePreview"
         >
-            <div class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-[#dbe2de] bg-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]">
-                <div class="flex items-center justify-between border-b border-[#e4ebe7] px-4 py-2.5">
+            <div class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-[#dde4de] bg-[#f9fbfa] px-4 py-3">
                     <div>
-                        <p class="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#7a8781]">File preview</p>
-                        <h3 class="mt-0.5 text-sm font-semibold text-[#1a2420]">{{ previewDocument.label }}</h3>
+                        <span class="text-[0.6rem] font-bold uppercase tracking-wider text-[#64748b]">File Preview</span>
+                        <h3 class="text-sm font-bold text-[#0f172a]">{{ previewDocument.label }}</h3>
                     </div>
-                    <button
-                        type="button"
-                        aria-label="Close preview"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d7e0db] text-base text-[#5f6c67] transition hover:bg-[#f4f7f5]"
-                        @click="closePreview"
-                    >
-                        ×
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button
+                            v-if="previewUrl"
+                            type="button"
+                            class="inline-flex h-8 items-center gap-1 rounded-lg border border-[#dde4de] bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50"
+                            @click="openPreviewInNewTab"
+                        >
+                            <span>Open in tab</span>
+                            <svg viewBox="0 0 16 16" class="h-3 w-3" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.22 11.78a.75.75 0 0 1 0-1.06L9.44 5.5H5.75a.75.75 0 0 1 0-1.5h5.5a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0V6.56l-5.22 5.22a.75.75 0 0 1-1.06 0Z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#dde4de] text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                            aria-label="Close"
+                            @click="closePreview"
+                        >
+                            &times;
+                        </button>
+                    </div>
                 </div>
 
-                <div class="relative min-h-[360px] flex-1 overflow-auto bg-[#f5f7f6] p-3">
-                    <div
-                        v-if="previewLoading"
-                        class="absolute inset-0 z-10 flex items-center justify-center bg-[#f5f7f6]/90"
-                    >
-                        <div class="flex items-center gap-2 text-[#31584a]">
-                            <span class="h-6 w-6 animate-spin rounded-full border-[3px] border-[#d7e0db] border-t-[#0f5b46]"></span>
-                            <p class="text-xs font-semibold">Loading preview...</p>
+                <div class="relative min-h-[380px] flex-1 overflow-auto bg-[#f8faf9] p-4">
+                    <div v-if="previewLoading" class="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+                        <div class="flex items-center gap-2 text-[#003629]">
+                            <span class="h-5 w-5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent"></span>
+                            <p class="text-xs font-bold">Loading preview...</p>
                         </div>
                     </div>
+
                     <DocumentPreview
                         v-if="previewCanInline && !previewFailed"
                         :src="previewUrl"
@@ -285,24 +305,18 @@ function visibleValidationNotes(document) {
                         @load="markPreviewLoaded"
                         @error="markPreviewFailed"
                     />
-                    <div
-                        v-else
-                        class="flex min-h-[360px] items-center justify-center rounded-md border border-[#d7e0db] bg-white px-5 text-center"
-                    >
-                        <div class="max-w-sm space-y-2.5">
-                            <h4 class="text-sm font-semibold text-[#1a2420]">Preview unavailable</h4>
-                            <p class="text-xs leading-5 text-[#5f6c67]">
-                                This browser cannot display the uploaded format here. Open the original file to view or download it.
-                            </p>
-                            <button
-                                v-if="previewUrl"
-                                type="button"
-                                class="inline-flex h-8 items-center justify-center rounded-md bg-[#003629] px-3 text-[0.68rem] font-semibold text-white transition hover:bg-[#0d4637]"
-                                @click="openPreviewInNewTab"
-                            >
-                                Open file in new tab
-                            </button>
-                        </div>
+
+                    <div v-else class="flex min-h-[360px] flex-col items-center justify-center p-6 text-center">
+                        <p class="text-sm font-bold text-[#0f172a]">Preview not available in this frame</p>
+                        <p class="mt-1 text-xs text-slate-500">You can open the original file directly in a new browser tab.</p>
+                        <button
+                            v-if="previewUrl"
+                            type="button"
+                            class="mt-3 inline-flex h-9 items-center justify-center rounded-xl bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a]"
+                            @click="openPreviewInNewTab"
+                        >
+                            Open File in New Tab
+                        </button>
                     </div>
                 </div>
             </div>

@@ -1,62 +1,90 @@
 <script setup>
 defineProps({
     summary: { type: Object, required: true },
+    currentStatus: { type: String, default: '' },
 });
+
+defineEmits(['filter-status']);
 
 const cards = [
     {
         key: 'total',
+        statusValue: '',
         label: 'Total',
-        iconWrap: 'bg-[#1b4d3e]/10 text-[#003629]',
-        valueClass: 'text-[#003629]',
+        iconWrap: 'bg-emerald-50 text-[#003629]',
+        countClass: 'text-[#003629]',
+        activeClass: 'border-[#003629] ring-1.5 ring-[#003629]/20 bg-emerald-50/20',
     },
     {
         key: 'pending',
-        label: 'Pending Review',
-        iconWrap: 'bg-[#fff3dc] text-[#c07b10]',
-        valueClass: 'text-[#1f2724]',
+        statusValue: 'pending',
+        label: 'Pending',
+        iconWrap: 'bg-amber-50 text-amber-700',
+        countClass: 'text-amber-800',
+        activeClass: 'border-amber-500 ring-1.5 ring-amber-500/20 bg-amber-50/30',
     },
     {
         key: 'approved',
+        statusValue: 'approved',
         label: 'Approved',
-        iconWrap: 'bg-[#eef7e3] text-[#416918]',
-        valueClass: 'text-[#416918]',
+        iconWrap: 'bg-emerald-50 text-emerald-700',
+        countClass: 'text-emerald-800',
+        activeClass: 'border-emerald-500 ring-1.5 ring-emerald-500/20 bg-emerald-50/30',
     },
     {
         key: 'rejected',
+        statusValue: 'rejected',
         label: 'Rejected',
-        iconWrap: 'bg-[#fff1f1] text-[#ba1a1a]',
-        valueClass: 'text-[#ba1a1a]',
+        iconWrap: 'bg-rose-50 text-rose-700',
+        countClass: 'text-rose-800',
+        activeClass: 'border-rose-500 ring-1.5 ring-rose-500/20 bg-rose-50/30',
     },
 ];
 
-function iconPath(key) {
-    if (key === 'total') return 'M4 6h16M4 12h16M4 18h16';
-    if (key === 'pending') return 'M12 7v5l3 2';
-    if (key === 'approved') return 'm8.5 12.5 2.3 2.3 4.7-5.1';
-    return 'M8.5 8.5l7 7M15.5 8.5l-7 7';
+function isCardActive(card, currentStatus) {
+    if (card.key === 'total') {
+        return !currentStatus || currentStatus === '';
+    }
+    return currentStatus === card.statusValue;
 }
 </script>
 
 <template>
-    <section class="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <article
+    <section class="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
+        <button
             v-for="card in cards"
             :key="card.key"
-            class="rounded-lg border border-[#dbe2de] bg-white p-3"
+            type="button"
+            class="flex items-center gap-2.5 rounded-lg border border-[#dde4de] bg-white px-3 py-2 text-left shadow-xs transition hover:border-[#b5c7bd] active:scale-[0.99]"
+            :class="isCardActive(card, currentStatus) ? card.activeClass : ''"
+            @click="$emit('filter-status', card.statusValue)"
         >
-            <div class="flex items-center gap-2.5">
-                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md" :class="card.iconWrap">
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <circle v-if="card.key !== 'total'" cx="12" cy="12" r="9" />
-                        <path :d="iconPath(card.key)" />
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <p class="truncate text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-[#6c7873]">{{ card.label }}</p>
-                    <p class="mt-0.5 text-lg font-semibold leading-none" :class="card.valueClass">{{ summary[card.key] }}</p>
-                </div>
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md" :class="card.iconWrap">
+                <svg v-if="card.key === 'total'" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg v-else-if="card.key === 'pending'" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                </svg>
+                <svg v-else-if="card.key === 'approved'" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <path d="m9 11 3 3L22 4" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m15 9-6 6M9 9l6 6" />
+                </svg>
             </div>
-        </article>
+
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-[0.6rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">
+                    {{ card.label }}
+                </p>
+                <p class="mt-0.5 text-base font-bold leading-none sm:text-lg" :class="card.countClass">
+                    {{ summary[card.key] ?? 0 }}
+                </p>
+            </div>
+        </button>
     </section>
 </template>

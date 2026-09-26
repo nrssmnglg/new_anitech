@@ -4,24 +4,61 @@ defineProps({
 });
 
 const steps = [
-    { number: '01', label: 'Form Intake' },
-    { number: '02', label: 'Documents' },
-    { number: '03', label: 'Payment' },
-    { number: '04', label: 'Approved' },
+    { number: 1, label: 'Form Intake', subtitle: 'Application captured' },
+    { number: 2, label: 'Document Verification', subtitle: 'Checklist validation' },
+    { number: 3, label: 'Payment Assessment', subtitle: 'Fee settlement' },
+    { number: 4, label: 'Membership Enrolled', subtitle: 'Final approval' },
 ];
 </script>
 
 <template>
-    <section class="rounded-lg border border-[#dbe2de] bg-white px-4 py-3">
-        <div class="relative mx-auto flex max-w-3xl justify-between">
-            <div class="absolute left-0 right-0 top-3.5 h-0.5 rounded-full bg-[#dfe6e1]"></div>
-            <div class="absolute left-0 top-3.5 h-0.5 rounded-full bg-[#003629]" :style="{ width: `${Math.max(0, (flow.step - 1) / 3 * 100)}%` }"></div>
-            <div v-for="(step, index) in steps" :key="step.number" class="relative z-10 flex flex-col items-center gap-1.5">
+    <section class="rounded-2xl border border-[#dde4de] bg-white px-4 py-3.5 shadow-xs sm:px-6">
+        <div class="relative mx-auto max-w-4xl">
+            <!-- Background track -->
+            <div class="absolute left-6 right-6 top-4 hidden h-0.5 rounded-full bg-slate-200 sm:block"></div>
+            <!-- Progress fill line -->
+            <div
+                class="absolute left-6 top-4 hidden h-0.5 rounded-full bg-[#003629] transition-all duration-500 sm:block"
+                :style="{ width: `${Math.min(100, Math.max(0, (flow.step - 1) / 3 * 100))}%` }"
+            ></div>
+
+            <div class="relative z-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-2">
                 <div
-                    class="flex h-7 w-7 items-center justify-center rounded-full text-[0.65rem] font-semibold ring-2 ring-white"
-                    :class="index + 1 <= flow.step ? 'bg-[#003629] text-white' : 'bg-[#eef1ef] text-[#6b7873]'"
-                >{{ index + 1 }}</div>
-                <span class="text-[0.68rem]" :class="index + 1 === flow.step ? 'font-semibold text-[#003629]' : 'font-medium text-[#6b7873]'">{{ step.label }}</span>
+                    v-for="step in steps"
+                    :key="step.number"
+                    class="flex items-center gap-2.5 sm:flex-col sm:text-center"
+                >
+                    <!-- Step circle -->
+                    <div
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-200"
+                        :class="[
+                            step.number < flow.step
+                                ? 'bg-[#003629] text-white shadow-xs'
+                                : step.number === flow.step
+                                    ? 'bg-[#003629] text-white ring-4 ring-[#003629]/15 shadow-sm'
+                                    : 'border border-slate-200 bg-slate-100 text-slate-400'
+                        ]"
+                    >
+                        <!-- Checkmark for completed steps -->
+                        <svg v-if="step.number < flow.step" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                        </svg>
+                        <span v-else>{{ step.number }}</span>
+                    </div>
+
+                    <!-- Step text -->
+                    <div class="min-w-0">
+                        <p
+                            class="truncate text-xs"
+                            :class="step.number === flow.step ? 'font-bold text-[#003629]' : step.number < flow.step ? 'font-semibold text-slate-700' : 'font-medium text-slate-400'"
+                        >
+                            {{ step.label }}
+                        </p>
+                        <p class="hidden text-[0.65rem] text-slate-400 sm:block">
+                            {{ step.subtitle }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

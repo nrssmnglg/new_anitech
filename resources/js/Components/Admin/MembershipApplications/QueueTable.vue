@@ -9,6 +9,7 @@ const props = defineProps({
     quickActionUrl: { type: String, required: true },
     compactMode: { type: Boolean, default: false },
 });
+
 defineEmits(['toggle-compact']);
 
 const quickActionForm = useForm({
@@ -25,6 +26,7 @@ const quickActionDialog = ref({
     noteLabel: '',
     submitLabel: '',
 });
+
 const sortKey = ref(readStoredValue('staff.membership-applications.sort-key', 'submittedAt'));
 const sortDirection = ref(readStoredValue('staff.membership-applications.sort-direction', 'desc'));
 
@@ -32,19 +34,24 @@ persistValue('staff.membership-applications.sort-key', sortKey);
 persistValue('staff.membership-applications.sort-direction', sortDirection);
 
 function statusBadge(value) {
-    if (value === 'approved') return 'bg-[#eef7e3] text-[#416918]';
-    if (value === 'rejected') return 'bg-[#ffdad6] text-[#93000a]';
-    return 'bg-[#fff3dc] text-[#a86100]';
+    if (value === 'approved') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    if (value === 'rejected') return 'bg-rose-50 text-rose-800 border-rose-200';
+    return 'bg-amber-50 text-amber-800 border-amber-200';
+}
+
+function statusDot(value) {
+    if (value === 'approved') return 'bg-emerald-500';
+    if (value === 'rejected') return 'bg-rose-500';
+    return 'bg-amber-500 animate-pulse';
 }
 
 function checklistTone(application) {
-    if (application.payment.isSettled) return 'bg-[#416918]';
+    if (application.payment.isSettled) return 'bg-emerald-600';
     if (application.documents.totalCount > 0) {
         const percent = Math.round((application.documents.verifiedCount / application.documents.totalCount) * 100);
-        return percent >= 100 ? 'bg-[#416918]' : (percent >= 50 ? 'bg-[#d99d2b]' : 'bg-[#ba1a1a]');
+        return percent >= 100 ? 'bg-emerald-600' : (percent >= 50 ? 'bg-amber-500' : 'bg-rose-500');
     }
-
-    return 'bg-[#c0c9c3]';
+    return 'bg-slate-300';
 }
 
 function checklistPercent(application) {
@@ -61,33 +68,22 @@ function farmerInitials(name) {
         .join('') || '?';
 }
 
-function submitQuickAction(application, action, note = '') {
-    quickActionForm.transform(() => ({
-        module: 'applications',
-        record: application.recordKey,
-        action,
-        note,
-    })).post(props.quickActionUrl, {
-        preserveScroll: true,
-        onSuccess: closeQuickActionDialog,
-    });
-}
 
 function openQuickActionDialog(action) {
     quickActionDialog.value = action === 'request_correction'
         ? {
             open: true,
             action,
-            title: 'Request correction',
-            noteLabel: 'Correction notes',
-            submitLabel: 'Send correction request',
+            title: 'Request Correction',
+            noteLabel: 'Correction Notes',
+            submitLabel: 'Send Correction Request',
         }
         : {
             open: true,
             action,
-            title: 'Forward to admin',
-            noteLabel: 'Forwarding note',
-            submitLabel: 'Forward now',
+            title: 'Forward to Admin',
+            noteLabel: 'Forwarding Note',
+            submitLabel: 'Forward Now',
         };
 
     quickActionForm.note = '';
@@ -132,151 +128,277 @@ const sortedApplications = computed(() => {
 });
 
 function densityToggleLabel() {
-    return props.compactMode ? 'Switch to comfortable rows' : 'Switch to compact rows';
+    return props.compactMode ? 'Switch to comfortable view' : 'Switch to compact view';
 }
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-lg border border-[#dbe2de] bg-white">
-        <div class="flex items-center justify-between border-b border-[#dbe2de] px-3.5 py-2.5">
-            <p class="text-xs font-semibold text-[#34463f]">Application Records</p>
-            <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d9e2dc] bg-white text-[#53615c] transition hover:bg-[#f4f7f5]"
-                :title="densityToggleLabel()"
-                @click="$emit('toggle-compact')"
-            >
-                <svg v-if="compactMode" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M4 7h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 17h16" />
-                </svg>
-                <svg v-else viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M4 6h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 18h16" />
-                    <path d="M9 4v4" />
-                    <path d="M15 10v4" />
-                    <path d="M9 16v4" />
-                </svg>
-            </button>
+    <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-sm">
+        <!-- Top Toolbar -->
+        <div class="flex items-center justify-between border-b border-[#dde4de] bg-[#f9fbfa] px-4 py-3">
+            <div class="flex items-center gap-2.5">
+                <span class="text-xs font-bold text-[#0f172a]">Application Records</span>
+                <span class="inline-flex items-center rounded-full bg-[#003629]/10 px-2 py-0.5 text-[0.65rem] font-bold text-[#003629]">
+                    {{ applications.total ?? sortedApplications.length }} Total
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#dde4de] bg-white px-2.5 text-xs font-medium text-[#64748b] shadow-xs transition hover:bg-[#f1f5f3] hover:text-[#0f172a]"
+                    :title="densityToggleLabel()"
+                    @click="$emit('toggle-compact')"
+                >
+                    <svg v-if="compactMode" viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 7h16M4 12h16M4 17h16" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16M4 12h16M4 18h16M9 4v4M15 10v4M9 16v4" />
+                    </svg>
+                    <span class="hidden sm:inline text-[0.7rem]">{{ compactMode ? 'Comfortable' : 'Compact' }}</span>
+                </button>
+            </div>
         </div>
+
+        <!-- Table container -->
         <div class="overflow-x-auto">
-            <table class="min-w-[1050px] w-full border-collapse text-left text-xs">
-                <thead class="border-b border-[#dbe2de] bg-[#f3f6f4]">
-                    <tr class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#6b7772]">
-                        <th class="px-3 py-2.5"><button type="button" @click="toggleSort('submittedAt')">Application</button></th>
-                        <th class="px-3 py-2.5"><button type="button" @click="toggleSort('farmer')">Farmer</button></th>
-                        <th class="px-3 py-2.5">Assignment</th>
-                        <th class="px-3 py-2.5"><button type="button" @click="toggleSort('checklist')">Checklist</button></th>
-                        <th class="px-3 py-2.5"><button type="button" @click="toggleSort('status')">Status</button></th>
-                        <th class="px-3 py-2.5 text-right">Actions</th>
+            <table class="w-full min-w-[1050px] border-collapse text-left text-xs">
+                <thead>
+                    <tr class="border-b border-[#dde4de] bg-[#f4f7f5] text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">
+                        <th class="px-4 py-3">
+                            <button type="button" class="group inline-flex items-center gap-1 font-bold text-[#64748b] hover:text-[#003629]" @click="toggleSort('submittedAt')">
+                                Application
+                                <svg viewBox="0 0 16 16" class="h-3 w-3 transition-opacity" :class="sortKey === 'submittedAt' ? 'opacity-100 text-[#003629]' : 'opacity-0 group-hover:opacity-60'" fill="currentColor">
+                                    <path v-if="sortDirection === 'asc'" d="M8 3.5l4 4H4l4-4z" />
+                                    <path v-else d="M8 12.5l4-4H4l4 4z" />
+                                </svg>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">
+                            <button type="button" class="group inline-flex items-center gap-1 font-bold text-[#64748b] hover:text-[#003629]" @click="toggleSort('farmer')">
+                                Farmer Applicant
+                                <svg viewBox="0 0 16 16" class="h-3 w-3 transition-opacity" :class="sortKey === 'farmer' ? 'opacity-100 text-[#003629]' : 'opacity-0 group-hover:opacity-60'" fill="currentColor">
+                                    <path v-if="sortDirection === 'asc'" d="M8 3.5l4 4H4l4-4z" />
+                                    <path v-else d="M8 12.5l4-4H4l4 4z" />
+                                </svg>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">Location & Association</th>
+                        <th class="px-4 py-3">
+                            <button type="button" class="group inline-flex items-center gap-1 font-bold text-[#64748b] hover:text-[#003629]" @click="toggleSort('checklist')">
+                                Requirements & Payment
+                                <svg viewBox="0 0 16 16" class="h-3 w-3 transition-opacity" :class="sortKey === 'checklist' ? 'opacity-100 text-[#003629]' : 'opacity-0 group-hover:opacity-60'" fill="currentColor">
+                                    <path v-if="sortDirection === 'asc'" d="M8 3.5l4 4H4l4-4z" />
+                                    <path v-else d="M8 12.5l4-4H4l4 4z" />
+                                </svg>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3">
+                            <button type="button" class="group inline-flex items-center gap-1 font-bold text-[#64748b] hover:text-[#003629]" @click="toggleSort('status')">
+                                Status
+                                <svg viewBox="0 0 16 16" class="h-3 w-3 transition-opacity" :class="sortKey === 'status' ? 'opacity-100 text-[#003629]' : 'opacity-0 group-hover:opacity-60'" fill="currentColor">
+                                    <path v-if="sortDirection === 'asc'" d="M8 3.5l4 4H4l4-4z" />
+                                    <path v-else d="M8 12.5l4-4H4l4 4z" />
+                                </svg>
+                            </button>
+                        </th>
+                        <th class="px-4 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
 
-                <tbody class="divide-y divide-[#ebf0ed]">
-                    <tr v-for="application in sortedApplications" :key="application.id" class="transition hover:bg-[#f9fbfa]">
-                        <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
-                            <div class="font-semibold text-[#003629]">{{ application.applicationNo }}</div>
-                            <div class="text-[0.6rem] font-semibold uppercase tracking-[0.06em] text-[#7a8781]">{{ application.sourceLabel }}</div>
-                            <div class="mt-0.5 text-[0.68rem] text-[#86918c]">{{ application.submittedAt || application.createdAt || 'Date not recorded' }}</div>
+                <tbody class="divide-y divide-[#edf2ee]">
+                    <tr
+                        v-for="application in sortedApplications"
+                        :key="application.id"
+                        class="group transition-colors duration-150 hover:bg-[#f6faf8]"
+                    >
+                        <!-- Application Info -->
+                        <td class="px-4 align-top" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-bold text-[#003629]">
+                                    {{ application.applicationNo }}
+                                </span>
+                            </div>
+                            <div class="mt-1 flex items-center gap-1.5">
+                                <span
+                                    v-if="application.source === 'mobile'"
+                                    class="inline-flex items-center gap-1 rounded-md border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-purple-700"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                                    </svg>
+                                    Mobile
+                                </span>
+                                <span
+                                    v-else
+                                    class="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[0.6rem] font-bold text-emerald-800"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                    Walk-in
+                                </span>
+                            </div>
+                            <div class="mt-1 flex items-center gap-1 text-[0.68rem] text-[#94a3b8]">
+                                <svg viewBox="0 0 20 20" class="h-3 w-3 shrink-0 text-[#94a3b8]" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clip-rule="evenodd" />
+                                </svg>
+                                <span>{{ application.submittedAt || application.createdAt || 'Date not recorded' }}</span>
+                            </div>
                         </td>
-                        <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
-                            <div class="flex items-start gap-2">
-                                <div class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#dff0e7] text-[0.65rem] font-semibold text-[#003629]">
+
+                        <!-- Farmer Applicant -->
+                        <td class="px-4 align-top" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <div class="flex items-start gap-2.5">
+                                <div class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#003629] to-[#005a45] text-[0.7rem] font-bold text-white shadow-xs">
                                     {{ farmerInitials(application.farmer.fullName) }}
                                 </div>
-                                <div>
-                                    <div class="font-semibold text-[#191c1c]">{{ application.farmer.fullName }}</div>
-                                    <div class="text-[0.68rem] text-[#86918c]">{{ application.farmer.farmerCode }}</div>
-                                    <span class="mt-0.5 inline-flex rounded bg-[#edf1ef] px-1.5 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.05em] text-[#5f6b66]">
-                                        {{ application.farmer.memberType?.name || 'Pending member type' }}
+                                <div class="min-w-0">
+                                    <div class="font-bold text-[#0f172a] group-hover:text-[#003629] transition-colors">
+                                        {{ application.farmer.fullName }}
+                                    </div>
+                                    <div class="mt-0.5 flex flex-wrap items-center gap-1.5">
+                                        <span class="font-mono text-[0.68rem] text-[#64748b]">
+                                            {{ application.farmer.farmerCode }}
+                                        </span>
+                                        <span
+                                            v-if="application.farmer.memberType?.name"
+                                            class="inline-flex rounded-md border border-[#dde4de] bg-[#f8fafc] px-1.5 py-0.5 text-[0.58rem] font-semibold text-[#475569]"
+                                        >
+                                            {{ application.farmer.memberType.name }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Location & Association -->
+                        <td class="px-4 align-top" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <div class="flex items-center gap-1.5 text-xs text-[#0f172a]">
+                                <svg viewBox="0 0 20 20" class="h-3.5 w-3.5 shrink-0 text-[#003629]/70" fill="currentColor">
+                                    <path fill-rule="evenodd" d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.541l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="font-medium">{{ application.farmer.barangay || 'No barangay' }}</span>
+                            </div>
+                            <div class="mt-1 flex items-center gap-1.5 text-xs text-[#64748b]">
+                                <svg viewBox="0 0 20 20" class="h-3.5 w-3.5 shrink-0 text-[#94a3b8]" fill="currentColor">
+                                    <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 18a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.813.813 0 0 1-.63 1.052H14.5Z" />
+                                </svg>
+                                <span class="truncate max-w-[180px]" :title="application.farmer.association">
+                                    {{ application.farmer.association || 'No association' }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Requirements Checklist & Payment -->
+                        <td class="px-4 align-top" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <div class="space-y-1.5 max-w-[200px]">
+                                <div class="flex items-center justify-between text-[0.68rem]">
+                                    <span class="font-medium text-[#475569]">
+                                        {{ application.documents.completionLabel || `${checklistPercent(application)}% verified` }}
+                                    </span>
+                                    <span class="font-bold text-[#0f172a]">{{ checklistPercent(application) }}%</span>
+                                </div>
+                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
+                                    <div
+                                        class="h-full transition-all duration-300"
+                                        :class="checklistTone(application)"
+                                        :style="{ width: `${checklistPercent(application)}%` }"
+                                    ></div>
+                                </div>
+                                <div class="flex items-center gap-1.5 pt-0.5">
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.62rem] font-semibold"
+                                        :class="application.payment.isSettled ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200'"
+                                    >
+                                        <svg v-if="application.payment.isSettled" viewBox="0 0 16 16" class="h-2.5 w-2.5 text-emerald-600" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+                                        </svg>
+                                        {{ application.payment.statusLabel }}
+                                    </span>
+                                    <span v-if="application.payment.amountDue > 0" class="text-[0.65rem] font-bold text-[#64748b]">
+                                        ₱{{ Number(application.payment.amountDue).toFixed(2) }}
                                     </span>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
-                            <div><span class="font-semibold">Brgy:</span> {{ application.farmer.barangay || 'No barangay' }}</div>
-                            <div class="mt-0.5 truncate" :title="application.farmer.association"><span class="font-semibold">Assoc:</span> {{ application.farmer.association || 'No association' }}</div>
-                            <div class="mt-0.5 text-[0.68rem] font-semibold text-[#6d8a7d]">
-                                {{ application.farmer.memberType ? `${application.farmer.memberType.code} - ${application.farmer.memberType.name}` : 'Member type not set' }}
-                            </div>
-                        </td>
-                        <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
-                            <div class="space-y-1.5">
-                                <div class="flex items-center gap-2">
-                                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e6ebe8]">
-                                        <div class="h-full" :class="checklistTone(application)" :style="{ width: `${checklistPercent(application)}%` }"></div>
-                                    </div>
-                                    <span class="text-[0.65rem] font-medium text-[#2e3131]">{{ checklistPercent(application) }}%</span>
-                                </div>
-                                <div class="text-[0.68rem]" :class="application.payment.isSettled ? 'text-[#416918]' : 'text-[#697772]'">
-                                    {{ application.payment.statusLabel }}
-                                    <span v-if="application.payment.amountDue > 0"> (PHP {{ Number(application.payment.amountDue).toFixed(2) }})</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-3 align-top" :class="compactMode ? 'py-2' : 'py-3'">
-                            <span class="inline-flex w-fit rounded-md px-2 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.05em]" :class="statusBadge(application.status.value)">
+
+                        <!-- Status -->
+                        <td class="px-4 align-top" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider"
+                                :class="statusBadge(application.status.value)"
+                            >
+                                <span class="h-1.5 w-1.5 rounded-full" :class="statusDot(application.status.value)"></span>
                                 {{ application.status.label }}
                             </span>
                         </td>
-                        <td class="px-3 align-top text-right" :class="compactMode ? 'py-2' : 'py-3'">
-                            <div class="flex flex-wrap justify-end gap-1.5">
-                                <button
-                                    v-if="application.quickActions?.canMarkComplete"
-                                    type="button"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#cfe0d6] bg-[#eff7e8] text-[#486814] transition hover:bg-[#e5f1da]"
-                                    title="Mark complete"
-                                    @click="submitQuickAction(application, 'mark_complete')"
-                                >
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="m5 12 4 4L19 6" />
-                                    </svg>
-                                </button>
+
+                        <!-- Actions -->
+                        <td class="px-4 align-top text-right" :class="compactMode ? 'py-2.5' : 'py-3.5'">
+                            <div class="flex items-center justify-end gap-1.5">
+
+                                <!-- Forward to Admin (if available) -->
                                 <button
                                     v-if="application.quickActions?.canForwardToAdmin"
                                     type="button"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d6dfda] bg-white text-[#36554a] transition hover:bg-[#f7faf8]"
-                                    title="Forward to admin"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#dde4de] bg-white text-[#334155] shadow-xs transition hover:bg-[#f1f5f3]"
+                                    title="Forward to Admin"
                                     @click="quickActionForm.record = application.recordKey; quickActionForm.module = 'applications'; quickActionForm.action = 'forward_to_admin'; openQuickActionDialog('forward_to_admin')"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M4 12h11" />
-                                        <path d="m11 5 7 7-7 7" />
+                                    <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
+
+                                <!-- Request Correction (if available) -->
                                 <button
                                     v-if="application.quickActions?.canRequestCorrection"
                                     type="button"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#f2d4c8] bg-[#fff6f1] text-[#b85b34] transition hover:bg-[#fff0e7]"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 shadow-xs transition hover:bg-amber-100"
                                     title="Request correction"
                                     @click="quickActionForm.record = application.recordKey; quickActionForm.module = 'applications'; quickActionForm.action = 'request_correction'; openQuickActionDialog('request_correction')"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 20h9" />
-                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                                        <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                                        <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
                                     </svg>
                                 </button>
+
+                                <!-- Primary Review Link -->
                                 <Link
                                     :href="application.actions.showUrl"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#d6dfda] bg-white text-[#003629] transition hover:bg-[#f7faf8]"
-                                    title="Review"
+                                    class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#003629] px-3 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:bg-[#00483a] hover:shadow-sm active:scale-[0.97]"
+                                    title="Review application"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
-                                        <circle cx="12" cy="12" r="3" />
+                                    <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                        <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                                        <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
                                     </svg>
+                                    <span>Review</span>
                                 </Link>
                             </div>
                         </td>
                     </tr>
 
-                    <tr v-if="applications.data.length === 0">
-                        <td colspan="6" class="px-4 py-10 text-center">
-                            <div class="mx-auto max-w-md rounded-md border border-dashed border-[#dbe2de] bg-[#f8faf9] px-4 py-5">
-                                <p class="text-sm font-semibold text-[#1a2420]">No queued applications found.</p>
-                                <p class="mt-1 text-xs text-[#6a7872]">New membership transactions will appear here once they are created.</p>
+                    <!-- Empty State -->
+                    <tr v-if="sortedApplications.length === 0">
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="mx-auto flex max-w-sm flex-col items-center justify-center">
+                                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                                    <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                                        <rect x="9" y="3" width="6" height="4" rx="2" />
+                                        <path d="M9 14h6M9 10h6M9 18h3" />
+                                    </svg>
+                                </div>
+                                <h3 class="mt-3 text-sm font-bold text-[#0f172a]">No Queued Applications Found</h3>
+                                <p class="mt-1 text-xs text-[#64748b]">
+                                    There are currently no membership applications matching your filter criteria.
+                                </p>
                             </div>
                         </td>
                     </tr>
@@ -284,23 +406,24 @@ function densityToggleLabel() {
             </table>
         </div>
 
-        <div class="flex flex-col items-start justify-between gap-3 border-t border-[#dbe2de] bg-[#fbfcfb] px-3.5 py-2.5 sm:flex-row sm:items-center">
-            <p class="text-xs text-[#697772]">
-                Showing <span class="font-bold">{{ applications.from || 0 }}-{{ applications.to || 0 }}</span> of <span class="font-bold">{{ applications.total }}</span> applications
+        <!-- Pagination & Footer -->
+        <div class="flex flex-col items-start justify-between gap-3 border-t border-[#dde4de] bg-[#f9fbfa] px-4 py-3 sm:flex-row sm:items-center">
+            <p class="text-xs text-[#64748b]">
+                Showing <span class="font-bold text-[#0f172a]">{{ applications.from || 0 }}</span> to <span class="font-bold text-[#0f172a]">{{ applications.to || 0 }}</span> of <span class="font-bold text-[#0f172a]">{{ applications.total }}</span> applications
             </p>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
                 <template v-for="link in applications.links" :key="link.label">
                     <span
                         v-if="!link.url"
-                        class="inline-flex min-h-8 items-center rounded-md border border-[#dbe2de] px-2.5 py-1.5 text-xs text-[#9aa6a1]"
+                        class="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border border-[#dde4de] bg-white/60 px-2.5 py-1 text-xs text-slate-300"
                         v-html="link.label"
                     />
                     <Link
                         v-else
                         :href="link.url"
-                        class="inline-flex min-h-8 items-center rounded-md border px-2.5 py-1.5 text-xs font-semibold transition"
-                        :class="link.active ? 'border-[#003629] bg-[#003629] text-white' : 'border-[#dbe2de] text-[#5f6b66] hover:bg-white'"
+                        class="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border px-2.5 py-1 text-xs font-semibold transition"
+                        :class="link.active ? 'border-[#003629] bg-[#003629] text-white shadow-xs' : 'border-[#dde4de] bg-white text-[#475569] hover:bg-[#f1f5f3]'"
                         preserve-scroll
                         preserve-state
                         v-html="link.label"
@@ -309,6 +432,7 @@ function densityToggleLabel() {
             </div>
         </div>
 
+        <!-- Quick Action Dialog Modal -->
         <QuickActionDialog
             :open="quickActionDialog.open"
             :title="quickActionDialog.title"

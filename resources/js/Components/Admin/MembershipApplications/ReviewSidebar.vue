@@ -18,113 +18,201 @@ defineEmits(['submit-payment', 'submit-rejection']);
 
 <template>
     <div class="space-y-4">
-        <section class="rounded-lg border border-[#dbe2de] bg-white">
-            <div class="border-b border-[#e4ebe7] bg-[#f6f8f7] px-4 py-2.5">
-                <p class="text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-[#7a8781]">Step 3</p>
-                <h2 class="mt-0.5 text-xs font-semibold text-[#1a2420]">
-                    {{ flow.isMobile ? 'Mobile payment' : 'Payment recording' }}
-                </h2>
+        <!-- Assessment & Payment Card -->
+        <section class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+            <div class="border-b border-[#dde4de] bg-[#f9fbfa] px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-[#003629]">
+                            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor">
+                                <path fill-rule="evenodd" d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm12 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xs font-bold text-[#0f172a]">
+                            {{ flow.isMobile ? 'Mobile Payment' : 'Payment Assessment' }}
+                        </h2>
+                    </div>
+                    <span class="rounded bg-[#003629]/10 px-2 py-0.5 text-[0.6rem] font-bold text-[#003629]">
+                        Step 3
+                    </span>
+                </div>
             </div>
 
-            <div class="space-y-3 p-3">
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-2.5">
-                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Membership Fee</p>
-                        <p class="mt-1 text-sm font-semibold text-[#191c1c]">PHP {{ Number(assessment.membershipFee || 0).toFixed(2) }}</p>
+            <div class="p-4">
+                <!-- Fee Summary Grid -->
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-2">
+                    <div class="rounded-xl border border-[#dde4de] bg-[#f9fbfa] p-2.5">
+                        <span class="text-[0.58rem] font-bold uppercase tracking-wider text-[#64748b]">Membership Fee</span>
+                        <p class="mt-0.5 text-xs font-bold text-[#0f172a]">₱{{ Number(assessment.membershipFee || 0).toFixed(2) }}</p>
                     </div>
-                    <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-2.5">
-                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Annual Due</p>
-                        <p class="mt-1 text-sm font-semibold text-[#191c1c]">PHP {{ Number(assessment.annualDue || 0).toFixed(2) }}</p>
+                    <div class="rounded-xl border border-[#dde4de] bg-[#f9fbfa] p-2.5">
+                        <span class="text-[0.58rem] font-bold uppercase tracking-wider text-[#64748b]">Annual Due</span>
+                        <p class="mt-0.5 text-xs font-bold text-[#0f172a]">₱{{ Number(assessment.annualDue || 0).toFixed(2) }}</p>
                     </div>
-                    <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-2.5">
-                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#7a8781]">Mortuary Fee</p>
-                        <p class="mt-1 text-sm font-semibold text-[#191c1c]">PHP {{ Number(assessment.mortuaryFee || 0).toFixed(2) }}</p>
+                    <div class="rounded-xl border border-[#dde4de] bg-[#f9fbfa] p-2.5">
+                        <span class="text-[0.58rem] font-bold uppercase tracking-wider text-[#64748b]">Mortuary Fee</span>
+                        <p class="mt-0.5 text-xs font-bold text-[#0f172a]">₱{{ Number(assessment.mortuaryFee || 0).toFixed(2) }}</p>
                     </div>
-                    <div class="rounded-md border border-[#d4e3da] bg-[#eef6f0] p-2.5">
-                        <p class="text-[0.68rem] font-black uppercase tracking-[0.16em] text-[#6a7b73]">Total Due</p>
-                        <p class="mt-1 text-sm font-semibold text-[#163b31]">PHP {{ Number(assessment.totalAmountDue || 0).toFixed(2) }}</p>
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5">
+                        <span class="text-[0.58rem] font-bold uppercase tracking-wider text-emerald-800">Total Amount</span>
+                        <p class="mt-0.5 text-xs font-bold text-[#003629]">₱{{ Number(assessment.totalAmountDue || 0).toFixed(2) }}</p>
                     </div>
                 </div>
 
-                <form v-if="flow.canRecordPaymentInAdmin" class="space-y-2.5" @submit.prevent="$emit('submit-payment')">
-                    <label class="space-y-2">
-                        <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Payment Method</span>
-                        <input v-model="paymentForm.payment_method" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
-                    </label>
-                    <label class="space-y-2">
-                        <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Reference No.</span>
-                        <input v-model="paymentForm.reference_no" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
-                    </label>
-                    <label class="space-y-2">
-                        <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Amount Paid</span>
-                        <input v-model="paymentForm.amount_paid" type="number" min="0.01" step="0.01" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
-                    </label>
-                    <label class="space-y-2">
-                        <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7a8781]">Paid At</span>
-                        <input v-model="paymentForm.paid_at" type="datetime-local" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
-                    </label>
-                    <button type="submit" class="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#003629] px-4 text-xs font-semibold text-white transition hover:bg-[#0d4637]" :disabled="paymentForm.processing">
-                        {{ paymentForm.processing ? 'Recording...' : 'Record Payment And Finish' }}
+                <!-- Payment Recording Form -->
+                <form v-if="flow.canRecordPaymentInAdmin" class="mt-4 space-y-3 border-t border-[#edf2ee] pt-3.5" @submit.prevent="$emit('submit-payment')">
+                    <div>
+                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Payment Method</label>
+                        <input
+                            v-model="paymentForm.payment_method"
+                            type="text"
+                            placeholder="e.g. Cash, GCash"
+                            class="mt-1 h-9 w-full rounded-lg border border-[#dde4de] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Reference Number (Optional)</label>
+                        <input
+                            v-model="paymentForm.reference_no"
+                            type="text"
+                            placeholder="Official Receipt # / Transaction ID"
+                            class="mt-1 h-9 w-full rounded-lg border border-[#dde4de] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Amount Paid (PHP)</label>
+                        <input
+                            v-model="paymentForm.amount_paid"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            class="mt-1 h-9 w-full rounded-lg border border-[#dde4de] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Date & Time Paid</label>
+                        <input
+                            v-model="paymentForm.paid_at"
+                            type="datetime-local"
+                            class="mt-1 h-9 w-full rounded-lg border border-[#dde4de] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
+                        >
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="mt-2 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a] hover:shadow-md disabled:opacity-60"
+                        :disabled="paymentForm.processing"
+                    >
+                        <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ paymentForm.processing ? 'Recording...' : 'Record Payment & Settle' }}</span>
                     </button>
                 </form>
 
-                <div v-else class="rounded-md border border-dashed border-[#dbe2de] bg-[#f8faf9] px-3 py-2.5 text-xs text-[#5f6c67]">
-                    <span v-if="flow.paymentSettled">Payment is already recorded for this application.</span>
-                    <span v-else>Finish the document checklist first before recording the payment.</span>
+                <!-- Status Note when form not active -->
+                <div v-else class="mt-3 rounded-xl border border-dashed border-[#dde4de] bg-[#f9fbfa] p-3 text-center text-xs text-slate-500">
+                    <span v-if="flow.paymentSettled" class="font-semibold text-emerald-700">
+                        Payment has been recorded and settled.
+                    </span>
+                    <span v-else>
+                        Verify and clear required documents first before recording payment.
+                    </span>
                 </div>
             </div>
         </section>
 
-        <section v-if="payments.length" class="rounded-lg border border-[#dbe2de] bg-white">
-            <div class="border-b border-[#e4ebe7] bg-[#f6f8f7] px-4 py-2.5">
-                <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#7a8781]">Payments</p>
-                <h2 class="mt-1 text-lg font-bold text-[#1a2420]">Recorded entries</h2>
+        <!-- Recorded Payments History -->
+        <section v-if="payments.length" class="overflow-hidden rounded-2xl border border-[#dde4de] bg-white shadow-xs">
+            <div class="border-b border-[#dde4de] bg-[#f9fbfa] px-4 py-3">
+                <span class="text-xs font-bold text-[#0f172a]">Payment History</span>
             </div>
 
             <div class="space-y-2 p-3">
-                <article v-for="payment in payments" :key="payment.id" class="rounded-md border border-[#e3eae6] bg-[#f7faf8] p-3">
-                    <div class="flex items-start justify-between gap-3">
+                <article
+                    v-for="payment in payments"
+                    :key="payment.id"
+                    class="rounded-xl border border-emerald-100 bg-emerald-50/20 p-3"
+                >
+                    <div class="flex items-start justify-between gap-2">
                         <div>
-                            <p class="text-sm font-bold text-[#191c1c]">PHP {{ Number(payment.amountPaid || 0).toFixed(2) }}</p>
-                            <p class="mt-1 text-xs text-[#78857f]">{{ payment.paidAt || 'No date' }}</p>
+                            <p class="text-xs font-bold text-[#0f172a]">₱{{ Number(payment.amountPaid || 0).toFixed(2) }}</p>
+                            <p class="mt-0.5 text-[0.65rem] text-slate-500">{{ payment.paidAt || 'No date' }}</p>
                         </div>
-                        <span class="inline-flex rounded-full bg-[#eef7e3] px-2.5 py-1 text-xs font-black text-[#416918]">{{ payment.statusLabel }}</span>
+                        <span class="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[0.6rem] font-bold text-emerald-700 border border-emerald-200">
+                            {{ payment.statusLabel }}
+                        </span>
                     </div>
-                    <p class="mt-3 text-xs font-black uppercase tracking-[0.14em] text-[#7a8781]">{{ payment.method || 'METHOD' }}</p>
-                    <p class="mt-1 text-sm text-[#5f6c67]">{{ payment.referenceNo || 'No reference number' }}</p>
+                    <div class="mt-2 flex items-center justify-between text-[0.68rem] text-slate-500">
+                        <span>Method: <strong class="text-slate-700">{{ payment.method || 'CASH' }}</strong></span>
+                        <span v-if="payment.referenceNo">Ref: <strong class="text-slate-700">{{ payment.referenceNo }}</strong></span>
+                    </div>
                 </article>
             </div>
         </section>
 
+        <!-- Rejection Control -->
         <section
             v-if="permissions.canRejectDecision && !flow.paymentSettled && application.status.value !== 'rejected'"
-            class="rounded-lg border border-[#f1c9c9] bg-[#fff8f8]"
+            class="overflow-hidden rounded-2xl border border-rose-200 bg-rose-50/30 p-4 shadow-xs"
         >
-            <form class="space-y-4 p-4" @submit.prevent="$emit('submit-rejection')">
-                <label class="space-y-2">
-                    <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7f5555]">Rejection Reason</span>
-                    <select v-model="rejectionForm.rejection_reason" required class="w-full rounded-2xl border border-[#e7bebe] bg-white px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#b42318]">
-                        <option value="">Select a reason</option>
+            <div class="flex items-center gap-2 text-rose-800">
+                <svg viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                </svg>
+                <h3 class="text-xs font-bold">Reject Application</h3>
+            </div>
+
+            <form class="mt-3 space-y-3" @submit.prevent="$emit('submit-rejection')">
+                <div>
+                    <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-rose-800">Rejection Reason</label>
+                    <select
+                        v-model="rejectionForm.rejection_reason"
+                        required
+                        class="mt-1 h-9 w-full rounded-lg border border-rose-200 bg-white px-3 text-xs text-[#0f172a] outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50"
+                    >
+                        <option value="">Select reason</option>
                         <option v-for="reason in rejectionReasonOptions" :key="reason.value" :value="reason.value">{{ reason.label }}</option>
                     </select>
-                </label>
+                </div>
 
-                <label v-if="rejectionForm.rejection_reason === 'other'" class="space-y-2">
-                    <span class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-[#7f5555]">Rejection Details</span>
-                    <textarea v-model="rejectionForm.rejection_details" required rows="3" class="w-full resize-none rounded-2xl border border-[#e7bebe] bg-white px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#b42318]"></textarea>
-                </label>
+                <div v-if="rejectionForm.rejection_reason === 'other'">
+                    <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-rose-800">Reason Details</label>
+                    <textarea
+                        v-model="rejectionForm.rejection_details"
+                        required
+                        rows="3"
+                        placeholder="Provide detailed explanation for rejection..."
+                        class="mt-1 w-full rounded-lg border border-rose-200 bg-white p-2.5 text-xs text-[#0f172a] outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-200/50"
+                    />
+                </div>
 
-                <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-[#a62828] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#8f1e1e] disabled:cursor-not-allowed disabled:opacity-60" :disabled="rejectionForm.processing || !rejectionForm.rejection_reason">
-                    {{ rejectionForm.processing ? 'Rejecting...' : 'Reject Application' }}
+                <button
+                    type="submit"
+                    class="inline-flex h-9 w-full items-center justify-center rounded-xl bg-rose-600 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-rose-700 disabled:opacity-60"
+                    :disabled="rejectionForm.processing || !rejectionForm.rejection_reason"
+                >
+                    {{ rejectionForm.processing ? 'Rejecting...' : 'Confirm Rejection' }}
                 </button>
             </form>
         </section>
 
-        <section v-if="application.status.value === 'rejected' && urls.reapply" class="rounded-[24px] border border-[#f0d8a8] bg-[#fffaf0] p-5 shadow-[0_14px_32px_rgba(120,82,20,0.05)]">
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.22em] text-[#9a6700]">Next step</p>
-            <h2 class="mt-1 text-base font-bold text-[#6e4a00]">Create a replacement application</h2>
-            <p class="mt-2 text-sm leading-6 text-[#745b2f]">The rejected record remains in history. Start a new application using the corrected details.</p>
-            <Link :href="urls.reapply" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-[#d6ad59] bg-white px-5 py-3 text-sm font-extrabold text-[#765000] transition hover:bg-[#fff4d9]">
+        <!-- Reapply Prompt if Rejected -->
+        <section
+            v-if="application.status.value === 'rejected' && urls.reapply"
+            class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4"
+        >
+            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-amber-800">Replacement Record</span>
+            <p class="mt-1 text-xs text-amber-900">
+                This application was rejected. You can create a new replacement record with corrected information.
+            </p>
+            <Link
+                :href="urls.reapply"
+                class="mt-3 inline-flex h-9 w-full items-center justify-center rounded-xl border border-amber-300 bg-white px-4 text-xs font-bold text-amber-900 shadow-xs transition hover:bg-amber-50"
+            >
                 Reapply for Membership
             </Link>
         </section>

@@ -17,15 +17,15 @@ const props = defineProps({
 });
 
 const form = useForm({
-    first_name: props.farmer.profile.firstName || '',
-    middle_name: props.farmer.profile.middleName || '',
-    last_name: props.farmer.profile.lastName || '',
-    suffix: props.farmer.profile.suffix || '',
-    birth_date: props.farmer.profile.birthDate || '',
-    sex: props.farmer.profile.sex || '',
-    civil_status: props.farmer.profile.civilStatus || '',
-    mobile_number: props.farmer.profile.mobileNumber || '',
-    address: props.farmer.profile.address || '',
+    first_name: props.farmer.profile?.firstName || '',
+    middle_name: props.farmer.profile?.middleName || '',
+    last_name: props.farmer.profile?.lastName || '',
+    suffix: props.farmer.profile?.suffix || '',
+    birth_date: props.farmer.profile?.birthDate || '',
+    sex: props.farmer.profile?.sex || '',
+    civil_status: props.farmer.profile?.civilStatus || '',
+    mobile_number: props.farmer.profile?.mobileNumber || '',
+    address: props.farmer.profile?.address || '',
     barangay_id: String(props.farmer.barangay?.key || props.farmer.barangay?.id || ''),
     association_id: String(props.farmer.association?.key || props.farmer.association?.id || ''),
     member_type_id: String(props.farmer.memberType?.key || props.farmer.memberType?.id || ''),
@@ -67,53 +67,121 @@ function submit() {
 
     <AdminLayout title="Edit Farmer Record">
         <div class="space-y-4">
-            <EditHero :farmer="farmer" :show-url="showUrl" />
+            <EditHero :farmer="farmer" :show-url="showUrl" :index-url="indexUrl" />
 
-            <form class="compact-edit-form space-y-4" @submit.prevent="submit">
-                <EditSectionCard eyebrow="Registry Details" title="Assignment and status">
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Member Type</span>
-                            <select v-model="form.member_type_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+            <form class="space-y-4" @submit.prevent="submit">
+                <!-- Section 1: Registry Assignment & Status -->
+                <EditSectionCard eyebrow="Registry Details" title="Assignment and Status">
+                    <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Member Type</span>
+                            <select
+                                v-model="form.member_type_id"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                                 <option value="">Select member type</option>
-                                <option v-for="item in memberTypes" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.code }} - {{ item.name }}</option>
+                                <option v-for="item in memberTypes" :key="item.key || item.id" :value="String(item.key || item.id)">
+                                    {{ item.code }} - {{ item.name }}
+                                </option>
                             </select>
                         </label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Registry Status</span>
-                            <select v-model="form.status" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Registry Status</span>
+                            <select
+                                v-model="form.status"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                                 <option v-for="item in statuses" :key="item.value" :value="item.value">{{ item.label }}</option>
                             </select>
                         </label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Registered At</span>
-                            <input v-model="form.registered_at" type="date" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Registration Date</span>
+                            <input
+                                v-model="form.registered_at"
+                                type="date"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                         </label>
-                        <div class="rounded-md border border-[#e3eae6] bg-[#f7faf8] px-3 py-2">
-                            <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Current Membership</p>
-                            <p class="mt-1 text-xs font-medium text-[#191c1c]">{{ farmer.membershipStatusLabel || 'Not set' }}</p>
+
+                        <div class="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-3 flex flex-col justify-center">
+                            <span class="text-[0.6rem] font-bold uppercase tracking-wider text-[#64748b]">Membership Status</span>
+                            <p class="mt-0.5 text-xs font-bold text-[#014d3c]">{{ farmer.membershipStatusLabel || 'Not set' }}</p>
                         </div>
                     </div>
                 </EditSectionCard>
 
-                <EditSectionCard eyebrow="Identity" title="Personal details">
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">First Name</span><input v-model="form.first_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Middle Name</span><input v-model="form.middle_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Last Name</span><input v-model="form.last_name" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Suffix</span><input v-model="form.suffix" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Birth Date</span><input v-model="form.birth_date" type="date" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Sex</span>
-                            <select v-model="form.sex" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+                <!-- Section 2: Personal Details -->
+                <EditSectionCard eyebrow="Identity" title="Personal Details">
+                    <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">First Name</span>
+                            <input
+                                v-model="form.first_name"
+                                type="text"
+                                placeholder="Given name"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Middle Name</span>
+                            <input
+                                v-model="form.middle_name"
+                                type="text"
+                                placeholder="Middle name"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Last Name</span>
+                            <input
+                                v-model="form.last_name"
+                                type="text"
+                                placeholder="Family name"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Suffix</span>
+                            <input
+                                v-model="form.suffix"
+                                type="text"
+                                placeholder="Jr., Sr., III, etc."
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Birth Date</span>
+                            <input
+                                v-model="form.birth_date"
+                                type="date"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Sex / Gender</span>
+                            <select
+                                v-model="form.sex"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                                 <option value="">Select sex</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                             </select>
                         </label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Civil Status</span>
-                            <select v-model="form.civil_status" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+
+                        <label class="block space-y-1.5 sm:col-span-2">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Civil Status</span>
+                            <select
+                                v-model="form.civil_status"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                                 <option value="">Select status</option>
                                 <option value="single">Single</option>
                                 <option value="married">Married</option>
@@ -124,35 +192,71 @@ function submit() {
                     </div>
                 </EditSectionCard>
 
-                <EditSectionCard eyebrow="Location" title="Contact and assignment">
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <label class="space-y-2"><span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Mobile Number</span><input v-model="form.mobile_number" type="text" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Barangay</span>
-                            <select v-model="form.barangay_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white" @change="syncAssociation">
+                <!-- Section 3: Contact and Location -->
+                <EditSectionCard eyebrow="Location &amp; Contact" title="Geographic &amp; Outreach Details">
+                    <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Mobile Phone</span>
+                            <input
+                                v-model="form.mobile_number"
+                                type="text"
+                                placeholder="09xxxxxxxxx"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Barangay</span>
+                            <select
+                                v-model="form.barangay_id"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                                @change="syncAssociation"
+                            >
                                 <option value="">Select barangay</option>
-                                <option v-for="item in barangays" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
+                                <option v-for="item in barangays" :key="item.key || item.id" :value="String(item.key || item.id)">
+                                    {{ item.name }}
+                                </option>
                             </select>
                         </label>
-                        <label class="space-y-2">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Association</span>
-                            <select v-model="form.association_id" class="w-full rounded-2xl border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white">
+
+                        <label class="block space-y-1.5">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Association</span>
+                            <select
+                                v-model="form.association_id"
+                                class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            >
                                 <option value="">No association assigned</option>
-                                <option v-for="item in filteredAssociations" :key="item.key || item.id" :value="String(item.key || item.id)">{{ item.name }}</option>
+                                <option v-for="item in filteredAssociations" :key="item.key || item.id" :value="String(item.key || item.id)">
+                                    {{ item.name }}
+                                </option>
                             </select>
                         </label>
-                        <label class="space-y-2 md:col-span-2 xl:col-span-4">
-                            <span class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#7a8781]">Address</span>
-                            <textarea v-model="form.address" rows="2" class="w-full rounded-[20px] border border-[#d7e0db] bg-[#f8faf9] px-4 py-3 text-sm text-[#191c1c] outline-none transition focus:border-[#376757] focus:bg-white"></textarea>
+
+                        <label class="block space-y-1.5 sm:col-span-2 lg:col-span-3">
+                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Street Address</span>
+                            <textarea
+                                v-model="form.address"
+                                rows="2"
+                                placeholder="House no., street, purok, sitio..."
+                                class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
+                            ></textarea>
                         </label>
                     </div>
                 </EditSectionCard>
 
-                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                    <Link :href="indexUrl" class="inline-flex h-9 items-center justify-center rounded-md border border-[#d7e0db] px-4 text-xs font-normal text-[#697772] transition hover:bg-[#f4f7f5]">
+                <!-- Form Bottom Actions -->
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <Link
+                        :href="indexUrl"
+                        class="inline-flex h-9 items-center justify-center rounded-lg border border-[#dde4de] bg-white px-4 text-xs font-semibold text-[#64748b] transition hover:bg-[#f1f5f3] hover:text-[#0f172a]"
+                    >
                         Cancel
                     </Link>
-                    <button type="submit" class="inline-flex h-9 items-center justify-center rounded-md bg-[#003629] px-5 text-xs font-semibold text-white transition hover:bg-[#0d4637]" :disabled="form.processing">
+                    <button
+                        type="submit"
+                        class="inline-flex h-9 items-center justify-center rounded-lg bg-[#014d3c] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+                        :disabled="form.processing"
+                    >
                         {{ form.processing ? 'Saving...' : 'Save Changes' }}
                     </button>
                 </div>
@@ -160,21 +264,3 @@ function submit() {
         </div>
     </AdminLayout>
 </template>
-
-<style scoped>
-.compact-edit-form :deep(label) { gap: 0.3rem; }
-.compact-edit-form :deep(input),
-.compact-edit-form :deep(select) {
-    min-height: 2.25rem;
-    border-radius: 0.375rem;
-    padding: 0.45rem 0.75rem;
-    font-size: 0.75rem;
-    background: #fff;
-}
-.compact-edit-form :deep(textarea) {
-    border-radius: 0.375rem;
-    padding: 0.55rem 0.75rem;
-    font-size: 0.75rem;
-    background: #fff;
-}
-</style>
