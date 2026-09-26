@@ -350,4 +350,46 @@ function submit() {
     .mortuary-claim-process .col-span-4 { grid-column: span 3 / span 3; }
     .mortuary-claim-process .col-span-8 { grid-column: span 9 / span 9; }
 }
+
+/* Final compact pass: override spacing utilities that add large page gaps. */
+.mortuary-claim-process { font-size: 0.8rem; }
+.mortuary-claim-process > .claim-process-hero {
+    min-height: 0 !important;
+    padding: 0.65rem 0.875rem !important;
+}
+.claim-process-hero > .relative { min-height: 2rem; }
+.claim-process-hero h1 { margin: 0 !important; font-size: 1rem !important; line-height: 1.25rem !important; }
+.claim-process-hero a { height: 1.9rem; min-height: 1.9rem !important; }
+.mortuary-claim-process form > .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem !important; }
+.mortuary-claim-process form > div:nth-child(2) { padding: 0.75rem !important; }
+.mortuary-claim-process form > div:first-child { min-height: 2.5rem; padding: 0.55rem 0.75rem !important; }
+.mortuary-claim-process form > div:first-child h2 { font-size: 0.9rem; line-height: 1.2rem; }
+.mortuary-claim-process form > div:first-child span { font-size: 0.65rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child {
+    padding: 0.65rem !important;
+}
+.mortuary-claim-process form > div:nth-child(2) > section:first-child h3 { font-size: 0.68rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child label {
+    min-height: 2.75rem;
+    padding: 0.5rem !important;
+}
+.mortuary-claim-process form > div:nth-child(2) > section:first-child label p:first-child { font-size: 0.75rem; }
+.mortuary-claim-process form > div:nth-child(2) > section:first-child label p:last-child { font-size: 0.62rem; }
+.mortuary-claim-process input:not([type='checkbox']),
+.mortuary-claim-process select { height: 2rem; min-height: 2rem !important; }
+.mortuary-claim-process textarea { height: 3.25rem; min-height: 3.25rem !important; padding: 0.5rem !important; }
+.mortuary-claim-process .col-span-4 > section { padding: 0.65rem !important; }
+.mortuary-claim-process .col-span-4 .h-14.w-14 { height: 2rem; width: 2rem; }
+.mortuary-claim-process .col-span-4 .grid.grid-cols-2 { gap: 0.4rem; }
+.mortuary-claim-process .col-span-4 .rounded-lg.p-4 { padding: 0.5rem !important; }
+.mortuary-claim-process .col-span-4 .rounded-lg.p-4 .text-2xl { font-size: 0.8rem !important; }
+
+@media (min-width: 1280px) {
+    .mortuary-claim-process .col-span-4 > section:nth-child(2) > .space-y-6 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+    .mortuary-claim-process .col-span-4 > section:nth-child(2) > .space-y-6 > * { margin-top: 0 !important; }
+}
 </style>
