@@ -14,17 +14,22 @@ trait HasEncryptedPublicRouteKey
 
     public function resolveRouteBinding($value, $field = null): ?Model
     {
+        return $this->resolveRouteBindingQuery($this->newQuery(), $value, $field)->first();
+    }
+
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
         if (is_numeric($value)) {
-            return $this->newQuery()->whereKey((int) $value)->first();
+            return $query->where($field ?? $this->getRouteKeyName(), (int) $value);
         }
 
         $decodedId = $this->publicRouteKeyService()->decode((string) $value);
 
         if ($decodedId === null) {
-            return null;
+            return $query->whereNull($this->getRouteKeyName());
         }
 
-        return $this->newQuery()->whereKey($decodedId)->first();
+        return $query->where($field ?? $this->getRouteKeyName(), $decodedId);
     }
 
     protected function publicRouteKeyService(): PublicRouteKeyService

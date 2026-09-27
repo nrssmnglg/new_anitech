@@ -31,6 +31,10 @@ class QueryWorkflowService
 
     public function close(array|object $query): array
     {
+        if ($query instanceof \Illuminate\Database\Eloquent\Model) {
+            return ['status' => 'Resolved'];
+        }
+
         $data = $this->normalize($query);
 
         return array_merge($data, [
@@ -40,6 +44,10 @@ class QueryWorkflowService
 
     public function reopen(array|object $query): array
     {
+        if ($query instanceof \Illuminate\Database\Eloquent\Model) {
+            return ['status' => 'New'];
+        }
+
         $data = $this->normalize($query);
 
         return array_merge($data, [
@@ -49,6 +57,10 @@ class QueryWorkflowService
 
     public function escalate(array|object $query): array
     {
+        if ($query instanceof \Illuminate\Database\Eloquent\Model) {
+            return ['status' => 'Escalated'];
+        }
+
         $data = $this->normalize($query);
 
         return array_merge($data, [

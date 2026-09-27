@@ -95,9 +95,9 @@ class QueryController extends Controller
             'summary' => $this->summary($filters),
             'queries' => $queries->through(fn (Query $query): array => $this->serializeQueueRow($query)),
             'urls' => [
-                'index' => route('admin.queries.index'),
-                'export' => route('admin.queries.export'),
-                'quickAction' => route('admin.tasks.quick-action'),
+                'index' => route('admin.queries.index', [], false),
+                'export' => route('admin.queries.export', [], false),
+                'quickAction' => route('admin.tasks.quick-action', [], false),
             ],
         ]);
     }
@@ -167,12 +167,12 @@ class QueryController extends Controller
                 ->values()
                 ->all(),
             'urls' => [
-                'index' => route('admin.queries.index'),
-                'respond' => route('admin.queries.respond', $query),
-                'close' => route('admin.queries.close', $query),
-                'reopen' => route('admin.queries.reopen', $query),
-                'escalate' => route('admin.queries.escalate', $query),
-                'storeInternalNote' => route('admin.queries.internal-notes.store', $query),
+                'index' => route('admin.queries.index', [], false),
+                'respond' => route('admin.queries.respond', $query, false),
+                'close' => route('admin.queries.close', $query, false),
+                'reopen' => route('admin.queries.reopen', $query, false),
+                'escalate' => route('admin.queries.escalate', $query, false),
+                'storeInternalNote' => route('admin.queries.internal-notes.store', $query, false),
             ],
             'responseTemplates' => $this->responseTemplates(),
         ]);
@@ -234,8 +234,7 @@ class QueryController extends Controller
             ],
         ]);
 
-        return redirect()
-            ->route('admin.queries.show', $query)
+        return back(fallback: route('admin.queries.show', $query, false))
             ->with('success', 'Response sent to farmer inquiry.');
     }
 
@@ -244,7 +243,7 @@ class QueryController extends Controller
         $payload = $this->queryWorkflowService->close($query);
 
         $query->fill([
-            'status' => $payload['status'],
+            'status' => $payload['status'] ?? 'Resolved',
         ])->save();
 
         $this->auditTrailService->record(
@@ -258,9 +257,8 @@ class QueryController extends Controller
             ]
         );
 
-        return redirect()
-            ->route('admin.queries.show', $query)
-            ->with('success', 'Inquiry closed.');
+        return back(fallback: route('admin.queries.show', $query, false))
+            ->with('success', 'Inquiry marked as resolved.');
     }
 
     public function reopen(Query $query): RedirectResponse
@@ -268,7 +266,7 @@ class QueryController extends Controller
         $payload = $this->queryWorkflowService->reopen($query);
 
         $query->fill([
-            'status' => $payload['status'],
+            'status' => $payload['status'] ?? 'New',
         ])->save();
 
         $this->auditTrailService->record(
@@ -282,8 +280,7 @@ class QueryController extends Controller
             ]
         );
 
-        return redirect()
-            ->route('admin.queries.show', $query)
+        return back(fallback: route('admin.queries.show', $query, false))
             ->with('success', 'Inquiry reopened.');
     }
 
@@ -292,7 +289,7 @@ class QueryController extends Controller
         $payload = $this->queryWorkflowService->escalate($query);
 
         $query->fill([
-            'status' => $payload['status'],
+            'status' => $payload['status'] ?? 'Escalated',
         ])->save();
 
         $this->auditTrailService->record(
@@ -306,8 +303,7 @@ class QueryController extends Controller
             ]
         );
 
-        return redirect()
-            ->route('admin.queries.show', $query)
+        return back(fallback: route('admin.queries.show', $query, false))
             ->with('success', 'Inquiry escalated.');
     }
 
@@ -351,7 +347,7 @@ class QueryController extends Controller
                 'code' => $query->farmer?->farmer_code ?? 'No code',
             ],
             'actions' => [
-                'show' => route('admin.queries.show', $query),
+                'show' => route('admin.queries.show', $query, false),
             ],
             'accountability' => $this->accountability($query, $latestResponder),
             'quickActions' => [
@@ -386,7 +382,7 @@ class QueryController extends Controller
                 ->map(fn (Attachment $attachment): array => [
                     'id' => $attachment->id,
                     'name' => $attachment->original_name ?: basename((string) $attachment->file_path),
-                    'url' => route('admin.queries.images.show', [$query, $attachment]),
+                    'url' => route('admin.queries.images.show', [$query, $attachment], false),
                 ])
                 ->values()
                 ->all(),
@@ -401,7 +397,7 @@ class QueryController extends Controller
                         ->map(fn (Attachment $attachment): array => [
                             'id' => $attachment->id,
                             'name' => $attachment->original_name ?: basename((string) $attachment->file_path),
-                            'url' => route('admin.queries.responses.attachments.show', [$query, $response, $attachment]),
+                            'url' => route('admin.queries.responses.attachments.show', [$query, $response, $attachment], false),
                         ])
                         ->values()
                         ->all(),
