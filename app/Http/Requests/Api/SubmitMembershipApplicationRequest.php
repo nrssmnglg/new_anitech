@@ -29,7 +29,7 @@ class SubmitMembershipApplicationRequest extends JsonFormRequest
             'association_id' => ['nullable', 'integer', 'exists:associations,id'],
             'remarks' => ['nullable', 'string'],
             'terms_accepted' => ['accepted'],
-            'reapply_from_application_id' => ['nullable', 'integer', 'exists:membership_applications,id'],
+            'reapply_from_application_id' => ['nullable', 'integer', 'exists:membership_transactions,id'],
         ];
     }
 

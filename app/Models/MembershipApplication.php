@@ -20,6 +20,38 @@ class MembershipApplication extends MembershipTransaction
         return 'application_no';
     }
 
+    protected ?string $capturedRejectionDetails = null;
+
+    public function setRejectionDetailsAttribute(?string $value): void
+    {
+        $this->capturedRejectionDetails = $value;
+    }
+
+    public function getRejectionDetailsAttribute(): ?string
+    {
+        if ($this->capturedRejectionDetails !== null) {
+            return $this->capturedRejectionDetails;
+        }
+
+        $docRemarks = $this->documents()->where('verification_status', 'Rejected')->latest('updated_at')->value('remarks');
+        if (filled($docRemarks)) {
+            return $docRemarks;
+        }
+
+        $auditMetadata = AuditLog::query()
+            ->where('subject_type', $this->getMorphClass())
+            ->where('subject_id', $this->getKey())
+            ->where('action', 'application_rejected')
+            ->latest('created_at')
+            ->value('metadata');
+
+        if (is_array($auditMetadata) && filled($auditMetadata['details'] ?? null)) {
+            return $auditMetadata['details'];
+        }
+
+        return null;
+    }
+
     protected static function booted(): void
     {
         static::addGlobalScope('application_only', function (Builder $builder): void {
@@ -28,6 +60,18 @@ class MembershipApplication extends MembershipTransaction
 
         static::creating(function (self $application): void {
             $application->transaction_type = 'Application';
+        });
+
+        static::created(function (self $application): void {
+            if ($application->capturedRejectionDetails) {
+                $userId = $application->reviewed_by ?? \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::query()->value('id');
+                if ($userId) {
+                    $application->internalNotes()->create([
+                        'body' => $application->capturedRejectionDetails,
+                        'created_by' => $userId,
+                    ]);
+                }
+            }
         });
     }
 
@@ -73,13 +117,32 @@ class MembershipApplication extends MembershipTransaction
         );
     }
 
+    public function getRemarksAttribute(): ?string
+    {
+        return $this->internalNotes()->latest()->value('body');
+    }
+
     public function getRejectionReasonLabelAttribute(): ?string
     {
-        return $this->rejection_reason ? str($this->rejection_reason)->replace('_', ' ')->title()->value() : null;
+        if ($this->rejection_reason instanceof \App\Enums\MembershipApplicationRejectionReason) {
+            return $this->rejection_reason->label();
+        }
+
+        $raw = $this->rejection_reason ? (string) $this->rejection_reason : null;
+
+        return $raw ? str($raw)->replace('_', ' ')->title()->value() : null;
     }
 
     public function getEffectiveRejectionDetailsAttribute(): ?string
     {
-        return $this->rejection_reason;
+        $label = $this->rejection_reason instanceof \App\Enums\MembershipApplicationRejectionReason
+            ? $this->rejection_reason->label()
+            : ($this->rejection_reason ? str((string) $this->rejection_reason)->replace('_', ' ')->title()->value() : null);
+
+        return $this->capturedRejectionDetails
+            ?? $this->getAttribute('rejection_details')
+            ?? $this->internalNotes()->latest()->value('body')
+            ?? $this->remarks
+            ?? $label;
     }
 }

@@ -17,6 +17,10 @@ class ReviewMembershipApplicationRequest extends FormRequest
             return false;
         }
 
+        if ($this->input('action') === 'reject') {
+            return $user->hasRole(User::ROLE_ADMIN);
+        }
+
         return $user->hasRole(User::ROLE_ADMIN)
             || $user->hasRole(User::ROLE_STAFF);
     }

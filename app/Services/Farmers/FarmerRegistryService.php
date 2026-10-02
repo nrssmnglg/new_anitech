@@ -397,5 +397,28 @@ class FarmerRegistryService
                 'mobile_number' => $data['mobile_number'] ?? null,
             ],
         );
+
+        if (filled($data['email'] ?? null)) {
+            $user = $farmer->users()->first();
+            if ($user) {
+                $user->update(['email' => $data['email']]);
+            } else {
+                $farmer->users()->create([
+                    'name' => $farmer->full_name ?: 'Farmer',
+                    'email' => $data['email'],
+                    'password' => bcrypt('password'),
+                ]);
+            }
+        }
+
+        if (filled($data['remarks'] ?? null)) {
+            $userId = \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::query()->value('id');
+            if ($userId) {
+                $farmer->internalNotes()->create([
+                    'body' => $data['remarks'],
+                    'created_by' => $userId,
+                ]);
+            }
+        }
     }
 }

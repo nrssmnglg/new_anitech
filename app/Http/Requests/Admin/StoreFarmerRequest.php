@@ -47,6 +47,7 @@ class StoreFarmerRequest extends FormRequest
             'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'civil_status' => ['nullable', Rule::in(['single', 'married', 'widowed', 'separated'])],
             'mobile_number' => ['nullable', 'string', 'max:30'],
+            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'barangay_id' => ['required', 'exists:barangays,id'],
             'association_id' => ['nullable', 'exists:associations,id'],

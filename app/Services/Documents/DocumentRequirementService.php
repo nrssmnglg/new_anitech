@@ -205,23 +205,43 @@ class DocumentRequirementService
         $submitted = [];
 
         foreach ($submittedDocuments as $document) {
-            $normalized = $this->normalizeDocument($document);
-            $typeValue = $normalized['document_type']
-                ?? $normalized['type']
-                ?? $this->resolveDocumentTypeValue($document, $normalized);
-            $type = $typeValue instanceof DocumentType
-                ? $typeValue
-                : DocumentType::tryFrom((string) $typeValue);
+            $type = null;
+            if (is_object($document) && isset($document->document_type) && $document->document_type instanceof DocumentType) {
+                $type = $document->document_type;
+            }
+
+            if ($type === null) {
+                $normalized = $this->normalizeDocument($document);
+                $rawTypeValue = $normalized['document_type'] ?? $normalized['type'] ?? null;
+                $typeValue = is_array($rawTypeValue)
+                    ? ($rawTypeValue['code'] ?? $rawTypeValue['value'] ?? null)
+                    : $rawTypeValue;
+
+                $typeValue ??= $this->resolveDocumentTypeValue($document, $normalized);
+                $type = $typeValue instanceof DocumentType
+                    ? $typeValue
+                    : DocumentType::tryFrom((string) $typeValue);
+            }
 
             if ($type === null) {
                 continue;
             }
 
             if ($verifiedOnly) {
-                $statusValue = $normalized['verification_status'] ?? null;
-                $status = $statusValue instanceof DocumentVerificationStatus
-                    ? $statusValue
-                    : DocumentVerificationStatus::tryFrom(strtolower((string) $statusValue));
+                $status = null;
+                if (is_object($document) && isset($document->verification_status)) {
+                    $status = $document->verification_status instanceof DocumentVerificationStatus
+                        ? $document->verification_status
+                        : DocumentVerificationStatus::tryFrom(strtolower((string) $document->verification_status));
+                }
+
+                if ($status === null) {
+                    $normalized ??= $this->normalizeDocument($document);
+                    $statusValue = $normalized['verification_status'] ?? null;
+                    $status = $statusValue instanceof DocumentVerificationStatus
+                        ? $statusValue
+                        : DocumentVerificationStatus::tryFrom(strtolower((string) $statusValue));
+                }
 
                 if ($status !== DocumentVerificationStatus::VERIFIED) {
                     continue;

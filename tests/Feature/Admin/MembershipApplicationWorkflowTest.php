@@ -67,7 +67,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $response->assertRedirect(route('admin.membership-applications.create'));
         $response->assertSessionHasErrors(['sex']);
         $this->assertDatabaseCount('farmers', 0);
-        $this->assertDatabaseCount('membership_applications', 0);
+        $this->assertDatabaseCount('membership_transactions', 0);
     }
 
     public function test_walk_in_duplicate_farmer_blocks_application_and_returns_error(): void
@@ -97,7 +97,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $response->assertRedirect(route('admin.membership-applications.create'));
         $response->assertSessionHasErrors('duplicate_check');
         $this->assertDatabaseCount('farmers', 1);
-        $this->assertDatabaseCount('membership_applications', 0);
+        $this->assertDatabaseCount('membership_transactions', 0);
     }
 
     public function test_walk_in_document_confirmation_is_automatically_verified(): void
@@ -172,6 +172,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $lookups = $this->makeLookups();
         $this->makeFeeSchedule();
 
+        FeeSchedule::query()->delete();
         $lookups['memberType']->delete();
 
         $response = $this->actingAs($user)->post(route('admin.membership-applications.store'), $this->walkInPayload($lookups));
@@ -367,7 +368,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $service->uploadMobileDocument(
             $application->fresh(),
             'two_by_two_picture',
-            UploadedFile::fake()->image('id-picture.jpg'),
+            UploadedFile::fake()->create('id-picture.jpg', 120, 'image/jpeg'),
         );
 
         $this->assertDatabaseCount('notifications', 1);
@@ -767,7 +768,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertNotNull($newApplication);
         $this->assertSame($farmer->id, $newApplication->farmer_id);
         $this->assertDatabaseCount('farmers', 1);
-        $this->assertDatabaseCount('membership_applications', 2);
+        $this->assertDatabaseCount(MembershipApplication::class, 2);
         $this->assertSame('Replacement walk-in application', $newApplication->remarks);
         $this->assertSame(ApplicationStatus::REJECTED, $rejectedApplication->fresh()->status);
         $this->assertSame('09179999999', $farmer->fresh()->mobile_number);

@@ -18,6 +18,7 @@ use App\Models\Association;
 use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\FarmerDocument;
+use App\Models\FeeSchedule;
 use App\Models\MemberType;
 use App\Models\MembershipApplication;
 use App\Models\PayMongoWebhookEvent;
@@ -222,14 +223,22 @@ class MembershipApplicationController extends Controller
 
             $reapplyApplication = MembershipApplication::query()
                 ->with(['farmer.profile', 'farmer.barangay:id,name', 'farmer.association:id,name', 'farmer.memberType:id,code,name'])
-                ->where(function (Builder $query) use ($reapplyReference): void {
+                ->where(function ($query) use ($reapplyReference): void {
                     $query->where('application_no', $reapplyReference);
 
-                    if (is_numeric($reapplyReference)) {
-                        $query->orWhereKey((int) $reapplyReference);
+                    $decodedId = null;
+                    try {
+                        $decodedId = (new MembershipApplication())->decodePublicRouteKey($reapplyReference);
+                    } catch (\Throwable) {
+                    }
+
+                    if ($decodedId) {
+                        $query->orWhere('id', (int) $decodedId);
+                    } elseif (is_numeric($reapplyReference)) {
+                        $query->orWhere('id', (int) $reapplyReference);
                     }
                 })
-                ->where('status', ApplicationStatus::REJECTED->value)
+                ->whereIn('status', [ApplicationStatus::REJECTED->value, 'Rejected'])
                 ->first();
 
             if ($reapplyApplication === null) {
@@ -264,6 +273,7 @@ class MembershipApplicationController extends Controller
 
         return Inertia::render('Admin/MembershipApplications/Create', [
             'entryMode' => $entryMode,
+            'pageSubtitle' => $reapplyApplication ? 'Create a replacement membership application.' : null,
             'statuses' => FarmerStatus::options(),
             'canSelectManualStatus' => $canSelectManualStatus,
             'barangays' => Barangay::query()
@@ -314,18 +324,18 @@ class MembershipApplicationController extends Controller
                 'registered_at' => old('registered_at', now()->format('Y-m-d')),
                 'status' => $canSelectManualStatus ? old('status', FarmerStatus::PENDING->value) : FarmerStatus::PENDING->value,
                 'application_remarks' => old('application_remarks', ''),
-                'first_name' => old('first_name', $prefillProfile?->first_name),
-                'middle_name' => old('middle_name', $prefillProfile?->middle_name),
-                'last_name' => old('last_name', $prefillProfile?->last_name),
-                'suffix' => old('suffix', $prefillProfile?->suffix),
-                'birth_date' => old('birth_date', $prefillProfile?->birth_date?->toDateString()),
-                'sex' => old('sex', $prefillProfile?->sex ? strtolower((string) $prefillProfile->sex) : null),
-                'civil_status' => old('civil_status', $prefillProfile?->civil_status ? strtolower((string) $prefillProfile->civil_status) : null),
-                'mobile_number' => old('mobile_number', $prefillProfile?->mobile_number),
+                'first_name' => old('first_name', $prefillProfile?->first_name ?? $prefillFarmer?->first_name),
+                'middle_name' => old('middle_name', $prefillProfile?->middle_name ?? $prefillFarmer?->middle_name),
+                'last_name' => old('last_name', $prefillProfile?->last_name ?? $prefillFarmer?->last_name),
+                'suffix' => old('suffix', $prefillProfile?->suffix ?? $prefillFarmer?->suffix),
+                'birth_date' => old('birth_date', $prefillProfile?->birth_date?->toDateString() ?? optional($prefillFarmer?->birth_date)->toDateString()),
+                'sex' => old('sex', $prefillProfile?->sex ? strtolower((string) $prefillProfile->sex) : ($prefillFarmer?->sex ? strtolower((string) $prefillFarmer->sex) : null)),
+                'civil_status' => old('civil_status', $prefillProfile?->civil_status ? strtolower((string) $prefillProfile->civil_status) : ($prefillFarmer?->civil_status ? strtolower((string) $prefillFarmer->civil_status) : null)),
+                'mobile_number' => old('mobile_number', $prefillProfile?->mobile_number ?? $prefillFarmer?->mobile_number),
                 'member_type_id' => $this->queryRouteKey(old('member_type_id', $prefillFarmer?->member_type_id ?? '')),
                 'barangay_id' => $this->queryRouteKey(old('barangay_id', $prefillFarmer?->barangay_id ?? '')),
                 'association_id' => $this->queryRouteKey(old('association_id', $prefillFarmer?->association_id ?? '')),
-                'address' => old('address', $prefillProfile?->address),
+                'address' => old('address', $prefillProfile?->address ?? $prefillFarmer?->address),
                 'remarks' => old('remarks', $prefillFarmer?->remarks),
                 'documents' => collect($this->documentRequirementService->requiredFor('application', ['source' => 'walk_in']))
                     ->mapWithKeys(fn ($document) => [
@@ -351,7 +361,7 @@ class MembershipApplicationController extends Controller
             ? MembershipApplication::query()
                 ->with('farmer')
                 ->whereKey($request->integer('reapply_from_application_id'))
-                ->where('status', ApplicationStatus::REJECTED->value)
+                ->whereIn('status', [ApplicationStatus::REJECTED->value, 'Rejected'])
                 ->first()
             : null;
         $duplicates = $this->farmerRegistryService->findPotentialDuplicates($validated, $reapplyApplication?->farmer);
@@ -381,6 +391,7 @@ class MembershipApplicationController extends Controller
                 'record_origin' => 'application',
                 'status' => $validated['status'],
                 'registered_at' => $validated['registered_at'] ?? null,
+                'email' => $validated['email'] ?? null,
                 'remarks' => $validated['remarks'] ?? null,
             ];
 
@@ -394,12 +405,7 @@ class MembershipApplicationController extends Controller
                 'remarks' => $validated['application_remarks'] ?? null,
             ]);
 
-            $receivedDocumentsSelected = collect($validated['documents'] ?? [])
-                ->contains(fn (array $documentData): bool => (bool) ($documentData['is_received'] ?? false));
-
-            if ($receivedDocumentsSelected) {
-                $application = $this->membershipApplicationService->initializeChecklist($application, Auth::id());
-            }
+            $application = $this->membershipApplicationService->initializeChecklist($application, Auth::id());
 
             foreach (($validated['documents'] ?? []) as $documentType => $documentData) {
                 if (! ($documentData['is_received'] ?? false)) {
@@ -412,6 +418,26 @@ class MembershipApplicationController extends Controller
                 if ($document) {
                     $this->membershipApplicationService->markDocumentReceived($application, $document->id, true, Auth::id());
                 }
+            }
+
+            if (($validated['status'] ?? null) === FarmerStatus::ACTIVE->value) {
+                $application = $this->membershipApplicationService->initializeChecklist($application, Auth::id());
+                foreach ($application->documents as $document) {
+                    $this->membershipApplicationService->markDocumentReceived($application, $document->id, true, Auth::id());
+                }
+                $application = $application->fresh(['farmer', 'documents']);
+                $this->membershipApplicationService->approve($application, Auth::id());
+                $feeSchedule = FeeSchedule::query()->where('is_active', true)->first();
+                $totalDue = $feeSchedule
+                    ? ((float) $feeSchedule->membership_fee + (float) $feeSchedule->annual_due + (float) $feeSchedule->mortuary_fee)
+                    : 350.0;
+
+                $this->membershipApplicationService->recordPayment($application, [
+                    'payment_method' => 'cash',
+                    'amount_paid' => $totalDue,
+                    'paid_at' => now()->toDateTimeString(),
+                    'reference_no' => 'INITIAL-ACTIVE',
+                ], Auth::id());
             }
 
             return $application->fresh(['farmer', 'documents']);
@@ -693,7 +719,7 @@ class MembershipApplicationController extends Controller
                 ->all(),
             'permissions' => [
                 'canApproveDecision' => ! $automaticallyClosed && ((Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false)),
-                'canRejectDecision' => ! $automaticallyClosed && ((Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false) || (Auth::user()?->hasRole(User::ROLE_STAFF) ?? false)),
+                'canRejectDecision' => ! $automaticallyClosed && (Auth::user()?->hasRole(User::ROLE_ADMIN) ?? false),
             ],
             'features' => [
                 'walkInAttachScanEnabled' => false,

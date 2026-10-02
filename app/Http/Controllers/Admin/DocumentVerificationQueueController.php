@@ -221,6 +221,12 @@ class DocumentVerificationQueueController extends Controller
         $transaction = $document->membershipTransaction;
         $workflow = strtolower((string) $transaction?->transaction_type) === 'renewal' ? 'renewal' : 'application';
         $uploadPresent = $this->farmerDocumentService->uploadPresent($document);
+
+        if (! $uploadPresent && $transaction) {
+            $this->farmerDocumentService->recoverStorageUploadIfPresent($document, $transaction);
+            $uploadPresent = $this->farmerDocumentService->uploadPresent($document);
+        }
+
         $readyForVerification = $this->farmerDocumentService->readyForVerification($document);
         $isExpired = $this->farmerDocumentService->isExpired($document);
         $expiresAt = $this->farmerDocumentService->expiresAt($document);

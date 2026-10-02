@@ -21,6 +21,7 @@ class FarmerDocument extends Model
         'is_required',
         'original_name',
         'file_path',
+        'path',
         'verification_status',
         'verified_by',
         'verified_at',
@@ -93,6 +94,11 @@ class FarmerDocument extends Model
     public function getPathAttribute(): string
     {
         return (string) $this->file_path;
+    }
+
+    public function setPathAttribute(?string $value): void
+    {
+        $this->attributes['file_path'] = $value;
     }
 
     public function getDiskAttribute(): string

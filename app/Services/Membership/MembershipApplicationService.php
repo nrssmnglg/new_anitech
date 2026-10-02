@@ -55,6 +55,16 @@ class MembershipApplicationService
             if ($application->source !== 'walk_in') {
                 $this->farmerDocumentService->ensureApplicationChecklist($application);
             }
+
+            if (filled($attributes['remarks'] ?? null)) {
+                $userId = $attributes['user_id'] ?? \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::query()->value('id');
+                if ($userId) {
+                    $application->internalNotes()->create([
+                        'body' => $attributes['remarks'],
+                        'created_by' => $userId,
+                    ]);
+                }
+            }
             $application->load('farmer');
             $application->farmer?->forceFill([
                 'membership_status' => MembershipStatus::PENDING_APPLICATION->value,
@@ -72,7 +82,9 @@ class MembershipApplicationService
                 ]
             );
 
-            $this->queueApplicationSubmittedNotification($application->refresh()->load('farmer'));
+            if ($application->source !== 'mobile') {
+                $this->queueApplicationSubmittedNotification($application->refresh()->load('farmer'));
+            }
 
             return $application->refresh()->load(['farmer', 'documents']);
         });

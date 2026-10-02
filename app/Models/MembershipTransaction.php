@@ -24,6 +24,7 @@ class MembershipTransaction extends Model
         'reviewed_at',
         'rejected_at',
         'rejection_reason',
+        'rejection_details',
         'is_late',
     ];
 
@@ -32,6 +33,7 @@ class MembershipTransaction extends Model
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'rejection_reason' => \App\Enums\MembershipApplicationRejectionReason::class,
         'is_late' => 'boolean',
     ];
 

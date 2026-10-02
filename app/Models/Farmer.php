@@ -36,7 +36,138 @@ class Farmer extends Model
         'activated_at',
         'inactive_at',
         'inactive_reason',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'birth_date',
+        'sex',
+        'civil_status',
+        'mobile_number',
+        'address',
+        'email',
+        'remarks',
     ];
+
+    protected array $profileAttributes = [];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Farmer $farmer): void {
+            $profileKeys = ['first_name', 'middle_name', 'last_name', 'suffix', 'sex', 'civil_status', 'birth_date', 'address', 'mobile_number', 'email', 'remarks'];
+            foreach ($profileKeys as $key) {
+                if (array_key_exists($key, $farmer->attributes)) {
+                    $farmer->profileAttributes[$key] = $farmer->attributes[$key];
+                    unset($farmer->attributes[$key]);
+                }
+            }
+        });
+
+        static::saved(function (Farmer $farmer): void {
+            if (! empty($farmer->profileAttributes)) {
+                $email = $farmer->profileAttributes['email'] ?? null;
+                $remarks = $farmer->profileAttributes['remarks'] ?? null;
+                unset($farmer->profileAttributes['email'], $farmer->profileAttributes['remarks']);
+
+                if (isset($farmer->profileAttributes['sex'])) {
+                    $farmer->profileAttributes['sex'] = ucfirst(strtolower((string) $farmer->profileAttributes['sex']));
+                } else {
+                    $farmer->profileAttributes['sex'] = 'Male';
+                }
+
+                if (isset($farmer->profileAttributes['civil_status'])) {
+                    $farmer->profileAttributes['civil_status'] = ucfirst(strtolower((string) $farmer->profileAttributes['civil_status']));
+                } else {
+                    $farmer->profileAttributes['civil_status'] = 'Single';
+                }
+
+                $farmer->profile()->updateOrCreate([], $farmer->profileAttributes);
+
+                if ($email) {
+                    $user = $farmer->users()->first();
+                    if ($user) {
+                        $user->update(['email' => $email]);
+                    } else {
+                        $farmer->users()->create([
+                            'name' => $farmer->full_name ?: 'Farmer',
+                            'email' => $email,
+                            'password' => bcrypt('password'),
+                        ]);
+                    }
+                }
+
+                if ($remarks) {
+                    $userId = \Illuminate\Support\Facades\Auth::id() ?? User::query()->value('id');
+                    if ($userId) {
+                        $farmer->internalNotes()->create([
+                            'body' => $remarks,
+                            'created_by' => $userId,
+                        ]);
+                    }
+                }
+
+                $farmer->load(['profile', 'users', 'internalNotes']);
+                $farmer->profileAttributes = [];
+            }
+        });
+    }
+
+    public function getEmailAttribute(): ?string
+    {
+        return $this->users()->first()?->email
+            ?? ($this->profileAttributes['email'] ?? null);
+    }
+
+    public function getRemarksAttribute(): ?string
+    {
+        return $this->internalNotes()->latest()->value('body')
+            ?? ($this->profileAttributes['remarks'] ?? null);
+    }
+
+    public function getFirstNameAttribute(): ?string
+    {
+        return $this->profile?->first_name ?? ($this->profileAttributes['first_name'] ?? null);
+    }
+
+    public function getLastNameAttribute(): ?string
+    {
+        return $this->profile?->last_name ?? ($this->profileAttributes['last_name'] ?? null);
+    }
+
+    public function getMiddleNameAttribute(): ?string
+    {
+        return $this->profile?->middle_name ?? ($this->profileAttributes['middle_name'] ?? null);
+    }
+
+    public function getSuffixAttribute(): ?string
+    {
+        return $this->profile?->suffix ?? ($this->profileAttributes['suffix'] ?? null);
+    }
+
+    public function getMobileNumberAttribute(): ?string
+    {
+        return $this->profile?->mobile_number ?? ($this->profileAttributes['mobile_number'] ?? null);
+    }
+
+    public function getAddressAttribute(): ?string
+    {
+        return $this->profile?->address ?? ($this->profileAttributes['address'] ?? null);
+    }
+
+    public function getBirthDateAttribute(): mixed
+    {
+        return $this->profile?->birth_date ?? ($this->profileAttributes['birth_date'] ?? null);
+    }
+
+    public function getSexAttribute(): ?string
+    {
+        return $this->profile?->sex ?? ($this->profileAttributes['sex'] ?? null);
+    }
+
+    public function getCivilStatusAttribute(): ?string
+    {
+        return $this->profile?->civil_status ?? ($this->profileAttributes['civil_status'] ?? null);
+    }
 
     protected $casts = [
         'is_registry_record' => 'boolean',

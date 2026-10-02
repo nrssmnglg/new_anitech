@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class FarmerDocumentService
 {
@@ -24,13 +25,20 @@ class FarmerDocumentService
         foreach ($this->documentRequirementService->checklistRowsForApplication($application) as $row) {
             $row = $this->filterFarmerDocumentColumns($row);
 
-            FarmerDocument::query()->updateOrCreate(
-                [
-                    'membership_transaction_id' => $application->id,
-                    'document_type_id' => $row['document_type_id'],
-                ],
-                $row,
-            );
+            $document = FarmerDocument::query()->firstOrNew([
+                'membership_transaction_id' => $application->id,
+                'document_type_id' => $row['document_type_id'],
+            ]);
+
+            if (! $document->exists) {
+                $document->fill($row)->save();
+            } else {
+                if (isset($row['is_required']) && $document->is_required !== (bool) $row['is_required']) {
+                    $document->update(['is_required' => (bool) $row['is_required']]);
+                }
+            }
+
+            $this->recoverStorageUploadIfPresent($document, $application);
         }
 
         return $application->documents()->with('documentType')->orderBy('document_type_id')->get();
@@ -41,13 +49,20 @@ class FarmerDocumentService
         foreach ($this->documentRequirementService->checklistRowsForRenewal($renewalRequest) as $row) {
             $row = $this->filterFarmerDocumentColumns($row);
 
-            FarmerDocument::query()->updateOrCreate(
-                [
-                    'membership_transaction_id' => $renewalRequest->id,
-                    'document_type_id' => $row['document_type_id'],
-                ],
-                $row,
-            );
+            $document = FarmerDocument::query()->firstOrNew([
+                'membership_transaction_id' => $renewalRequest->id,
+                'document_type_id' => $row['document_type_id'],
+            ]);
+
+            if (! $document->exists) {
+                $document->fill($row)->save();
+            } else {
+                if (isset($row['is_required']) && $document->is_required !== (bool) $row['is_required']) {
+                    $document->update(['is_required' => (bool) $row['is_required']]);
+                }
+            }
+
+            $this->recoverStorageUploadIfPresent($document, $renewalRequest);
         }
 
         return $renewalRequest->documents()->with('documentType')->orderBy('document_type_id')->get();
@@ -58,13 +73,20 @@ class FarmerDocumentService
         foreach ($this->documentRequirementService->checklistRowsForReactivation($reactivationRequest) as $row) {
             $row = $this->filterFarmerDocumentColumns($row);
 
-            FarmerDocument::query()->updateOrCreate(
-                [
-                    'membership_transaction_id' => $reactivationRequest->id,
-                    'document_type_id' => $row['document_type_id'],
-                ],
-                $row,
-            );
+            $document = FarmerDocument::query()->firstOrNew([
+                'membership_transaction_id' => $reactivationRequest->id,
+                'document_type_id' => $row['document_type_id'],
+            ]);
+
+            if (! $document->exists) {
+                $document->fill($row)->save();
+            } else {
+                if (isset($row['is_required']) && $document->is_required !== (bool) $row['is_required']) {
+                    $document->update(['is_required' => (bool) $row['is_required']]);
+                }
+            }
+
+            $this->recoverStorageUploadIfPresent($document, $reactivationRequest);
         }
 
         return $reactivationRequest->documents()->with('documentType')->orderBy('document_type_id')->get();
@@ -199,6 +221,88 @@ class FarmerDocumentService
         $columns ??= Schema::getColumnListing('farmer_documents');
 
         return array_intersect_key($row, array_flip($columns));
+    }
+
+    public function recoverStorageUploadIfPresent(FarmerDocument $document, mixed $transaction): void
+    {
+        if ($this->uploadPresent($document)) {
+            return;
+        }
+
+        $appNo = $transaction->application_no ?? null;
+        if (! $appNo) {
+            return;
+        }
+
+        $documentType = $document->document_type?->value
+            ?? (string) ($document->documentType?->code ?? '');
+        if (! $documentType) {
+            return;
+        }
+
+        $disksToCheck = collect([
+            $document->disk ?: 'public',
+            'public',
+            's3',
+        ])->unique()->filter(function (string $diskName): bool {
+            return (bool) config("filesystems.disks.{$diskName}");
+        })->values();
+
+        $candidateDirs = [
+            "membership-applications/{$appNo}/{$documentType}",
+            "membership-applications/{$appNo}/office/{$documentType}",
+            "renewals/{$appNo}/{$documentType}",
+            "renewals/{$appNo}/office/{$documentType}",
+            "reactivations/{$appNo}/{$documentType}",
+            "reactivations/{$appNo}/office/{$documentType}",
+        ];
+
+        foreach ($disksToCheck as $diskName) {
+            try {
+                $disk = Storage::disk($diskName);
+                foreach ($candidateDirs as $dir) {
+                    $files = $disk->files($dir);
+                    if (! empty($files)) {
+                        sort($files);
+                        $latestFile = end($files);
+                        $filename = basename($latestFile);
+
+                        $payload = [
+                            'file_path' => $latestFile,
+                            'original_name' => $filename,
+                        ];
+
+                        if (! $document->uploaded_at) {
+                            $payload['uploaded_at'] = now();
+                        }
+
+                        if (Schema::hasColumn('farmer_documents', 'mime_type')) {
+                            try {
+                                $mime = $disk->mimeType($latestFile);
+                                if ($mime) {
+                                    $payload['mime_type'] = $mime;
+                                }
+                            } catch (\Throwable) {
+                            }
+                        }
+
+                        if (Schema::hasColumn('farmer_documents', 'file_size')) {
+                            try {
+                                $size = $disk->size($latestFile);
+                                if ($size) {
+                                    $payload['file_size'] = $size;
+                                }
+                            } catch (\Throwable) {
+                            }
+                        }
+
+                        $document->forceFill($payload)->save();
+                        return;
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
     }
 }
 

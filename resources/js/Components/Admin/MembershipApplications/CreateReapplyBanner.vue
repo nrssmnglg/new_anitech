@@ -11,7 +11,7 @@ defineProps({
                 <p class="text-[0.72rem] font-black uppercase tracking-[0.24em] text-[#a86100]">Re-application Source</p>
                 <h2 class="mt-2 text-xl font-black text-[#191c1c]">Replacement membership record</h2>
                 <p class="mt-2 max-w-2xl text-sm leading-7 text-[#5f6c67]">
-                    The rejected application stays in history. This form creates a new application for the same farmer record.
+                    Create a replacement membership application. The rejected application stays in history. This form creates a new application for the same farmer record.
                 </p>
             </div>
             <div class="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm text-[#5f6c67]">
