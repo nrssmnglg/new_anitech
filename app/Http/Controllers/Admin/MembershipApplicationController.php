@@ -421,12 +421,10 @@ class MembershipApplicationController extends Controller
             }
 
             if (($validated['status'] ?? null) === FarmerStatus::ACTIVE->value) {
-                $application = $this->membershipApplicationService->initializeChecklist($application, Auth::id());
                 foreach ($application->documents as $document) {
                     $this->membershipApplicationService->markDocumentReceived($application, $document->id, true, Auth::id());
                 }
                 $application = $application->fresh(['farmer', 'documents']);
-                $this->membershipApplicationService->approve($application, Auth::id());
                 $feeSchedule = FeeSchedule::query()->where('is_active', true)->first();
                 $totalDue = $feeSchedule
                     ? ((float) $feeSchedule->membership_fee + (float) $feeSchedule->annual_due + (float) $feeSchedule->mortuary_fee)
@@ -886,7 +884,7 @@ class MembershipApplicationController extends Controller
 
         if (in_array($result['summary']['assessment_status'], [AssessmentStatus::PAID, AssessmentStatus::OVERPAID], true)) {
             return redirect()
-                ->route('admin.farmers.index')
+                ->route('admin.membership-applications.show', $membershipApplication)
                 ->with('success', 'Payment recorded and membership completed.');
         }
 

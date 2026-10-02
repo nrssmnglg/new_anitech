@@ -41,7 +41,7 @@ class MembershipApplication extends MembershipTransaction
         $auditMetadata = AuditLog::query()
             ->where('subject_type', $this->getMorphClass())
             ->where('subject_id', $this->getKey())
-            ->where('action', 'application_rejected')
+            ->where('event', 'application_rejected')
             ->latest('created_at')
             ->value('metadata');
 
@@ -131,6 +131,11 @@ class MembershipApplication extends MembershipTransaction
         $raw = $this->rejection_reason ? (string) $this->rejection_reason : null;
 
         return $raw ? str($raw)->replace('_', ' ')->title()->value() : null;
+    }
+
+    public function getApprovedAtAttribute(): mixed
+    {
+        return $this->status === ApplicationStatus::APPROVED ? $this->reviewed_at : null;
     }
 
     public function getEffectiveRejectionDetailsAttribute(): ?string

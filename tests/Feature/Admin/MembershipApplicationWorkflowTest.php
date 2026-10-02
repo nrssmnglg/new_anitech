@@ -48,7 +48,7 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertNotNull($farmer);
         $this->assertSame('walk_in', $application->source);
         $this->assertSame(ApplicationStatus::SUBMITTED, $application->status);
-        $this->assertCount(3, $application->documents);
+        $this->assertCount(4, $application->documents);
         $this->assertTrue($application->documents->every(fn ($document) => $document->is_received === false));
         $this->assertSame(MembershipStatus::PENDING_DOCUMENTS, $farmer->fresh()->membership_status);
     }
@@ -668,8 +668,8 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame(FarmerStatus::ACTIVE, $farmer->status);
         $this->assertSame(MembershipStatus::ACTIVE, $farmer->membership_status);
         $this->assertDatabaseHas('payment_assessments', [
-            'membership_application_id' => $application->id,
-            'status' => AssessmentStatus::PAID->value,
+            'membership_transaction_id' => $application->id,
+            'status' => 'Paid',
         ]);
         $this->assertDatabaseCount('payments', 1);
         $this->assertDatabaseCount('membership_ledgers', 1);
@@ -695,8 +695,8 @@ class MembershipApplicationWorkflowTest extends TestCase
         $this->assertSame(MembershipStatus::ACTIVE, $application->farmer->fresh()->membership_status);
         $this->assertTrue($application->documents->every(fn ($document) => $document->verification_status === DocumentVerificationStatus::VERIFIED));
         $this->assertDatabaseHas('payment_assessments', [
-            'membership_application_id' => $application->id,
-            'status' => AssessmentStatus::PAID->value,
+            'membership_transaction_id' => $application->id,
+            'status' => 'Paid',
         ]);
         $this->assertDatabaseCount('payments', 1);
         $this->assertDatabaseCount('membership_ledgers', 1);

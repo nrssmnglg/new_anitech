@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\MemberTypeCode;
+use App\Models\MemberType;
 use Illuminate\Validation\Rule;
 
 class StoreMembershipApplicationRequest extends StoreFarmerRequest
@@ -35,11 +37,19 @@ class StoreMembershipApplicationRequest extends StoreFarmerRequest
             }
         }
 
-        if (! $this->filled('member_type_id')) {
-            $defaultId = \App\Models\MemberType::query()->value('id');
-            if ($defaultId) {
-                $this->merge(['member_type_id' => $defaultId]);
-            }
+        if (! $this->filled('member_type_id') || ! MemberType::query()->whereKey($this->input('member_type_id'))->exists()) {
+            $type = MemberTypeCode::NM;
+            $default = MemberType::query()->firstOrCreate(
+                ['code' => $type->value],
+                [
+                    'name' => $type->label(),
+                    'requires_membership_fee' => true,
+                    'mortuary_eligible' => true,
+                    'status' => 'Active',
+                ],
+            );
+
+            $this->merge(['member_type_id' => $default->id]);
         }
     }
 

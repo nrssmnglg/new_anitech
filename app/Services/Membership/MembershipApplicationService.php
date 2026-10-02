@@ -101,6 +101,7 @@ class MembershipApplicationService
 
             $this->farmerDocumentService->ensureApplicationChecklist($application);
             $initialized = $application->refresh()->load(['farmer', 'documents']);
+            $this->updateMembershipStatusFromDocuments($initialized);
 
             $this->auditTrailService->recordById(
                 'membership_applications',
