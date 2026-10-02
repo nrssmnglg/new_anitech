@@ -266,15 +266,15 @@ class DocumentVerificationQueueController extends Controller
             'actions' => [
                 'reviewUrl' => $workflow === 'renewal'
                     ? route('admin.renewals.documents.review', [$transaction, $document])
-                    : route('admin.membership-applications.documents.review', [$transaction, $document]),
+                    : route('admin.membership-applications.documents.review', [$transaction->application_no ?: $transaction->id, $document]),
                 'viewUrl' => $uploadPresent
                     ? ($workflow === 'renewal'
                         ? route('admin.renewals.documents.view', [$transaction, $document])
-                        : route('admin.membership-applications.documents.view', [$transaction, $document]))
+                        : route('admin.membership-applications.documents.view', [$transaction->application_no ?: $transaction->id, $document]))
                     : null,
                 'showParentUrl' => $workflow === 'renewal'
-                    ? route('admin.renewals.show', $transaction)
-                    : route('admin.membership-applications.show', $transaction),
+                    ? route('admin.renewals.show', RenewalRequest::query()->find($transaction->id) ?: $transaction)
+                    : route('admin.membership-applications.show', $transaction->application_no ?: $transaction->id),
             ],
         ];
     }

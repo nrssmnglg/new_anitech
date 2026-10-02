@@ -1403,7 +1403,7 @@ class FarmerController extends Controller
             'statusLabel' => $application->status?->label() ?? 'Pending',
             'submittedAt' => optional($application->submitted_at)->format('M d, Y h:i A'),
             'documentsCount' => (int) ($application->documents_count ?? $application->documents()->count()),
-            'showUrl' => route('admin.membership-applications.show', $application),
+            'showUrl' => route('admin.membership-applications.show', $application->application_no ?: $application->id),
         ];
     }
 
@@ -1511,7 +1511,7 @@ class FarmerController extends Controller
                 'status' => $application->status?->label() ?? 'Pending',
                 'occurredAt' => optional($application->submitted_at ?? $application->created_at)?->format('M d, Y h:i A'),
                 'occurredAtRaw' => optional($application->submitted_at ?? $application->created_at)?->toDateTimeString(),
-                'href' => route('admin.membership-applications.show', $application),
+                'href' => route('admin.membership-applications.show', $application->application_no ?: $application->id),
                 'meta' => [
                     'Documents' => (string) ($application->documents_count ?? 0),
                     'Source' => strtoupper(str_replace('_', '-', (string) $application->source)),
@@ -1549,11 +1549,13 @@ class FarmerController extends Controller
                 'key' => 'application-annual-dues-' . $ledger->id,
                 'type' => 'renewal',
                 'title' => 'Annual dues covered by membership application',
-                'subtitle' => $ledger->membershipTransaction->application_no . ' for ' . $ledger->year,
+                'subtitle' => ($ledger->membershipTransaction?->application_no ?: 'Application #' . $ledger->membershipTransaction?->id) . ' for ' . $ledger->year,
                 'status' => 'Completed',
                 'occurredAt' => optional($ledger->paid_at ?? $ledger->created_at)?->format('M d, Y h:i A'),
                 'occurredAtRaw' => optional($ledger->paid_at ?? $ledger->created_at)?->toDateTimeString(),
-                'href' => route('admin.membership-applications.show', $ledger->membershipTransaction->application_no),
+                'href' => $ledger->membershipTransaction
+                    ? route('admin.membership-applications.show', $ledger->membershipTransaction->application_no ?: $ledger->membershipTransaction->id)
+                    : null,
                 'meta' => ['Year' => (string) $ledger->year, 'Source' => 'Membership application'],
             ])->all();
 
@@ -1667,7 +1669,7 @@ class FarmerController extends Controller
         return FarmerDocument::query()
             ->with([
                 'documentType:id,code,name',
-                'membershipTransaction:id,transaction_type,farmer_id',
+                'membershipTransaction:id,transaction_type,farmer_id,application_no',
             ])
             ->whereHas('membershipTransaction', fn (Builder $query) => $query->where('farmer_id', $farmer->id))
             ->latest('uploaded_at')
@@ -1678,9 +1680,10 @@ class FarmerController extends Controller
                 $href = null;
 
                 if ($transaction?->transaction_type === 'Application') {
-                    $href = route('admin.membership-applications.show', $transaction);
+                    $href = route('admin.membership-applications.show', $transaction->application_no ?: $transaction->id);
                 } elseif ($transaction?->transaction_type === 'Renewal') {
-                    $href = route('admin.renewals.show', $transaction);
+                    $renewal = RenewalRequest::query()->find($transaction->id);
+                    $href = $renewal ? route('admin.renewals.show', $renewal) : null;
                 }
 
                 return [
