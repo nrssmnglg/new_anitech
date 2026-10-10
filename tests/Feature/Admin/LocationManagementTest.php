@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Association;
 use App\Models\Barangay;
+use App\Models\Farmer;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -118,6 +119,52 @@ class LocationManagementTest extends TestCase
         $this->assertNotNull($association);
         $response->assertRedirect(route('admin.associations.show', $association));
         $this->assertSame($barangay->id, $association->barangay_id);
+    }
+
+    public function test_store_assigns_existing_barangay_farmers_to_the_new_association(): void
+    {
+        $barangay = Barangay::query()->create([
+            'name' => 'San Vicente',
+            'code' => 'BRGY-016',
+            'status' => 'active',
+        ]);
+        $farmer = Farmer::factory()->create(['barangay_id' => $barangay->id]);
+
+        $this->post(route('admin.associations.store'), [
+            'barangay_id' => $barangay->id,
+            'name' => 'San Vicente Farmers Association',
+            'status' => 'active',
+        ])->assertSessionHasNoErrors();
+
+        $association = Association::query()->where('barangay_id', $barangay->id)->firstOrFail();
+
+        $this->assertSame($association->id, $farmer->fresh()->association_id);
+    }
+
+    public function test_edit_lists_unassigned_farmers_from_the_association_barangay(): void
+    {
+        $barangay = Barangay::query()->create([
+            'name' => 'Balaya',
+            'code' => 'BRGY-017',
+            'status' => 'active',
+        ]);
+        $association = Association::query()->create([
+            'barangay_id' => $barangay->id,
+            'name' => 'Balaya Farmers Association',
+            'code' => 'ASSOC-025',
+            'status' => 'active',
+        ]);
+        $farmer = Farmer::factory()->create([
+            'barangay_id' => $barangay->id,
+            'association_id' => null,
+            'first_name' => 'Juan',
+            'last_name' => 'Dela Cruz',
+        ]);
+
+        $response = $this->get(route('admin.associations.edit', $association));
+
+        $response->assertOk();
+        $response->assertSee($farmer->farmer_code);
     }
 
     public function test_store_auto_generates_association_code(): void

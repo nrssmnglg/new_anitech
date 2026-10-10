@@ -36,7 +36,7 @@ class UpdateAssociationRequest extends FormRequest
             'president_farmer_id' => [
                 'nullable',
                 Rule::exists('farmers', 'id')->where(
-                    fn ($query) => $query->where('association_id', $association?->id),
+                    fn ($query) => $query->where('barangay_id', $this->input('barangay_id')),
                 ),
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],

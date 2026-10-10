@@ -126,7 +126,7 @@ function closePresidentPicker() {
                         </span>
                         <span class="shrink-0 text-[0.62rem] text-[#94a3b8]">{{ farmer.mobileNumber }}</span>
                     </button>
-                    <p v-if="filteredPresidentCandidates.length === 0" class="px-3 py-6 text-center text-xs text-[#94a3b8]">No matching farmer in this association.</p>
+                    <p v-if="filteredPresidentCandidates.length === 0" class="px-3 py-6 text-center text-xs text-[#94a3b8]">No matching farmer in this barangay.</p>
                 </div>
             </div>
 
@@ -144,7 +144,7 @@ function closePresidentPicker() {
                 <button type="button" class="inline-flex h-7 shrink-0 items-center rounded-md border border-[#fecdd3] bg-[#fff1f2] px-2.5 text-[0.62rem] font-bold text-[#e11d48] transition-all duration-150 hover:bg-[#ffe4e6]" @click="clearPresident">Remove</button>
             </div>
 
-            <p class="text-[0.62rem] text-[#94a3b8]">Searches only registered farmers assigned to this association.</p>
+            <p class="text-[0.62rem] text-[#94a3b8]">Searches registered farmers in this association's barangay.</p>
             <p v-if="form.errors.president_farmer_id" class="flex items-center gap-1 text-xs font-medium text-rose-600">
                 <svg viewBox="0 0 16 16" class="h-3 w-3 shrink-0" fill="currentColor"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm-.75-4.75a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-1.5 0v4.5ZM8 11.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
                 {{ form.errors.president_farmer_id }}

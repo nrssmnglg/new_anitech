@@ -127,10 +127,16 @@ class AssociationController extends Controller
                 ->max() + 1;
             $code = 'ASSOC' . str_pad((string) $nextNumber, 2, '0', STR_PAD_LEFT);
 
-            return Association::query()->create([
+            $association = Association::query()->create([
                 ...$request->validated(),
                 'code' => $code,
             ]);
+
+            Farmer::query()
+                ->where('barangay_id', $association->barangay_id)
+                ->update(['association_id' => $association->id]);
+
+            return $association;
         }, 3);
 
         return redirect()
@@ -190,7 +196,8 @@ class AssociationController extends Controller
                 'president_farmer_id' => $this->queryRouteKey($association->president_farmer_id),
                 'status' => $association->status ?: 'active',
             ],
-            'presidentCandidates' => $association->farmers()
+            'presidentCandidates' => Farmer::query()
+                ->where('barangay_id', $association->barangay_id)
                 ->with('profile:id,farmer_id,first_name,middle_name,last_name,suffix,mobile_number')
                 ->get()
                 ->sortBy(fn (Farmer $farmer): string => strtolower($farmer->full_name))
@@ -219,14 +226,26 @@ class AssociationController extends Controller
     public function update(UpdateAssociationRequest $request, Association $association): RedirectResponse
     {
         $validated = $request->validated();
-        $president = filled($validated['president_farmer_id'] ?? null)
-            ? Farmer::query()->find($validated['president_farmer_id'])
-            : null;
 
-        $association->update([
-            ...$validated,
-            'president_name' => $president?->full_name,
-        ]);
+        DB::transaction(function () use ($validated, $association): void {
+            $president = filled($validated['president_farmer_id'] ?? null)
+                ? Farmer::query()->find($validated['president_farmer_id'])
+                : null;
+
+            $association->update([
+                ...$validated,
+                'president_name' => $president?->full_name,
+            ]);
+
+            Farmer::query()
+                ->where('association_id', $association->id)
+                ->where('barangay_id', '!=', $association->barangay_id)
+                ->update(['association_id' => null]);
+
+            Farmer::query()
+                ->where('barangay_id', $association->barangay_id)
+                ->update(['association_id' => $association->id]);
+        });
 
         return redirect()
             ->route('admin.associations.show', $association)

@@ -192,7 +192,10 @@
         </div>
 
         <section class="report-sheet">
-            <h1 class="report-title">SUMMARY OF BASACAFEFA RENEWAL CY {{ $reportYear }}</h1>
+            <h1 class="report-title">
+                Federation of Farmers association of San Carlos City, Pangasinan(FEFASACAPA) INC.<br>
+                SUMMARY OF RENEWAL CY {{ $reportYear }}
+            </h1>
 
             @php
                 $visibleColumns = array_keys($selectedColumns);

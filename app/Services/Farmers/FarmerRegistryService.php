@@ -202,6 +202,15 @@ class FarmerRegistryService
     private function preparePayload(array $data, ?Farmer $farmer = null): array
     {
         $payload = Arr::except($data, ['has_existing_membership', 'confirm_duplicate_override']);
+
+        if (filled($payload['barangay_id'] ?? null)) {
+            $barangayAssociationId = Association::query()
+                ->where('barangay_id', $payload['barangay_id'])
+                ->value('id');
+
+            $payload['association_id'] = $barangayAssociationId;
+        }
+
         $status = FarmerStatus::tryFrom((string) ($payload['status'] ?? FarmerStatus::PENDING->value))
             ?? FarmerStatus::PENDING;
         $registeredAt = $this->normalizeRegisteredAt($payload['registered_at'] ?? null, $farmer);

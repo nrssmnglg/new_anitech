@@ -6,6 +6,8 @@ use Illuminate\Support\Collection;
 
 class RenewalSummaryPdfService extends BasePdfReport
 {
+    private const ORGANIZATION_NAME = 'Federation of Farmers association of San Carlos City, Pangasinan(FEFASACAPA) INC.';
+
     public function buildSummary(Collection $summaryRows, array $totals, array $selectedColumns, string $title, string $generatedAt, int $year): string
     {
         $this->bootPdf('Renewal Summary Report', 'P');
@@ -139,7 +141,8 @@ class RenewalSummaryPdfService extends BasePdfReport
     ): void
     {
         $this->pdf->SetFont('Arial', 'B', 11);
-        $this->pdf->Cell(0, 6, $this->text('SUMMARY OF BASACAFEFA RENEWAL CY ' . $year), 0, 1, 'C');
+        $this->pdf->Cell(0, 6, $this->text(self::ORGANIZATION_NAME), 0, 1, 'C');
+        $this->pdf->Cell(0, 6, $this->text('SUMMARY OF RENEWAL CY ' . $year), 0, 1, 'C');
         $this->pdf->Ln(2);
 
         $left = $this->pdf->GetX();
@@ -208,7 +211,8 @@ class RenewalSummaryPdfService extends BasePdfReport
 
         $this->pdf->SetFont('Arial', 'B', 12);
         $this->pdf->SetTextColor(0, 0, 0);
-        $this->pdf->Cell(0, 6, $this->text('BASACAFEFA MASTERLIST OF MEMBERS RENEWAL AND NEW MEMBERSHIP'), 0, 1, 'C');
+        $this->pdf->Cell(0, 6, $this->text(self::ORGANIZATION_NAME), 0, 1, 'C');
+        $this->pdf->Cell(0, 6, $this->text('MASTERLIST OF MEMBERS RENEWAL AND NEW MEMBERSHIP'), 0, 1, 'C');
         $this->pdf->Ln(1);
 
         $this->pdf->SetFont('Arial', 'B', 9);
