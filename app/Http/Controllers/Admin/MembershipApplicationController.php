@@ -921,7 +921,15 @@ class MembershipApplicationController extends Controller
 
         $disk = $document->disk ?: 'public';
         $path = (string) $document->file_path;
-        $storageMimeType = strtolower((string) (Storage::disk($disk)->mimeType($path) ?: ''));
+        $storageMimeType = '';
+
+        try {
+            $storageMimeType = strtolower((string) (Storage::disk($disk)->mimeType($path) ?: ''));
+        } catch (\Throwable) {
+            // A stale object path or unavailable S3 metadata must not prevent
+            // the entire application review page from loading. The extension
+            // fallback below still supplies a useful preview content type.
+        }
 
         if ($storageMimeType !== '' && $storageMimeType !== 'application/octet-stream') {
             return $storageMimeType;

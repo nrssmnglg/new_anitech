@@ -511,6 +511,13 @@ class MembershipApplicationWorkflowTest extends TestCase
             'reviewed_at' => now(),
         ]);
 
+        Storage::fake('public');
+        app(FarmerDocumentService::class)->ensureApplicationChecklist($application);
+        $application->documents()->firstOrFail()->forceFill([
+            'file_path' => 'membership-applications/APP-APPROVED-REVIEW/two_by_two_picture/missing.png',
+            'original_name' => 'missing.png',
+        ])->save();
+
         $this->assertNull($application->fresh()->rejection_details);
 
         $response = $this->actingAs($this->makeAdminUser())
