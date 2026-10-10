@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import CreateReapplyBanner from '../../../Components/Admin/MembershipApplications/CreateReapplyBanner.vue';
 import CreateSectionCard from '../../../Components/Admin/MembershipApplications/CreateSectionCard.vue';
@@ -118,6 +118,12 @@ function syncAssociation() {
         form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].id) : '';
     }
 }
+
+watch(
+    () => form.barangay_id,
+    () => syncAssociation(),
+    { immediate: true },
+);
 
 function syncMemberType() {
     form.member_type_id = resolvedMemberTypeId.value;

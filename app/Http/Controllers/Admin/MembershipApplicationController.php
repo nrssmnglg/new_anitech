@@ -49,6 +49,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MembershipApplicationController extends Controller
 {
+    /** @var array<string, string> */
+    private array $queryRouteKeys = [];
+
     public function __construct(
         private readonly MembershipApplicationService $membershipApplicationService,
         private readonly FarmerDocumentService $farmerDocumentService,
@@ -1093,7 +1096,9 @@ class MembershipApplicationController extends Controller
             return (string) $id;
         }
 
-        return app(PublicRouteKeyService::class)->encode((int) $id);
+        $key = (string) $id;
+
+        return $this->queryRouteKeys[$key] ??= app(PublicRouteKeyService::class)->encode((int) $id);
     }
 
     private function decodeQueryRouteKey(string $key): ?int

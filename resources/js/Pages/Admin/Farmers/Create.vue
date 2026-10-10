@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
@@ -157,6 +157,12 @@ function syncAssociation() {
         form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].key || filteredAssociations.value[0].id) : '';
     }
 }
+
+watch(
+    () => form.barangay_id,
+    () => syncAssociation(),
+    { immediate: true },
+);
 
 function submit() {
     form.post(props.storeUrl, {

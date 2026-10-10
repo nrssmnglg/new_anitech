@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import EditHero from '../../../Components/Admin/Farmers/EditHero.vue';
 import EditSectionCard from '../../../Components/Admin/Farmers/EditSectionCard.vue';
@@ -54,6 +54,12 @@ function syncAssociation() {
         form.association_id = filteredAssociations.value[0] ? String(filteredAssociations.value[0].key || filteredAssociations.value[0].id) : '';
     }
 }
+
+watch(
+    () => form.barangay_id,
+    () => syncAssociation(),
+    { immediate: true },
+);
 
 function submit() {
     form.put(props.updateUrl, {

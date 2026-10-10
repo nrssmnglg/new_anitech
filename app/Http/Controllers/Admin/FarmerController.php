@@ -51,6 +51,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FarmerController extends Controller
 {
+    /** @var array<string, string> */
+    private array $queryRouteKeys = [];
+
     public function __construct(
         private readonly FarmerRegistryService $registry,
         private readonly LegacyMembershipRecorderService $legacyMembershipRecorder,
@@ -1887,7 +1890,13 @@ class FarmerController extends Controller
 
     private function queryRouteKey(int|string|null $id): ?string
     {
-        return $id === null ? null : app(PublicRouteKeyService::class)->encode($id);
+        if ($id === null) {
+            return null;
+        }
+
+        $key = (string) $id;
+
+        return $this->queryRouteKeys[$key] ??= app(PublicRouteKeyService::class)->encode($id);
     }
 
     private function decodeFilterRouteKey(string $key): ?string
