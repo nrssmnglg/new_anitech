@@ -19,6 +19,9 @@ use Inertia\Response as InertiaResponse;
 
 class AssociationController extends Controller
 {
+    /** @var array<string, string> */
+    private array $queryRouteKeys = [];
+
     public function __construct()
     {
         $this->middleware('role.in:' . User::ROLE_ADMIN);
@@ -194,7 +197,7 @@ class AssociationController extends Controller
                 'code' => $association->code,
                 'president_name' => $association->president_name,
                 'president_farmer_id' => $this->queryRouteKey($association->president_farmer_id),
-                'status' => $association->status ?: 'active',
+                'status' => strtolower((string) ($association->status ?: 'active')),
             ],
             'presidentCandidates' => Farmer::query()
                 ->where('barangay_id', $association->barangay_id)
@@ -375,7 +378,13 @@ class AssociationController extends Controller
 
     private function queryRouteKey(int|string|null $id): string
     {
-        return $id === null || $id === '' ? '' : app(PublicRouteKeyService::class)->encode($id);
+        if ($id === null || $id === '') {
+            return '';
+        }
+
+        $key = (string) $id;
+
+        return $this->queryRouteKeys[$key] ??= app(PublicRouteKeyService::class)->encode($id);
     }
 
     private function decodeQueryRouteKey(string $key): ?int
