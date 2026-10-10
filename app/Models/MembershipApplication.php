@@ -33,6 +33,13 @@ class MembershipApplication extends MembershipTransaction
             return $this->capturedRejectionDetails;
         }
 
+        // The review page serializes this attribute for every application.
+        // Avoid rejection-only document and audit queries for active/approved
+        // applications, where rejection details can never apply.
+        if ($this->status !== ApplicationStatus::REJECTED) {
+            return null;
+        }
+
         $docRemarks = $this->documents()->where('verification_status', 'Rejected')->latest('updated_at')->value('remarks');
         if (filled($docRemarks)) {
             return $docRemarks;

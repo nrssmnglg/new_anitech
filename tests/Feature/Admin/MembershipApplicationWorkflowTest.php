@@ -497,6 +497,33 @@ class MembershipApplicationWorkflowTest extends TestCase
         $approvedResponse->assertDontSee($pendingApplication->application_no);
     }
 
+    public function test_approved_application_review_page_does_not_resolve_rejection_audit_details(): void
+    {
+        $lookups = $this->makeLookups();
+        $this->makeFeeSchedule();
+        $farmer = $this->makeFarmer($lookups);
+        $application = MembershipApplication::query()->create([
+            'farmer_id' => $farmer->id,
+            'application_no' => 'APP-APPROVED-REVIEW',
+            'source' => 'mobile',
+            'status' => ApplicationStatus::APPROVED,
+            'submitted_at' => now(),
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertNull($application->fresh()->rejection_details);
+
+        $response = $this->actingAs($this->makeAdminUser())
+            ->get(route('admin.membership-applications.show', $application));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/MembershipApplications/Show')
+            ->where('application.applicationNo', $application->application_no)
+            ->where('application.status.value', ApplicationStatus::APPROVED->value)
+            ->where('application.rejectionDetails', null));
+    }
+
     public function test_paid_application_annual_dues_appear_in_renewal_history_and_cover_only_the_paid_year(): void
     {
         $lookups = $this->makeLookups();
