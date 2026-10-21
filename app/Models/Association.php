@@ -19,6 +19,7 @@ class Association extends Model
         'name',
         'president_name',
         'president_farmer_id',
+        'president_social_link',
         'status',
     ];
 

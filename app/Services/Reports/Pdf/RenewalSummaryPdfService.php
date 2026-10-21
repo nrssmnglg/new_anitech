@@ -40,7 +40,7 @@ class RenewalSummaryPdfService extends BasePdfReport
         $columnWidths = $this->summaryColumnWidths($visibleColumns, $columnDefinitions);
         $fontSize = count($visibleColumns) > 8 ? 5.5 : 6.5;
 
-        $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize);
+        $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize, $generatedAt);
         $rowHeight = 5;
         $this->pdf->SetFont('Arial', '', $fontSize);
 
@@ -48,7 +48,7 @@ class RenewalSummaryPdfService extends BasePdfReport
             if ($this->pdf->GetY() + $rowHeight > $this->pdf->GetPageHeight() - 14) {
                 $this->pdf->AddPage('P');
                 $this->pdf->SetXY(10, 10);
-                $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize);
+                $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize, $generatedAt);
                 $this->pdf->SetFont('Arial', '', $fontSize);
             }
 
@@ -67,7 +67,7 @@ class RenewalSummaryPdfService extends BasePdfReport
         if ($this->pdf->GetY() + $rowHeight > $this->pdf->GetPageHeight() - 14) {
             $this->pdf->AddPage('P');
             $this->pdf->SetXY(10, 10);
-            $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize);
+            $this->drawSummaryTitleAndHeader($visibleColumns, $columnDefinitions, $columnWidths, $year, $fontSize, $generatedAt);
         }
 
         $this->pdf->SetFont('Arial', 'B', $fontSize);
@@ -137,12 +137,17 @@ class RenewalSummaryPdfService extends BasePdfReport
         array $columnDefinitions,
         array $columnWidths,
         int $year,
-        float $fontSize
+        float $fontSize,
+        string $generatedAt = ''
     ): void
     {
         $this->pdf->SetFont('Arial', 'B', 11);
-        $this->pdf->Cell(0, 6, $this->text(self::ORGANIZATION_NAME), 0, 1, 'C');
-        $this->pdf->Cell(0, 6, $this->text('SUMMARY OF RENEWAL CY ' . $year), 0, 1, 'C');
+        $this->pdf->Cell(0, 5, $this->text(self::ORGANIZATION_NAME), 0, 1, 'C');
+        $this->pdf->Cell(0, 5, $this->text('SUMMARY OF RENEWAL CY ' . $year), 0, 1, 'C');
+        if ($generatedAt !== '') {
+            $this->pdf->SetFont('Arial', '', 7.5);
+            $this->pdf->Cell(0, 4, $this->text($generatedAt), 0, 1, 'C');
+        }
         $this->pdf->Ln(2);
 
         $left = $this->pdf->GetX();
@@ -213,6 +218,10 @@ class RenewalSummaryPdfService extends BasePdfReport
         $this->pdf->SetTextColor(0, 0, 0);
         $this->pdf->Cell(0, 6, $this->text(self::ORGANIZATION_NAME), 0, 1, 'C');
         $this->pdf->Cell(0, 6, $this->text('MASTERLIST OF MEMBERS RENEWAL AND NEW MEMBERSHIP'), 0, 1, 'C');
+        if ($generatedAt !== '') {
+            $this->pdf->SetFont('Arial', '', 8);
+            $this->pdf->Cell(0, 4, $this->text($generatedAt), 0, 1, 'C');
+        }
         $this->pdf->Ln(1);
 
         $this->pdf->SetFont('Arial', 'B', 9);

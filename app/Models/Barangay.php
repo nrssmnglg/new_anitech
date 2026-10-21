@@ -33,4 +33,9 @@ class Barangay extends Model
     {
         return $this->hasMany(Farmer::class);
     }
+
+    public function advisories(): HasMany
+    {
+        return $this->hasMany(Advisory::class);
+    }
 }

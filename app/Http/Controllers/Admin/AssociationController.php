@@ -103,6 +103,8 @@ class AssociationController extends Controller
                 'name' => '',
                 'code' => '',
                 'president_name' => '',
+                'president_messenger_url' => '',
+                'president_social_url' => '',
                 'status' => 'active',
             ],
             'barangays' => $this->availableBarangays()
@@ -197,6 +199,7 @@ class AssociationController extends Controller
                 'code' => $association->code,
                 'president_name' => $association->president_name,
                 'president_farmer_id' => $this->queryRouteKey($association->president_farmer_id),
+                'president_social_link' => $association->president_social_link ?? '',
                 'status' => strtolower((string) ($association->status ?: 'active')),
             ],
             'presidentCandidates' => Farmer::query()
@@ -343,6 +346,7 @@ class AssociationController extends Controller
             'name' => $association->name,
             'code' => $association->code,
             'president_name' => $association->president_name,
+            'president_social_link' => $association->president_social_link,
             'president' => $association->president ? [
                 'name' => $association->president->full_name,
                 'farmerCode' => $association->president->farmer_code,

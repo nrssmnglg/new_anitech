@@ -21,7 +21,10 @@ const emit = defineEmits(['apply', 'reset', 'export']);
                             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
                         </svg>
                         <input
+                            id="mortuary-search"
                             v-model="form.search"
+                            name="search"
+                            aria-label="Search"
                             type="text"
                             :placeholder="activeSection === 'records' ? 'Reference, code, or name' : 'Farmer code or name'"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] pl-8.5 pr-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -33,7 +36,10 @@ const emit = defineEmits(['apply', 'reset', 'export']);
                 <label v-if="activeSection === 'records'" class="space-y-1">
                     <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Status</span>
                     <select
+                        id="mortuary-status"
                         v-model="form.status"
+                        name="status"
+                        aria-label="Status"
                         class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                     >
                         <option value="">All Statuses</option>
@@ -45,7 +51,10 @@ const emit = defineEmits(['apply', 'reset', 'export']);
                 <label class="space-y-1">
                     <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Year</span>
                     <select
+                        id="mortuary-year"
                         v-model="form.year"
+                        name="year"
+                        aria-label="Year"
                         class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                     >
                         <option value="">All Years</option>
@@ -57,7 +66,10 @@ const emit = defineEmits(['apply', 'reset', 'export']);
                 <label class="space-y-1">
                     <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Barangay</span>
                     <select
+                        id="mortuary-barangay"
                         v-model="form.barangay_id"
+                        name="barangay_id"
+                        aria-label="Barangay"
                         class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                     >
                         <option value="">All Barangays</option>

@@ -20,11 +20,11 @@ test.describe('Location Management — lists', () => {
     await page.goto('/admin/barangays');
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Add Barangay' })).toBeVisible();
-    await expect(main.getByRole('heading', { name: 'Registered Locations' })).toBeVisible();
+    await expect(main.getByRole('heading', { name: 'Registered Barangays' })).toBeVisible();
     await expect(main.getByRole('table').getByRole('columnheader', { name: 'Barangay' })).toBeVisible();
 
     await page.goto('/admin/associations');
-    await expect(main.getByRole('heading', { name: 'Association Management' })).toBeVisible();
+    await expect(main.getByRole('heading', { name: 'Associations', exact: true })).toBeVisible();
     await expect(main.getByRole('link', { name: 'Add Association' })).toBeVisible();
     await expect(main.getByRole('table').getByRole('columnheader', { name: 'Association' })).toBeVisible();
   });

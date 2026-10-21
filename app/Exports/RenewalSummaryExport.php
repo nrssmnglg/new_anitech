@@ -13,6 +13,7 @@ class RenewalSummaryExport implements FromArray, ShouldAutoSize, WithHeadings
         private readonly Collection $rows,
         private readonly array $totals,
         private readonly array $columns,
+        private readonly ?string $generatedAt = null,
     ) {
     }
 
@@ -54,6 +55,11 @@ class RenewalSummaryExport implements FromArray, ShouldAutoSize, WithHeadings
                 'female_count' => $this->totals['female_count'],
                 'male_count' => $this->totals['male_count'],
             ]);
+            if ($this->generatedAt) {
+                $rows[] = $this->mapRow([
+                    'barangay' => $this->generatedAt,
+                ]);
+            }
         }
 
         return $rows;

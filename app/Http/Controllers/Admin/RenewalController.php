@@ -319,7 +319,7 @@ class RenewalController extends Controller
             if ($format === 'xlsx') {
                 $fileName = 'Barangay-Masterlist-' . now()->format('m-d-Y') . '.xlsx';
 
-                return Excel::download(new RenewalMasterlistExport($masterlistRows, $totals, $selectedColumns), $fileName);
+                return Excel::download(new RenewalMasterlistExport($masterlistRows, $totals, $selectedColumns, now()->format('F d, Y h:i A')), $fileName);
             }
 
             if ($format === 'pdf') {
@@ -382,7 +382,7 @@ class RenewalController extends Controller
         if ($format === 'xlsx') {
             $fileName = 'Renewal-Summary-' . now()->format('m-d-Y') . '.xlsx';
 
-            return Excel::download(new RenewalSummaryExport($summaryRows, $totals, $selectedColumns), $fileName);
+            return Excel::download(new RenewalSummaryExport($summaryRows, $totals, $selectedColumns, now()->format('F d, Y h:i A')), $fileName);
         }
 
         if ($format === 'pdf') {

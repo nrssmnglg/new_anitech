@@ -72,6 +72,14 @@
             text-transform: uppercase;
         }
 
+        .report-generation-time {
+            margin: -8px 0 14px;
+            text-align: center;
+            font-size: 11px;
+            font-style: italic;
+            color: #4b5563;
+        }
+
         .report-header-grid {
             display: flex;
             flex-direction: column;
@@ -204,6 +212,11 @@
                 padding: 0;
                 box-shadow: none;
             }
+
+            .report-generation-time {
+                font-size: 9px;
+                margin: -6px 0 10px;
+            }
         }
     </style>
 </head>
@@ -222,6 +235,7 @@
 
         <section class="report-sheet">
             <h1 class="report-title">MASTERLIST OF RENEWAL AND MEMBERSHIP</h1>
+            <p class="report-generation-time">{{ $generatedAt->format('F d, Y h:i A') }}</p>
 
             <div class="report-header-grid">
                 <div class="report-header-row">

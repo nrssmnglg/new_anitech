@@ -1,6 +1,6 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, reactive, ref } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -11,13 +11,17 @@ const props = defineProps({
     filterOptions: { type: Object, required: true },
 });
 
+const page = usePage();
+const flashSuccess = computed(() => page.props.flash?.success || '');
+const flashError = computed(() => page.props.flash?.error || '');
+
 const form = reactive({
     search: props.filters.search || '',
     status: props.filters.status || '',
     association: props.filters.association || '',
 });
 
-const showFilters = ref(!!(form.search || form.status || form.association));
+const showFilters = ref(true);
 
 function applyFilters() {
     router.get(props.urls.index, { ...form }, {
@@ -35,6 +39,10 @@ function resetFilters() {
 }
 
 function deleteBarangay(barangay) {
+    if (!barangay.canDelete) {
+        return;
+    }
+
     if (!window.confirm(`Delete ${barangay.name}? This action cannot be undone.`)) {
         return;
     }
@@ -52,6 +60,14 @@ const activeFilterCount = () => [form.search, form.status, form.association].fil
 
     <AdminLayout title="Barangay Management">
         <div class="space-y-4">
+            <!-- Flash alerts -->
+            <div v-if="flashSuccess" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+                {{ flashSuccess }}
+            </div>
+            <div v-if="flashError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+                {{ flashError }}
+            </div>
+
             <!-- Hero Header -->
             <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003629] via-[#00483a] to-[#005a45] px-5 py-5 text-white shadow-lg shadow-[#003629]/15">
                 <!-- Decorative pattern -->
@@ -115,19 +131,19 @@ const activeFilterCount = () => [form.search, form.status, form.association].fil
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Search</span>
                             <div class="relative">
                                 <svg viewBox="0 0 20 20" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94a3b8]" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.58 3.58a.75.75 0 1 1-1.06 1.06l-3.58-3.58A7 7 0 0 1 2 9Z" clip-rule="evenodd"/></svg>
-                                <input v-model="form.search" type="text" placeholder="Barangay name or code" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] pl-9 pr-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                                <input id="barangay-search" v-model="form.search" name="search" aria-label="Search" autocomplete="off" type="text" placeholder="Barangay name or code" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] pl-9 pr-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                             </div>
                         </label>
                         <label class="space-y-1.5">
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Status</span>
-                            <select v-model="form.status" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                            <select id="barangay-status" v-model="form.status" name="status" aria-label="Status" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                                 <option value="">All statuses</option>
                                 <option v-for="item in filterOptions.statuses" :key="item.value" :value="item.value">{{ item.label }}</option>
                             </select>
                         </label>
                         <label class="space-y-1.5">
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Association</span>
-                            <select v-model="form.association" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                            <select id="barangay-association" v-model="form.association" name="association" aria-label="Association" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                                 <option value="">All associations</option>
                                 <option v-for="item in filterOptions.associations" :key="item.value" :value="item.value">{{ item.label }}</option>
                             </select>
@@ -206,9 +222,24 @@ const activeFilterCount = () => [form.search, form.status, form.association].fil
                                         <Link :href="barangay.actions.editUrl" aria-label="Edit barangay" title="Edit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#475569] transition-all duration-150 hover:bg-[#f1f5f9]">
                                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                         </Link>
-                                        <button type="button" aria-label="Delete barangay" title="Delete" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#dc2626] transition-all duration-150 hover:bg-[#fef2f2]" @click="deleteBarangay(barangay)">
+                                        <button
+                                            v-if="barangay.canDelete"
+                                            type="button"
+                                            aria-label="Delete barangay"
+                                            title="Delete"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#dc2626] transition-all duration-150 hover:bg-[#fef2f2]"
+                                            @click="deleteBarangay(barangay)"
+                                        >
                                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 10v6M14 10v6"/></svg>
                                         </button>
+                                        <span
+                                            v-else
+                                            aria-label="Cannot delete: linked to records"
+                                            title="Cannot delete: linked to farmers or associations"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#cbd5e1] cursor-not-allowed opacity-50"
+                                        >
+                                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 10v6M14 10v6"/></svg>
+                                        </span>
                                     </div>
                                 </td>
                             </tr>

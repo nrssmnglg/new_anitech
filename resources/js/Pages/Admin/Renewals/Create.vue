@@ -112,6 +112,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                                 <label class="block space-y-1.5">
                                     <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Renewal Year</span>
                                     <input
+                                        id="renewal-year"
+                                        name="year"
                                         v-model="form.year"
                                         type="number"
                                         min="2000"
@@ -131,6 +133,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                             <label class="block space-y-1.5">
                                 <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Remarks &amp; Notes</span>
                                 <textarea
+                                    id="renewal-remarks"
+                                    name="remarks"
                                     v-model="form.remarks"
                                     rows="2"
                                     placeholder="Optional notes or observations regarding this renewal..."
@@ -145,6 +149,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                                     <label class="block space-y-1.5">
                                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Payment Method</span>
                                         <select
+                                            id="renewal-payment-method"
+                                            name="payment_method"
                                             v-model="form.payment_method"
                                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                                         >
@@ -157,6 +163,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                                     <label class="block space-y-1.5">
                                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Reference Number</span>
                                         <input
+                                            id="renewal-reference-no"
+                                            name="reference_no"
                                             v-model="form.reference_no"
                                             type="text"
                                             placeholder="OR No. / Reference Code"
@@ -167,6 +175,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                                     <label class="block space-y-1.5">
                                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Amount Paid (PHP)</span>
                                         <input
+                                            id="renewal-amount-paid"
+                                            name="amount_paid"
                                             v-model="form.amount_paid"
                                             type="number"
                                             min="0.01"
@@ -178,6 +188,8 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
                                     <label class="block space-y-1.5">
                                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Payment Timestamp</span>
                                         <input
+                                            id="renewal-paid-at"
+                                            name="paid_at"
                                             v-model="form.paid_at"
                                             type="datetime-local"
                                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"

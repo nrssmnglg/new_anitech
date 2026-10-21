@@ -19,7 +19,7 @@ test('Mortuary records export downloads an Excel report', async ({ page }) => {
   await expect(main.getByRole('heading', { name: 'Mortuary Records' })).toBeVisible();
   await main.getByRole('button', { name: 'Export', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Generate Mortuary Records' })).toBeVisible();
-  await page.getByRole('button', { name: 'Excel' }).click();
+  await page.getByRole('button', { name: 'Excel', exact: true }).click();
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),

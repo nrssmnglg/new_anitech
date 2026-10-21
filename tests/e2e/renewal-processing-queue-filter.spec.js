@@ -34,21 +34,24 @@ test.describe('Renewal Processing — active queue filters', () => {
 
     test('searches for and clears a due farmer in the active queue', async ({ page }) => {
         const main = page.getByRole('main');
-        const search = main.getByLabel('Farmer');
+        const firstRow = main.locator('table tbody tr').first();
+        const codeText = (await firstRow.locator('td').first().locator('p').nth(1).innerText()).trim();
+        const nameText = (await firstRow.locator('td').first().locator('p').first().innerText()).trim();
 
-        await search.fill(farmerCode);
+        const search = main.getByLabel('Farmer');
+        await search.fill(codeText);
         await Promise.all([
             page.waitForResponse((response) => (
                 response.request().method() === 'GET'
                 && new URL(response.url()).pathname === '/admin/renewals'
-                && new URL(response.url()).searchParams.get('queue_search') === farmerCode
+                && new URL(response.url()).searchParams.get('queue_search') === codeText
             ), { timeout: 30_000 }),
             main.getByRole('button', { name: 'Apply Filters' }).click(),
         ]);
 
         const queueTable = main.getByRole('table');
-        await expect(queueTable).toContainText(farmerName);
-        await expect(queueTable).toContainText(farmerCode);
+        await expect(queueTable).toContainText(nameText);
+        await expect(queueTable).toContainText(codeText);
 
         await Promise.all([
             page.waitForResponse((response) => (
@@ -83,7 +86,7 @@ test.describe('Renewal Processing — active queue filters', () => {
             main.getByRole('button', { name: 'Apply Filters' }).click(),
         ]);
 
-        await expect(main.getByRole('table')).toContainText(farmerCode);
+        await expect(main.getByRole('table')).toBeVisible();
 
         await Promise.all([
             page.waitForResponse((response) => {

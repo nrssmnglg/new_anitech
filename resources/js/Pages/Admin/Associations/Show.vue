@@ -46,6 +46,41 @@ const statCards = [
         textTone: props.association.is_active ? 'text-[#15803d]' : 'text-[#64748b]',
     },
 ];
+
+const getSocialInfo = (val) => {
+    if (!val) return null;
+    const trimmed = String(val).trim();
+    if (!trimmed) return null;
+
+    let href = trimmed;
+    if (trimmed.startsWith('m.me/')) {
+        href = `https://${trimmed}`;
+    } else if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        href = `https://${trimmed.replace(/^@/, '')}`;
+    }
+
+    const lower = trimmed.toLowerCase();
+    if (lower.includes('m.me') || lower.includes('messenger.com')) {
+        return {
+            href,
+            label: 'Messenger',
+            type: 'messenger',
+        };
+    }
+    if (lower.includes('facebook.com') || lower.includes('fb.me') || lower.includes('fb.com')) {
+        return {
+            href,
+            label: 'Facebook',
+            type: 'facebook',
+        };
+    }
+
+    return {
+        href,
+        label: 'Social Media',
+        type: 'general',
+    };
+};
 </script>
 
 <template>
@@ -122,6 +157,30 @@ const statCards = [
                             <span v-else>{{ association.president_name || 'Not set' }}</span>
                         </dd>
                         <dd class="mt-1 text-[0.68rem] text-[#94a3b8]">{{ association.president?.contactNumber || 'No contact number recorded' }}</dd>
+
+                        <!-- President Social Media Link Badge -->
+                        <div v-if="association.president_social_link && getSocialInfo(association.president_social_link)" class="mt-2.5 flex flex-wrap items-center gap-2">
+                            <a
+                                :href="getSocialInfo(association.president_social_link).href"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                :title="getSocialInfo(association.president_social_link).label"
+                                class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[0.65rem] font-bold transition-all hover:shadow-sm active:scale-95"
+                                :class="[
+                                    getSocialInfo(association.president_social_link).type === 'messenger'
+                                        ? 'border-[#0084ff]/25 bg-[#0084ff]/10 text-[#0084ff] hover:bg-[#0084ff]/20'
+                                        : getSocialInfo(association.president_social_link).type === 'facebook'
+                                        ? 'border-[#1877f2]/25 bg-[#1877f2]/10 text-[#1877f2] hover:bg-[#1877f2]/20'
+                                        : 'border-[#14745a]/25 bg-[#14745a]/10 text-[#14745a] hover:bg-[#14745a]/20'
+                                ]"
+                            >
+                                <svg v-if="getSocialInfo(association.president_social_link).type === 'messenger'" viewBox="0 0 24 24" class="h-3 w-3 fill-current"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.908 1.455 5.503 3.734 7.159V22l3.433-1.884c.907.251 1.865.388 2.833.388 5.523 0 10-4.145 10-9.246C22 6.145 17.523 2 12 2Zm1.055 12.443-2.573-2.745-5.02 2.745 5.521-5.86 2.639 2.745 4.954-2.745-5.521 5.86Z"/></svg>
+                                <svg v-else-if="getSocialInfo(association.president_social_link).type === 'facebook'" viewBox="0 0 24 24" class="h-3 w-3 fill-current"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z"/></svg>
+                                <svg v-else viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                <span>{{ getSocialInfo(association.president_social_link).label }}</span>
+                                <svg viewBox="0 0 16 16" class="h-2.5 w-2.5 opacity-60" fill="currentColor"><path fill-rule="evenodd" d="M4.22 11.78a.75.75 0 0 1 0-1.06L9.94 5H6.75a.75.75 0 0 1 0-1.5h5a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-1.5 0V6.06l-5.72 5.72a.75.75 0 0 1-1.06 0Z" clip-rule="evenodd"/></svg>
+                            </a>
+                        </div>
                     </div>
                     <div class="border-b border-[#edf2ee] px-5 py-4">
                         <dt class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#7b8b80]">Barangay</dt>

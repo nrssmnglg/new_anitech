@@ -36,7 +36,6 @@ class StoreMortuaryClaimRequest extends FormRequest
             ->with('documentType:id,code')
             ->where('transaction_type', 'Mortuary')
             ->where('is_active', true)
-            ->where('is_required', true)
             ->get();
 
         foreach ($requirements as $requirement) {
@@ -46,7 +45,11 @@ class StoreMortuaryClaimRequest extends FormRequest
                 continue;
             }
 
-            $rules["requirements.$code.is_received"] = ['accepted'];
+            // Optional requirements still need a rule, otherwise validated() drops them
+            // and they are always stored as "not received".
+            $rules["requirements.$code.is_received"] = $requirement->is_required
+                ? ['accepted']
+                : ['nullable', 'boolean'];
         }
 
         return $rules;

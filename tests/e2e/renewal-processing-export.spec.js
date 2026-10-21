@@ -18,12 +18,12 @@ test.describe('Renewal Processing — summary export', () => {
 
         await page.goto('/admin/renewals', { waitUntil: 'domcontentloaded' });
         await page.getByRole('button', { name: 'Export Summary' }).click();
-        await expect(page.getByRole('heading', { name: 'Generate Renewal Summary' })).toBeVisible();
-        await page.getByRole('button', { name: 'Excel' }).click();
+        await expect(page.getByRole('heading', { name: /Renewal Summary/i })).toBeVisible();
+        await page.getByRole('button', { name: /Excel/i }).click();
 
         const [download] = await Promise.all([
             page.waitForEvent('download'),
-            page.getByRole('button', { name: 'Export Excel' }).click(),
+            page.getByRole('button', { name: /Export Excel/i }).click(),
         ]);
 
         expect(download.suggestedFilename()).toMatch(/\.xlsx$/i);

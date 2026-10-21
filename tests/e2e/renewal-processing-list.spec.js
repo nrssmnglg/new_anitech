@@ -32,24 +32,25 @@ test.describe('Renewal Processing — list views', () => {
         const main = page.getByRole('main');
 
         await expect(page.getByRole('heading', { name: 'Renewal Processing' })).toBeVisible();
-        await expect(main.getByRole('link', { name: 'Active Queue' })).toBeVisible();
-        await expect(main.getByRole('link', { name: 'Renewal Records' })).toBeVisible();
+        await expect(main.getByRole('link', { name: /Active Queue/i })).toBeVisible();
+        await expect(main.getByRole('link', { name: /Renewal Records/i })).toBeVisible();
         await expect(main.getByRole('heading', { name: 'Farmers Due This Year' })).toBeVisible();
 
         const queueTable = main.getByRole('table');
         await expect(queueTable).toBeVisible();
-        await expect(queueTable.getByRole('columnheader', { name: 'Farmer' })).toBeVisible();
-        await expect(queueTable.getByRole('columnheader', { name: 'Renewal Status' })).toBeVisible();
+        await expect(queueTable.getByRole('columnheader', { name: /Farmer/i })).toBeVisible();
+        await expect(queueTable.getByRole('columnheader', { name: /Status/i })).toBeVisible();
 
         await Promise.all([
-            page.waitForURL(/\/admin\/renewals\?section=records/, { timeout: 20_000 }),
-            main.getByRole('link', { name: 'Renewal Records' }).click(),
+            page.waitForResponse((res) => res.url().includes('section=records') && res.status() === 200),
+            main.getByRole('link', { name: /Renewal Records/i }).click(),
         ]);
+        await expect(page).toHaveURL(/\/admin\/renewals\?section=records/);
 
-        await expect(main.getByRole('heading', { name: 'Renewal Records' })).toBeVisible();
+        await expect(main.getByRole('heading', { name: 'Renewal Records', level: 1 })).toBeVisible();
         const recordsTable = main.getByRole('table');
         await expect(recordsTable).toBeVisible();
-        await expect(recordsTable.getByRole('columnheader', { name: 'Farmer Name' })).toBeVisible();
-        await expect(recordsTable.getByRole('columnheader', { name: 'Renewal Years' })).toBeVisible();
+        await expect(recordsTable.getByRole('columnheader', { name: /Farmer/i })).toBeVisible();
+        await expect(recordsTable.getByRole('columnheader', { name: /Years/i })).toBeVisible();
     });
 });

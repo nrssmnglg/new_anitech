@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
+import { computed, watch, ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import AppState from '../components/ui/AppState.vue';
 import { useDraft } from '../composables/useDraft';
@@ -211,19 +211,87 @@ const clearLocalError = (field) => {
     localErrors.value = nextErrors;
 };
 
+const termsBodyRef = ref(null);
+const termsEndSentinelRef = ref(null);
+const hasReadTerms = ref(Boolean(form.terms_accepted));
+const hasScrolledTermsToEnd = ref(Boolean(form.terms_accepted));
+let termsObserver = null;
+
+const checkTermsAtBottom = () => {
+    const el = termsBodyRef.value;
+    if (!el) return;
+    const isAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 25;
+    if (isAtBottom) {
+        hasScrolledTermsToEnd.value = true;
+    }
+};
+
+const handleTermsScroll = () => {
+    checkTermsAtBottom();
+};
+
 const openTermsModal = () => {
     showTermsModal.value = true;
+    nextTick(() => {
+        const el = termsBodyRef.value;
+        if (el) {
+            if (hasReadTerms.value) {
+                hasScrolledTermsToEnd.value = true;
+            } else {
+                if (el.scrollHeight <= el.clientHeight + 10) {
+                    hasScrolledTermsToEnd.value = true;
+                } else {
+                    hasScrolledTermsToEnd.value = false;
+                    el.scrollTop = 0;
+                }
+            }
+        }
+
+        if (typeof IntersectionObserver !== 'undefined' && termsEndSentinelRef.value) {
+            termsObserver?.disconnect();
+            termsObserver = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0]?.isIntersecting) {
+                        hasScrolledTermsToEnd.value = true;
+                    }
+                },
+                { root: termsBodyRef.value, threshold: 0.1 }
+            );
+            termsObserver.observe(termsEndSentinelRef.value);
+        }
+    });
 };
 
 const closeTermsModal = () => {
+    termsObserver?.disconnect();
+    termsObserver = null;
     showTermsModal.value = false;
 };
 
 const agreeToTerms = () => {
+    if (!hasScrolledTermsToEnd.value) {
+        return;
+    }
+    hasReadTerms.value = true;
     form.terms_accepted = true;
     clearLocalError('terms_accepted');
-    showTermsModal.value = false;
+    closeTermsModal();
 };
+
+const handleTermsLabelClick = (e) => {
+    if (e.target.closest('.farmer-app__terms-link')) {
+        return;
+    }
+    if (!hasReadTerms.value) {
+        e.preventDefault();
+        openTermsModal();
+    }
+};
+
+onUnmounted(() => {
+    termsObserver?.disconnect();
+    termsObserver = null;
+});
 
 const validateMobileNumber = () => {
     if (!form.mobile_number) {
@@ -685,11 +753,19 @@ loadReapplyContext();
                             </ul>
                         </div>
 
-                        <label class="farmer-app__apply-terms">
-                            <input v-model="form.terms_accepted" type="checkbox">
+                        <label
+                            class="farmer-app__apply-terms"
+                            :class="{ 'is-locked': !hasReadTerms }"
+                            @click="handleTermsLabelClick"
+                        >
+                            <input
+                                v-model="form.terms_accepted"
+                                type="checkbox"
+                                :disabled="!hasReadTerms"
+                            >
                             <span>
                                 I have read and agree to the
-                                <button type="button" class="farmer-app__terms-link" @click="openTermsModal">
+                                <button type="button" class="farmer-app__terms-link" @click.stop="openTermsModal">
                                     Terms and Conditions
                                 </button>
                                 and Privacy Notice.
@@ -735,7 +811,7 @@ loadReapplyContext();
                     <button type="button" aria-label="Close Terms and Conditions" @click="closeTermsModal">x</button>
                 </div>
 
-                <div class="farmer-app__terms-body">
+                <div ref="termsBodyRef" class="farmer-app__terms-body" @scroll.passive="handleTermsScroll">
                     <p id="terms-title">By using AniTech Farmer Services, you agree to the following:</p>
 
                     <ol>
@@ -744,18 +820,27 @@ loadReapplyContext();
                         <li><strong>Information and Documents.</strong> All submitted information and documents must be accurate, complete, valid, and readable. Submissions remain subject to verification by the Agriculture Office.</li>
                         <li><strong>Transactions and Claims.</strong> Applications, renewals, reactivations, payments, and mortuary assistance claims are subject to applicable requirements and approval procedures. Submission through AniTech does not guarantee approval.</li>
                         <li><strong>Proper Use.</strong> Users must not submit false information, impersonate others, upload harmful files, attempt unauthorized access, or misuse the system.</li>
-                        <li><strong>Privacy.</strong> Personal information and submitted records will be processed for Agriculture Office services and handled according to the system's Privacy Notice.</li>
-                        <li><strong>System Availability.</strong> AniTech may occasionally be unavailable due to maintenance, internet connectivity, updates, or technical issues.</li>
-                        <li><strong>Changes.</strong> These Terms and Conditions may be updated when necessary. Users may be required to review and accept updated terms.</li>
+                        <li><strong>Privacy and Confidentiality.</strong> Personal information and submitted records will be treated with confidentiality, processed for Agriculture Office services, and handled according to the system's Privacy Notice.</li>
                         <li><strong>Acceptance.</strong> By selecting <strong>"I Agree,"</strong> you confirm that you have read, understood, and agreed to these Terms and Conditions and the Privacy Notice.</li>
                     </ol>
+
+                    <div ref="termsEndSentinelRef" class="farmer-app__terms-sentinel" aria-hidden="true"></div>
+
+                    <div v-if="!hasScrolledTermsToEnd" class="farmer-app__terms-scroll-hint">
+                        ↓ Scroll to the end of the terms to enable "I Agree"
+                    </div>
                 </div>
 
                 <div class="farmer-app__terms-actions">
                     <button type="button" class="farmer-app__btn farmer-app__apply-secondary" @click="closeTermsModal">
                         Cancel
                     </button>
-                    <button type="button" class="farmer-app__btn farmer-app__apply-submit" @click="agreeToTerms">
+                    <button
+                        type="button"
+                        class="farmer-app__btn farmer-app__apply-submit"
+                        :disabled="!hasScrolledTermsToEnd"
+                        @click="agreeToTerms"
+                    >
                         I Agree
                     </button>
                 </div>
@@ -880,15 +965,20 @@ loadReapplyContext();
 .farmer-app__apply-terms input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--pwa-green-800); }
 .farmer-app__terms-link { display: inline; padding: 0; border: 0; background: transparent; color: var(--pwa-green-800); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .farmer-app__modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 21, 16, .58); }
-.farmer-app__terms-modal { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(100%, 680px); max-height: min(86dvh, 720px); overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 24px 80px rgba(0, 21, 16, .24); }
+.farmer-app__apply-terms.is-locked { opacity: .82; cursor: pointer; }
+.farmer-app__apply-terms input:disabled { cursor: not-allowed; opacity: .5; }
+.farmer-app__terms-modal { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(100%, 680px); max-height: min(78dvh, 480px); overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 24px 80px rgba(0, 21, 16, .24); }
 .farmer-app__terms-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--pwa-border); color: var(--pwa-green-900); font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
 .farmer-app__terms-header button { flex: 0 0 auto; width: 32px; height: 32px; border: 1px solid var(--pwa-border); border-radius: 8px; background: #fff; color: var(--pwa-ink); font-size: .9rem; cursor: pointer; }
-.farmer-app__terms-body { overflow: auto; padding: 15px; color: var(--pwa-ink); }
+.farmer-app__terms-body { max-height: 320px; overflow-y: auto; padding: 15px; color: var(--pwa-ink); }
 .farmer-app__terms-body h2 { margin: 0 0 8px; font-size: 1rem; line-height: 1.3; }
 .farmer-app__terms-body p { margin: 0 0 12px; color: var(--pwa-muted); font-size: .82rem; line-height: 1.5; }
 .farmer-app__terms-body ol { display: grid; gap: 10px; margin: 0; padding-left: 1.2rem; font-size: .78rem; line-height: 1.5; }
+.farmer-app__terms-sentinel { height: 1px; width: 100%; pointer-events: none; }
+.farmer-app__terms-scroll-hint { text-align: center; font-size: .72rem; font-weight: 700; color: var(--pwa-green-800); padding: 7px 10px; background: var(--pwa-surface-soft); border: 1px dashed var(--pwa-border); border-radius: 8px; margin-top: 12px; }
 .farmer-app__terms-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px 15px; border-top: 1px solid var(--pwa-border); background: var(--pwa-surface-soft); }
 .farmer-app__terms-actions .farmer-app__btn { min-height: 42px; border-radius: 9px; font-size: .76rem; }
+.farmer-app__terms-actions .farmer-app__btn:disabled { opacity: .45; cursor: not-allowed; filter: grayscale(0.6); }
 .farmer-app__apply-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 2px; }
 .farmer-app__apply-actions .farmer-app__btn { width: 100%; min-height: 44px; padding: 9px 11px; border-radius: 9px; font-size: .76rem; box-shadow: none; }
 .farmer-app__apply-actions > :last-child { grid-column: 1 / -1; min-height: 38px; border: 0; background: transparent; }

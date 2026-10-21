@@ -255,9 +255,16 @@ class MortuaryClaimController extends Controller
         }) ?: $eligibleFarmers->first();
         $requirements = $this->activeMortuaryRequirements();
 
+        $eligibleLedgers = $eligibleFarmers
+            ->map(fn (Farmer $farmer): array => $this->serializeEligibleFarmerForCreate($farmer))
+            ->values();
+        $selectedIndex = $eligibleFarmers->search(fn (Farmer $farmer): bool => $farmer === $selectedFarmer);
+
         return Inertia::render('Admin/MortuaryClaims/Create', [
-            'eligibleLedgers' => $eligibleFarmers->map(fn (Farmer $farmer): array => $this->serializeEligibleFarmerForCreate($farmer))->values()->all(),
-            'selectedLedgerId' => $this->queryRouteKey($this->representativeMortuaryLedger($selectedFarmer)?->id),
+            'eligibleLedgers' => $eligibleLedgers->all(),
+            // Must come from the same serialized list: route keys are encrypted with a random IV,
+            // so encoding the same id twice produces different strings that would never match.
+            'selectedLedgerId' => $selectedIndex !== false ? $eligibleLedgers[$selectedIndex]['id'] : null,
             'requirements' => $requirements->map(fn (DocumentRequirement $requirement): array => [
                 'id' => $requirement->id,
                 'code' => strtolower((string) $requirement->documentType?->code),

@@ -32,6 +32,7 @@ const form = useForm({
     code: props.association.code ?? '',
     president_name: props.association.president_name ?? '',
     president_farmer_id: props.association.president_farmer_id ?? '',
+    president_social_link: props.association.president_social_link ?? '',
     status: props.association.status ?? 'active',
 });
 

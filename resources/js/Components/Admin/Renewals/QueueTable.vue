@@ -89,7 +89,7 @@ const sortedRenewals = computed(() => {
         <!-- Table Header Bar -->
         <div class="flex flex-col gap-2 border-b border-[#f1f5f9] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-sm font-bold text-[#0f172a]">Farmers Due for Renewal</h2>
+                <h2 class="text-sm font-bold text-[#0f172a]">Farmers Due This Year</h2>
                 <p class="text-[0.68rem] text-slate-500">{{ renewals.total }} farmer{{ renewals.total === 1 ? '' : 's' }} awaiting renewal</p>
             </div>
             <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -102,7 +102,7 @@ const sortedRenewals = computed(() => {
                     <svg viewBox="0 0 20 20" class="h-3.5 w-3.5 text-slate-400" fill="currentColor">
                         <path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
                     </svg>
-                    <span>{{ compactMode ? 'Comfortable' : 'Compact' }}</span>
+                    <span>{{ compactMode ? 'Comfortable Rows' : 'Compact Rows' }}</span>
                 </button>
             </div>
         </div>

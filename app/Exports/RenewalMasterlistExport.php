@@ -13,6 +13,7 @@ class RenewalMasterlistExport implements FromArray, ShouldAutoSize, WithHeadings
         private readonly Collection $rows,
         private readonly array $totals,
         private readonly array $columns,
+        private readonly ?string $generatedAt = null,
     ) {
     }
 
@@ -53,6 +54,11 @@ class RenewalMasterlistExport implements FromArray, ShouldAutoSize, WithHeadings
                     ->map(fn (string $code): string => $code . ': ' . number_format((int) ($memberTypeCounts[$code] ?? 0)))
                     ->implode(' | '),
             ]);
+            if ($this->generatedAt) {
+                $rows[] = $this->mapRow([
+                    'name' => $this->generatedAt,
+                ]);
+            }
         }
 
         return $rows;

@@ -19,6 +19,7 @@ class StoreAssociationRequest extends FormRequest
             'barangay_id' => $this->decodeRouteKey($this->input('barangay_id')),
             'name' => trim((string) $this->input('name')),
             'president_name' => filled($this->input('president_name')) ? trim((string) $this->input('president_name')) : null,
+            'president_social_link' => filled($this->input('president_social_link')) ? trim((string) $this->input('president_social_link')) : null,
         ]);
     }
 
@@ -28,6 +29,7 @@ class StoreAssociationRequest extends FormRequest
             'barangay_id' => ['required', 'exists:barangays,id', 'unique:associations,barangay_id'],
             'name' => ['required', 'string', 'max:255', 'unique:associations,name'],
             'president_name' => ['nullable', 'string', 'max:255'],
+            'president_social_link' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

@@ -8,7 +8,6 @@ test('Location Management creates and edits linked sample records', async ({ pag
   const id = Date.now();
   const barangayName = `Playwright Barangay ${id}`;
   const barangayEdited = `${barangayName} Edited`;
-  const barangayCode = `PW${String(id).slice(-7)}`;
   const associationName = `Playwright Association ${id}`;
   const associationEdited = `${associationName} Edited`;
 
@@ -19,7 +18,6 @@ test('Location Management creates and edits linked sample records', async ({ pag
 
   await page.goto('/admin/barangays/create');
   await page.getByLabel('Barangay Name').fill(barangayName);
-  await page.getByLabel('Barangay Code').fill(barangayCode);
   await Promise.all([page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/admin/barangays'), page.getByRole('button', { name: 'Save Barangay' }).click()]);
   await page.waitForURL(url => url.pathname.startsWith('/admin/barangays/') && !url.pathname.endsWith('/create'), { timeout: 30_000 });
   const barangayUrl = page.url();
@@ -29,11 +27,9 @@ test('Location Management creates and edits linked sample records', async ({ pag
   await page.waitForURL(url => !url.pathname.endsWith('/edit'), { timeout: 30_000 });
 
   await page.goto('/admin/associations/create');
-  const barangayOption = `${barangayEdited} (${barangayCode})`;
-  await page.getByLabel('Barangay').selectOption({ label: barangayOption });
+  const optionValue = await page.locator('option', { hasText: barangayEdited }).first().getAttribute('value');
+  await page.getByLabel('Barangay').selectOption(optionValue);
   await page.getByLabel('Association Name').fill(associationName);
-  await page.getByLabel('Association Code').fill(`A${barangayCode}`);
-  await page.getByLabel('Association President').fill('Playwright Test President');
   await Promise.all([page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname === '/admin/associations'), page.getByRole('button', { name: 'Save Association' }).click()]);
   await page.waitForURL(url => url.pathname.startsWith('/admin/associations/') && !url.pathname.endsWith('/create'), { timeout: 30_000 });
   const associationUrl = page.url();

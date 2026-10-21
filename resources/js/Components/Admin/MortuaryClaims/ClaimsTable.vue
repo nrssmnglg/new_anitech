@@ -67,7 +67,7 @@ function initials(name) {
                 <!-- Queue Table Header -->
                 <thead v-if="activeSection === 'queue'">
                     <tr class="border-b border-[#dde4de] bg-[#f8faf9] text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">
-                        <th class="px-4 py-2.5">Farmer</th>
+                        <th class="px-4 py-2.5">Farmer Name / Code</th>
                         <th class="px-4 py-2.5">Member Type</th>
                         <th class="px-4 py-2.5">Ledger Year</th>
                         <th class="px-4 py-2.5 text-center">Contributed</th>

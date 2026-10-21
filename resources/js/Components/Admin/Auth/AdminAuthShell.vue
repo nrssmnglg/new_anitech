@@ -6,7 +6,7 @@ defineProps({
     },
     heroCopy: {
         type: String,
-        required: true,
+        default: '',
     },
     logoUrl: {
         type: String,
@@ -33,7 +33,7 @@ defineProps({
                         {{ heroTitle }}
                     </h1>
 
-                    <div class="mt-5 border-l-4 border-[#8DBB61] pl-5">
+                    <div v-if="heroCopy" class="mt-5 border-l-4 border-[#8DBB61] pl-5">
                         <p class="text-base leading-relaxed text-white/90">
                             {{ heroCopy }}
                         </p>

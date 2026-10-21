@@ -70,6 +70,8 @@ function visibleQualityIssues(issues) {
                     <label class="flex items-center gap-1.5 rounded-lg border border-[#dbe3dd] bg-white px-2.5 py-1 text-xs text-[#475569]">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Scope:</span>
                         <select
+                            id="bulk-scope-select"
+                            name="bulk_scope"
                             :value="bulkScope"
                             class="bg-transparent text-xs font-semibold text-[#0f172a] outline-none"
                             @change="$emit('update-bulk-scope', $event.target.value)"
@@ -137,6 +139,9 @@ function visibleQualityIssues(issues) {
                     <tr class="border-b border-[#e2e8f0] bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">
                         <th class="w-12 px-4 py-3 text-center">
                             <input
+                                id="select-all-farmers"
+                                name="select_all_farmers"
+                                aria-label="Select all farmers on this page"
                                 :checked="allCurrentPageSelected"
                                 type="checkbox"
                                 class="h-4 w-4 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]"
@@ -161,6 +166,9 @@ function visibleQualityIssues(issues) {
                         <!-- Checkbox column -->
                         <td class="px-4 py-3.5 text-center align-top">
                             <input
+                                :id="'farmer-select-' + farmer.id"
+                                :name="'farmer_select_' + farmer.id"
+                                :aria-label="'Select ' + farmer.fullName"
                                 :checked="selectedIds.includes(farmer.id)"
                                 type="checkbox"
                                 class="h-4 w-4 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]"

@@ -169,7 +169,7 @@ function startExport() {
                 <div class="flex items-center justify-between border-b border-[#f1f5f9] pb-3.5">
                     <div class="flex items-center gap-2">
                         <span class="flex h-2 w-2 rounded-full bg-[#014d3c]"></span>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#0f172a]">Export Mortuary Report</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#0f172a]">Generate Mortuary Records</h3>
                     </div>
                     <button type="button" aria-label="Close export dialog" class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[#dde4de] text-[#64748b] transition hover:bg-[#f1f5f3] hover:text-[#0f172a]" @click="closeExportModal">
                         <span class="text-base leading-none">&times;</span>
@@ -187,7 +187,7 @@ function startExport() {
                                 :class="exportFormat === 'pdf' ? 'bg-[#014d3c] font-bold text-white shadow-xs' : 'text-[#64748b] hover:text-[#0f172a]'"
                                 @click="setExportFormat('pdf')"
                             >
-                                PDF Document
+                                PDF
                             </button>
                             <button
                                 type="button"
@@ -195,7 +195,7 @@ function startExport() {
                                 :class="exportFormat === 'xlsx' ? 'bg-[#014d3c] font-bold text-white shadow-xs' : 'text-[#64748b] hover:text-[#0f172a]'"
                                 @click="setExportFormat('xlsx')"
                             >
-                                Excel Spreadsheet
+                                Excel
                             </button>
                         </div>
                     </div>
@@ -214,7 +214,10 @@ function startExport() {
                                 :class="selectedExportColumns.includes(column.value) ? 'border-[#014d3c]/40 bg-[#f0fdf4]/30 text-[#014d3c]' : 'border-[#dde4de] text-[#475569] hover:border-[#cbd5e1]'"
                             >
                                 <input
+                                    :id="`mortuary-export-column-${column.value}`"
                                     :checked="selectedExportColumns.includes(column.value)"
+                                    name="columns[]"
+                                    :value="column.value"
                                     type="checkbox"
                                     class="h-3.5 w-3.5 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]"
                                     @change="toggleExportColumn(column.value)"
@@ -244,7 +247,7 @@ function startExport() {
                         Cancel
                     </button>
                     <button type="button" class="inline-flex h-9 items-center justify-center rounded-lg bg-[#014d3c] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.97]" @click="startExport">
-                        Download {{ exportFormat === 'pdf' ? 'PDF' : 'Excel' }}
+                        Export {{ exportFormat === 'pdf' ? 'PDF' : 'Excel' }}
                     </button>
                 </div>
             </section>

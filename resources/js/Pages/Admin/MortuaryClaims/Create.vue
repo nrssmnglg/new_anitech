@@ -38,7 +38,7 @@ const selectedInitials = computed(() => (
 
 const form = useForm({
     membership_ledger_id: selectedLedger.value?.id || '',
-    claim_date: new Date().toISOString().slice(0, 10),
+    claim_date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10),
     claim_amount: selectedLedger.value?.expectedClaimAmount || '',
     claimer_name: '',
     claimer_relationship: '',
@@ -209,7 +209,10 @@ function submit() {
                                             :class="form.requirements[requirement.code]?.is_received ? 'border-[#014d3c]/40 bg-[#f0fdf4]/20' : (form.errors['requirements.' + requirement.code + '.is_received'] ? 'border-rose-300 ring-1 ring-rose-200 bg-rose-50/30' : 'border-[#dde4de] hover:border-[#cbd5e1]')"
                                         >
                                             <input
+                                                :id="`mortuary-requirement-${requirement.code}`"
                                                 v-model="form.requirements[requirement.code].is_received"
+                                                :name="`requirements[${requirement.code}][is_received]`"
+                                                :aria-label="requirement.label"
                                                 type="checkbox"
                                                 class="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]"
                                             >
@@ -228,20 +231,26 @@ function submit() {
                                     <label class="block space-y-1">
                                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Claim Date</span>
                                         <input
+                                            id="claim_date"
                                             v-model="form.claim_date"
+                                            name="claim_date"
+                                            aria-label="Claim Date"
                                             type="date"
                                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                                         >
                                     </label>
 
                                     <label class="block space-y-1">
-                                        <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Calculated Claim Amount</span>
-                                        <div class="flex h-9 items-center justify-between rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 text-xs">
-                                            <span class="text-[#64748b]">Computed Entitlement:</span>
-                                            <span class="font-mono font-bold text-[#014d3c]">
-                                                PHP {{ Number(form.claim_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                                            </span>
-                                        </div>
+                                        <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Claim Amount (PHP)</span>
+                                        <input
+                                            id="claim_amount"
+                                            :value="form.claim_amount"
+                                            name="claim_amount"
+                                            aria-label="Claim Amount (PHP)"
+                                            type="number"
+                                            readonly
+                                            class="h-9 w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 font-mono text-xs font-bold text-[#014d3c] outline-none"
+                                        >
                                     </label>
                                 </div>
 
@@ -250,9 +259,13 @@ function submit() {
                                     <p class="text-[0.62rem] font-bold uppercase tracking-[0.1em] text-[#64748b] mb-3">Beneficiary / Claimer Information</p>
                                     <div class="grid gap-3.5 sm:grid-cols-2">
                                         <label class="block space-y-1">
-                                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Claimer Full Name</span>
+                                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Full Name of Claimer</span>
                                             <input
+                                                id="claimer_name"
                                                 v-model="form.claimer_name"
+                                                name="claimer_name"
+                                                aria-label="Full Name of Claimer"
+                                                autocomplete="off"
                                                 type="text"
                                                 placeholder="e.g. Maria Santos"
                                                 class="h-9 w-full rounded-lg border bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -262,9 +275,13 @@ function submit() {
                                         </label>
 
                                         <label class="block space-y-1">
-                                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Relationship to Deceased</span>
+                                            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Relationship</span>
                                             <input
+                                                id="claimer_relationship"
                                                 v-model="form.claimer_relationship"
+                                                name="claimer_relationship"
+                                                aria-label="Relationship"
+                                                autocomplete="off"
                                                 type="text"
                                                 placeholder="e.g. Spouse, Son, Daughter"
                                                 class="h-9 w-full rounded-lg border bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -276,7 +293,11 @@ function submit() {
                                         <label class="block space-y-1">
                                             <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Contact Number</span>
                                             <input
+                                                id="claimer_contact_number"
                                                 v-model="form.claimer_contact_number"
+                                                name="claimer_contact_number"
+                                                aria-label="Contact Number"
+                                                autocomplete="tel"
                                                 type="text"
                                                 placeholder="09xx xxx xxxx"
                                                 class="h-9 w-full rounded-lg border bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -288,7 +309,11 @@ function submit() {
                                         <label class="block space-y-1">
                                             <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Current Address</span>
                                             <input
+                                                id="claimer_address"
                                                 v-model="form.claimer_address"
+                                                name="claimer_address"
+                                                aria-label="Current Address"
+                                                autocomplete="street-address"
                                                 type="text"
                                                 placeholder="Barangay, Municipality"
                                                 class="h-9 w-full rounded-lg border bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -301,9 +326,12 @@ function submit() {
 
                                 <!-- Remarks -->
                                 <label class="block space-y-1">
-                                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Remarks & Field Observations</span>
+                                    <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Remarks & Processing Notes</span>
                                     <textarea
+                                        id="remarks"
                                         v-model="form.remarks"
+                                        name="remarks"
+                                        aria-label="Remarks & Processing Notes"
                                         rows="2"
                                         placeholder="Optional context, certificate validation details, or notes..."
                                         class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -327,7 +355,7 @@ function submit() {
                                             class="inline-flex h-9 items-center justify-center rounded-lg bg-[#014d3c] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#01362a] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
                                             :disabled="form.processing || !selectedLedger"
                                         >
-                                            {{ form.processing ? 'Submitting Claim...' : 'Confirm & File Claim' }}
+                                            {{ form.processing ? 'Filing...' : 'File Claim' }}
                                         </button>
                                     </div>
                                 </div>

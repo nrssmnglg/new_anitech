@@ -62,8 +62,10 @@ defineEmits(['submit-payment', 'submit-rejection']);
                 <!-- Payment Recording Form -->
                 <form v-if="flow.canRecordPaymentInAdmin" class="mt-4 space-y-3 border-t border-[#edf2ee] pt-3.5" @submit.prevent="$emit('submit-payment')">
                     <div>
-                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Payment Method</label>
+                        <label for="review-payment-method" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Payment Method</label>
                         <input
+                            id="review-payment-method"
+                            name="payment_method"
                             v-model="paymentForm.payment_method"
                             type="text"
                             placeholder="e.g. Cash, GCash"
@@ -72,8 +74,10 @@ defineEmits(['submit-payment', 'submit-rejection']);
                     </div>
 
                     <div>
-                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Reference Number (Optional)</label>
+                        <label for="review-reference-no" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Reference No.</label>
                         <input
+                            id="review-reference-no"
+                            name="reference_no"
                             v-model="paymentForm.reference_no"
                             type="text"
                             placeholder="Official Receipt # / Transaction ID"
@@ -82,8 +86,10 @@ defineEmits(['submit-payment', 'submit-rejection']);
                     </div>
 
                     <div>
-                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Amount Paid (PHP)</label>
+                        <label for="review-amount-paid" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Amount Paid</label>
                         <input
+                            id="review-amount-paid"
+                            name="amount_paid"
                             v-model="paymentForm.amount_paid"
                             type="number"
                             min="0.01"
@@ -93,8 +99,10 @@ defineEmits(['submit-payment', 'submit-rejection']);
                     </div>
 
                     <div>
-                        <label class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Date & Time Paid</label>
+                        <label for="review-paid-at" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Date & Time Paid</label>
                         <input
+                            id="review-paid-at"
+                            name="paid_at"
                             v-model="paymentForm.paid_at"
                             type="datetime-local"
                             class="mt-1 h-9 w-full rounded-lg border border-[#dde4de] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"

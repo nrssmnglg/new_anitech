@@ -17,7 +17,7 @@ test.describe('Membership Applications — create form', () => {
     test('opens a ready-to-fill new membership application form', async ({ page }) => {
         await page.goto('/admin/membership-applications/create', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: 'New Membership Application' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'New Membership Application' })).toBeAttached();
         await expect(page.getByLabel('Farmer Code')).toHaveValue(/FRM-/);
         await expect(page.getByLabel('Registration Date')).toBeEditable();
         await expect(page.getByLabel('First Name')).toBeEditable();

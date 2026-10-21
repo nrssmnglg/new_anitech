@@ -1722,8 +1722,8 @@ class FarmerController extends Controller
                 'title' => 'Mortuary claim',
                 'subtitle' => $claim->claim_reference ?: 'Mortuary claim #' . $claim->id,
                 'status' => str((string) $claim->status)->replace('_', ' ')->title()->toString(),
-                'occurredAt' => optional($claim->claim_date ?? $claim->created_at)?->format('M d, Y h:i A'),
-                'occurredAtRaw' => optional($claim->claim_date ?? $claim->created_at)?->toDateTimeString(),
+                'occurredAt' => optional($claim->created_at ?? $claim->claim_date)?->format('M d, Y h:i A'),
+                'occurredAtRaw' => optional($claim->created_at ?? $claim->claim_date)?->toDateTimeString(),
                 'href' => route('admin.mortuary-claims.show', $claim),
                 'meta' => [
                     'Claim Amount' => 'PHP ' . number_format((float) $claim->claim_amount, 2),

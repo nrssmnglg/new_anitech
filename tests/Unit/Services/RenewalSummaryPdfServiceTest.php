@@ -49,9 +49,44 @@ class RenewalSummaryPdfServiceTest extends TestCase
             'Abanon',
             'Abanon Agrifarmers Association',
             'Juan Dela Cruz',
-            'July 30, 2026',
+            'July 30, 2026 10:30 AM',
             2026,
             ['name'],
+        );
+
+        $this->assertStringStartsWith('%PDF-', $pdf);
+    }
+
+    public function test_summary_pdf_generates_with_date_and_time(): void
+    {
+        $pdf = (new RenewalSummaryPdfService())->buildSummary(
+            collect([[
+                'barangay' => 'Abanon',
+                'farmer_count' => 10,
+                'annual_due' => 1000,
+                'mortuary_fee' => 1500,
+                'membership_fee' => 0,
+                'total_amount' => 2500,
+                'membership_count' => 0,
+                'without_mortuary_count' => 0,
+                'female_count' => 5,
+                'male_count' => 5,
+            ]]),
+            [
+                'farmers' => 10,
+                'annual_due' => 1000,
+                'mortuary_fee' => 1500,
+                'membership_fee' => 0,
+                'total_amount' => 2500,
+                'membership_count' => 0,
+                'without_mortuary_count' => 0,
+                'female_count' => 5,
+                'male_count' => 5,
+            ],
+            ['barangay', 'farmer_count', 'total_amount'],
+            'Renewal Summary CY 2026',
+            'October 21, 2026 07:45 PM',
+            2026
         );
 
         $this->assertStringStartsWith('%PDF-', $pdf);

@@ -28,7 +28,7 @@ class BarangayController extends Controller
         $filters = $request->only(['search', 'status', 'association']);
         $barangaysQuery = Barangay::query()
             ->with(['association:id,barangay_id,name,code'])
-            ->withCount('farmers')
+            ->withCount(['farmers', 'associations', 'advisories'])
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($nested) use ($search): void {
                     $nested
@@ -191,11 +191,13 @@ class BarangayController extends Controller
     {
         $farmerCount = $barangay->farmers()->count();
         $associationCount = $barangay->associations()->count();
+        $advisoryCount = $barangay->advisories()->count();
 
-        if ($farmerCount > 0 || $associationCount > 0) {
+        if ($farmerCount > 0 || $associationCount > 0 || $advisoryCount > 0) {
             $dependencies = collect([
                 $farmerCount > 0 ? "{$farmerCount} farmer record(s)" : null,
                 $associationCount > 0 ? "{$associationCount} association record(s)" : null,
+                $advisoryCount > 0 ? "{$advisoryCount} advisory record(s)" : null,
             ])->filter()->implode(' and ');
 
             return back()->with('error', "Barangay cannot be deleted because it is linked to {$dependencies}.");
@@ -265,6 +267,10 @@ class BarangayController extends Controller
     private function serializeBarangayRow(Barangay $barangay): array
     {
         $status = strtolower((string) $barangay->status);
+        $hasRelationships = ((int) ($barangay->farmers_count ?? 0) > 0)
+            || ($barangay->association !== null)
+            || ((int) ($barangay->associations_count ?? 0) > 0)
+            || ((int) ($barangay->advisories_count ?? 0) > 0);
 
         return [
             'id' => $barangay->id,
@@ -279,6 +285,7 @@ class BarangayController extends Controller
                 'name' => $barangay->association->name,
                 'code' => $barangay->association->code,
             ] : null,
+            'canDelete' => ! $hasRelationships,
             'actions' => [
                 'showUrl' => route('admin.barangays.show', $barangay),
                 'editUrl' => route('admin.barangays.edit', $barangay),

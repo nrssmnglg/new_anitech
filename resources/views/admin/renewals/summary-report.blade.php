@@ -69,6 +69,14 @@
             text-transform: uppercase;
         }
 
+        .report-generation-time {
+            margin: -6px 0 12px;
+            text-align: center;
+            font-size: 11px;
+            font-style: italic;
+            color: #4b5563;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -161,6 +169,11 @@
                 font-size: 15px;
             }
 
+            .report-generation-time {
+                font-size: 9px;
+                margin: -4px 0 8px;
+            }
+
             th,
             td {
                 border-width: 1px;
@@ -196,6 +209,9 @@
                 Federation of Farmers association of San Carlos City, Pangasinan(FEFASACAPA) INC.<br>
                 SUMMARY OF RENEWAL CY {{ $reportYear }}
             </h1>
+            <p class="report-generation-time">
+                {{ $generatedAt->format('F d, Y h:i A') }}
+            </p>
 
             @php
                 $visibleColumns = array_keys($selectedColumns);

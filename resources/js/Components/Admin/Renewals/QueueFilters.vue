@@ -18,6 +18,7 @@ const emit = defineEmits(['apply', 'reset']);
                     </svg>
                     <input
                         id="queue-farmer-search"
+                        name="queue_search"
                         v-model="form.queue_search"
                         type="text"
                         placeholder="Search by name or code..."
@@ -30,6 +31,7 @@ const emit = defineEmits(['apply', 'reset']);
                 <label for="queue-year" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Year</label>
                 <select
                     id="queue-year"
+                    name="queue_year"
                     v-model="form.queue_year"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -41,6 +43,7 @@ const emit = defineEmits(['apply', 'reset']);
                 <label for="queue-barangay" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Barangay</label>
                 <select
                     id="queue-barangay"
+                    name="queue_barangay_id"
                     v-model="form.queue_barangay_id"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -53,6 +56,7 @@ const emit = defineEmits(['apply', 'reset']);
                 <label for="queue-member-type" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Member Type</label>
                 <select
                     id="queue-member-type"
+                    name="queue_member_type_id"
                     v-model="form.queue_member_type_id"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -73,7 +77,7 @@ const emit = defineEmits(['apply', 'reset']);
                     type="submit"
                     class="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a] active:scale-95 xl:flex-initial"
                 >
-                    Apply
+                    Apply Filters
                 </button>
             </div>
         </form>

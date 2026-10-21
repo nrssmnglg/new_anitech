@@ -46,7 +46,7 @@ function closePresidentPicker() {
     <div class="grid gap-4 md:grid-cols-2">
         <label class="space-y-1.5">
             <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Barangay</span>
-            <select v-model="form.barangay_id" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
+            <select id="association-form-barangay" v-model="form.barangay_id" name="barangay_id" aria-label="Barangay" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
                 <option value="">Select barangay</option>
                 <option v-for="barangay in barangays" :key="barangay.id" :value="barangay.id">
                     {{ barangay.name }}{{ barangay.code ? ` (${barangay.code})` : '' }}
@@ -60,7 +60,7 @@ function closePresidentPicker() {
 
         <label class="space-y-1.5">
             <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Status</span>
-            <select v-model="form.status" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
+            <select id="association-form-status" v-model="form.status" name="status" aria-label="Status" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
                 <option v-for="(label, value) in statusOptions" :key="value" :value="value">{{ label }}</option>
             </select>
             <p v-if="form.errors.status" class="flex items-center gap-1 text-xs font-medium text-rose-600">
@@ -71,7 +71,7 @@ function closePresidentPicker() {
 
         <label class="space-y-1.5 md:col-span-2">
             <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Association Name</span>
-            <input v-model="form.name" type="text" placeholder="Enter association name" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
+            <input id="association-name" v-model="form.name" name="name" aria-label="Association Name" autocomplete="off" type="text" placeholder="Enter association name" class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10">
             <p v-if="form.errors.name" class="flex items-center gap-1 text-xs font-medium text-rose-600">
                 <svg viewBox="0 0 16 16" class="h-3 w-3 shrink-0" fill="currentColor"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm-.75-4.75a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-1.5 0v4.5ZM8 11.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
                 {{ form.errors.name }}
@@ -80,7 +80,7 @@ function closePresidentPicker() {
 
         <label class="space-y-1.5 md:col-span-2">
             <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Association Code</span>
-            <input :value="form.code || 'Generated when saved'" type="text" readonly class="h-10 w-full cursor-not-allowed rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-xs text-[#94a3b8] outline-none">
+            <input id="association-code" :value="form.code || 'Generated when saved'" name="code" aria-label="Association Code" type="text" readonly class="h-10 w-full cursor-not-allowed rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-xs text-[#94a3b8] outline-none">
             <p v-if="form.errors.code" class="flex items-center gap-1 text-xs font-medium text-rose-600">
                 <svg viewBox="0 0 16 16" class="h-3 w-3 shrink-0" fill="currentColor"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm-.75-4.75a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-1.5 0v4.5ZM8 11.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
                 {{ form.errors.code }}
@@ -96,7 +96,10 @@ function closePresidentPicker() {
                         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.58 3.58a.75.75 0 1 1-1.06 1.06l-3.58-3.58A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
                     </svg>
                     <input
+                        id="association-president-search"
                         v-model="presidentSearch"
+                        name="president_search"
+                        aria-label="Association President"
                         type="search"
                         autocomplete="off"
                         placeholder="Search farmer by name or code"
@@ -154,7 +157,26 @@ function closePresidentPicker() {
         <!-- Placeholder for Create mode (before president can be selected) -->
         <label v-else class="space-y-1.5 md:col-span-2">
             <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">Association President</span>
-            <input value="Save the association first, then select its president while editing" type="text" readonly class="h-10 w-full cursor-not-allowed rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-xs text-[#94a3b8] outline-none">
+            <input id="association-president-placeholder" value="Save the association first, then select its president while editing" name="president_placeholder" aria-label="Association President" type="text" readonly class="h-10 w-full cursor-not-allowed rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-xs text-[#94a3b8] outline-none">
+        </label>
+
+        <!-- President Social Media Link -->
+        <label class="space-y-1.5 md:col-span-2">
+            <span class="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#64748b]">President Social Media Link</span>
+            <input
+                id="association-president-social-link"
+                v-model="form.president_social_link"
+                name="president_social_link"
+                aria-label="President Social Media Link"
+                type="text"
+                placeholder="e.g. https://facebook.com/username, m.me/username, or social profile link"
+                class="h-10 w-full rounded-lg border border-[#d7e0db] bg-[#f9fbfa] px-3.5 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#14745a] focus:bg-white focus:ring-2 focus:ring-[#14745a]/10"
+            >
+            <p class="text-[0.62rem] text-[#94a3b8]">Social media profile or direct messaging link (e.g. Facebook, Messenger).</p>
+            <p v-if="form.errors.president_social_link" class="flex items-center gap-1 text-xs font-medium text-rose-600">
+                <svg viewBox="0 0 16 16" class="h-3 w-3 shrink-0" fill="currentColor"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm-.75-4.75a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-1.5 0v4.5ZM8 11.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>
+                {{ form.errors.president_social_link }}
+            </p>
         </label>
     </div>
 </template>

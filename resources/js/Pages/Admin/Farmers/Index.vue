@@ -340,6 +340,8 @@ function submitBulkArchive() {
                             class="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-xs text-[#0f172a] transition-all hover:border-[#cbd5e1] hover:bg-[#f1f5f9]"
                         >
                             <input
+                                :id="'export-col-' + column.value"
+                                :name="'export_col_' + column.value"
                                 :checked="selectedExportColumns.includes(column.value)"
                                 type="checkbox"
                                 class="h-3.5 w-3.5 rounded border-slate-300 text-[#014d3c] focus:ring-[#014d3c]"
@@ -402,52 +404,52 @@ function submitBulkArchive() {
                 <div v-if="bulkModal === 'notify'" class="mt-4 space-y-3">
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Subject</span>
-                        <input v-model="notifyForm.subject" type="text" placeholder="e.g. Important notice regarding renewal" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <input id="bulk-notify-subject" name="subject" v-model="notifyForm.subject" type="text" placeholder="e.g. Important notice regarding renewal" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                     </label>
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Message Content</span>
-                        <textarea v-model="notifyForm.message" rows="4" placeholder="Enter message to deliver to the selected farmers..." class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"></textarea>
+                        <textarea id="bulk-notify-message" name="message" v-model="notifyForm.message" rows="4" placeholder="Enter message to deliver to the selected farmers..." class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"></textarea>
                     </label>
                 </div>
 
                 <div v-else-if="bulkModal === 'follow_up'" class="mt-4 space-y-3">
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Follow-up Note</span>
-                        <textarea v-model="followUpForm.note" rows="4" placeholder="e.g. Waiting for barangay confirmation, verify missing mobile number, callback scheduled..." class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"></textarea>
+                        <textarea id="bulk-follow-up-note" name="note" v-model="followUpForm.note" rows="4" placeholder="e.g. Waiting for barangay confirmation, verify missing mobile number, callback scheduled..." class="w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] p-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"></textarea>
                     </label>
                 </div>
 
                 <div v-else-if="bulkModal === 'status'" class="mt-4 grid gap-3 sm:grid-cols-2">
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Review Status</span>
-                        <select v-model="statusReviewForm.review_status" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <select id="bulk-review-status" name="review_status" v-model="statusReviewForm.review_status" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                             <option v-for="status in filterOptions.statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
                         </select>
                     </label>
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Inactive Reason</span>
-                        <input v-model="statusReviewForm.inactive_reason" type="text" placeholder="Required for inactive or deceased" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <input id="bulk-inactive-reason" name="inactive_reason" v-model="statusReviewForm.inactive_reason" type="text" placeholder="Required for inactive or deceased" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                     </label>
                 </div>
 
                 <div v-else-if="bulkModal === 'assign'" class="mt-4 grid gap-3 sm:grid-cols-3">
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Barangay</span>
-                        <select v-model="assignmentForm.barangay_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <select id="bulk-assign-barangay" name="barangay_id" v-model="assignmentForm.barangay_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                             <option value="">Keep current</option>
                             <option v-for="barangay in filterOptions.barangays" :key="barangay.key || barangay.id" :value="String(barangay.key || barangay.id)">{{ barangay.name }}</option>
                         </select>
                     </label>
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Association</span>
-                        <select v-model="assignmentForm.association_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <select id="bulk-assign-association" name="association_id" v-model="assignmentForm.association_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                             <option value="">Keep current</option>
                             <option v-for="association in assignmentAssociations" :key="association.key || association.id" :value="String(association.key || association.id)">{{ association.name }}</option>
                         </select>
                     </label>
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Member Type</span>
-                        <select v-model="assignmentForm.member_type_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <select id="bulk-assign-member-type" name="member_type_id" v-model="assignmentForm.member_type_id" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                             <option value="">Keep current</option>
                             <option v-for="memberType in filterOptions.memberTypes" :key="memberType.key || memberType.id" :value="String(memberType.key || memberType.id)">{{ memberType.code }} - {{ memberType.name }}</option>
                         </select>
@@ -457,11 +459,11 @@ function submitBulkArchive() {
                 <div v-else class="mt-4 grid gap-3 sm:grid-cols-2">
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Registered Before</span>
-                        <input v-model="archiveForm.registered_before" type="date" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <input id="bulk-archive-registered-before" name="registered_before" v-model="archiveForm.registered_before" type="date" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                     </label>
                     <label class="block space-y-1.5">
                         <span class="text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Archive Reason</span>
-                        <input v-model="archiveForm.archive_reason" type="text" placeholder="e.g. Inactive for multiple years" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
+                        <input id="bulk-archive-reason" name="archive_reason" v-model="archiveForm.archive_reason" type="text" placeholder="e.g. Inactive for multiple years" class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10">
                     </label>
                 </div>
 

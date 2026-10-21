@@ -21,6 +21,7 @@ class UpdateAssociationRequest extends FormRequest
             'president_farmer_id' => $this->decodeRouteKey($this->input('president_farmer_id')),
             'name' => trim((string) $this->input('name')),
             'president_name' => filled($this->input('president_name')) ? trim((string) $this->input('president_name')) : null,
+            'president_social_link' => filled($this->input('president_social_link')) ? trim((string) $this->input('president_social_link')) : null,
         ]);
     }
 
@@ -39,6 +40,7 @@ class UpdateAssociationRequest extends FormRequest
                     fn ($query) => $query->where('barangay_id', $this->input('barangay_id')),
                 ),
             ],
+            'president_social_link' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

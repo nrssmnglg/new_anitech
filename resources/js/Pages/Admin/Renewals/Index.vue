@@ -275,6 +275,8 @@ function startExport() {
                                 class="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 cursor-pointer transition hover:border-[#003629]/40"
                             >
                                 <input
+                                    :id="'renewal-export-col-' + column.value"
+                                    :name="'export_columns[]'"
                                     :checked="selectedExportColumns.includes(column.value)"
                                     type="checkbox"
                                     class="h-4 w-4 rounded border-slate-300 text-[#003629] focus:ring-[#003629]"

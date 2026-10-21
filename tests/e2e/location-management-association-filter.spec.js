@@ -27,7 +27,7 @@ test('Location Management filters associations by search and barangay', async ({
   await expect(table).toContainText('ABANON AGRIFARMERS', { timeout: 30_000 });
   await expect(table).toContainText('Abanon');
 
-  await main.getByRole('button', { name: 'Clear' }).click();
+  await main.getByRole('button', { name: 'Reset' }).click();
   await expect(search).toHaveValue('');
   await expect(barangay).toHaveValue('');
 });

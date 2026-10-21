@@ -207,6 +207,9 @@ function visibleValidationNotes(document) {
                     <!-- Action Controls -->
                     <div class="flex flex-wrap items-center gap-2 lg:justify-end">
                         <input
+                            :id="'doc-remarks-' + document.id"
+                            :name="'doc_remarks_' + document.id"
+                            aria-label="Document remarks"
                             v-model="documentRemarks[document.id]"
                             type="text"
                             placeholder="Optional remarks..."

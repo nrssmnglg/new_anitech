@@ -179,6 +179,17 @@ const statusTone = computed(() => {
 
                 <!-- Right 1 Column: Beneficiary Details & Audit Trail -->
                 <div class="space-y-4">
+                    <!-- Claim Released Confirmation -->
+                    <section
+                        v-if="['released', 'approved'].includes(String(claim.status.value).toLowerCase())"
+                        class="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4 shadow-xs"
+                    >
+                        <h2 class="text-sm font-bold text-[#14532d]">Claim Released</h2>
+                        <p class="mt-1 text-xs leading-5 text-[#166534]">
+                            This claim was approved and released when it was filed, after the required documents and beneficiary details were completed. The farmer's registry status is now {{ claim.farmer.statusLabel || 'updated' }}.
+                        </p>
+                    </section>
+
                     <!-- Beneficiary Details Card -->
                     <section class="rounded-2xl border border-[#dde4de] bg-white p-4 shadow-xs">
                         <div class="border-b border-[#f1f5f9] pb-3">

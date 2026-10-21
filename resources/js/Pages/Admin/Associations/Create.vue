@@ -23,6 +23,7 @@ const form = useForm({
     name: '',
     code: '',
     president_name: '',
+    president_social_link: '',
     status: 'active',
 });
 

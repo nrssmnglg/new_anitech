@@ -91,6 +91,9 @@ function removeFilter(key) {
                                 <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.58 3.58a.75.75 0 1 1-1.06 1.06l-3.58-3.58A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
                             </svg>
                             <input
+                                id="queue-filter-search"
+                                name="search"
+                                aria-label="Search Records"
                                 v-model="form.search"
                                 type="text"
                                 placeholder="App #, code, name..."
@@ -113,6 +116,9 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Registration Source</span>
                         <select
+                            id="queue-filter-source"
+                            name="source"
+                            aria-label="Registration Source"
                             v-model="form.source"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                             @change="$emit('apply')"
@@ -128,6 +134,9 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Application Status</span>
                         <select
+                            id="queue-filter-status"
+                            name="status"
+                            aria-label="Application Status"
                             v-model="form.status"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                             @change="$emit('apply')"
@@ -143,6 +152,9 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Fiscal Year</span>
                         <select
+                            id="queue-filter-year"
+                            name="year"
+                            aria-label="Fiscal Year"
                             v-model="form.year"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                             @change="$emit('apply')"
@@ -158,6 +170,9 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Barangay Location</span>
                         <select
+                            id="queue-filter-barangay"
+                            name="barangay_id"
+                            aria-label="Barangay Location"
                             v-model="form.barangay_id"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                             @change="$emit('apply')"

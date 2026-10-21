@@ -19,6 +19,7 @@ defineEmits(['apply', 'reset', 'export']);
                     </svg>
                     <input
                         id="records-farmer-search"
+                        name="record_search"
                         v-model="form.record_search"
                         type="text"
                         placeholder="Search name or code..."
@@ -31,6 +32,7 @@ defineEmits(['apply', 'reset', 'export']);
                 <label for="records-year" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Year</label>
                 <select
                     id="records-year"
+                    name="record_year"
                     v-model="form.record_year"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -43,6 +45,7 @@ defineEmits(['apply', 'reset', 'export']);
                 <label for="records-barangay" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Barangay</label>
                 <select
                     id="records-barangay"
+                    name="record_barangay_id"
                     v-model="form.record_barangay_id"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -55,6 +58,7 @@ defineEmits(['apply', 'reset', 'export']);
                 <label for="records-source" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Type</label>
                 <select
                     id="records-source"
+                    name="record_source"
                     v-model="form.record_source"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -67,6 +71,7 @@ defineEmits(['apply', 'reset', 'export']);
                 <label for="records-status" class="block text-[0.62rem] font-bold uppercase tracking-wider text-[#64748b]">Status</label>
                 <select
                     id="records-status"
+                    name="record_status"
                     v-model="form.record_status"
                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition focus:border-[#003629] focus:bg-white focus:ring-2 focus:ring-[#003629]/10"
                 >
@@ -97,7 +102,7 @@ defineEmits(['apply', 'reset', 'export']);
                     type="submit"
                     class="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#003629] px-4 text-xs font-bold text-white shadow-xs transition hover:bg-[#00483a] active:scale-95 xl:flex-initial"
                 >
-                    Apply
+                    Apply Filters
                 </button>
             </div>
         </form>

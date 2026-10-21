@@ -125,8 +125,11 @@ function removeFilter(key) {
                                 <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.58 3.58a.75.75 0 1 1-1.06 1.06l-3.58-3.58A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
                             </svg>
                             <input
+                                id="farmer-filter-search"
+                                name="search"
                                 v-model="form.search"
                                 type="text"
+                                autocomplete="off"
                                 placeholder="Search by code, name, mobile..."
                                 class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] pl-9 pr-7 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                             >
@@ -145,6 +148,8 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Barangay</span>
                         <select
+                            id="farmer-filter-barangay"
+                            name="barangay_id"
                             v-model="form.barangay_id"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                         >
@@ -159,6 +164,8 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Association</span>
                         <select
+                            id="farmer-filter-association"
+                            name="association_id"
                             v-model="form.association_id"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                         >
@@ -173,6 +180,8 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Status</span>
                         <select
+                            id="farmer-filter-status"
+                            name="status"
                             v-model="form.status"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                             @change="$emit('apply')"
@@ -188,6 +197,8 @@ function removeFilter(key) {
                     <label class="space-y-1.5">
                         <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Member Type</span>
                         <select
+                            id="farmer-filter-member-type"
+                            name="member_type_id"
                             v-model="form.member_type_id"
                             class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#0f172a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                         >
@@ -205,6 +216,8 @@ function removeFilter(key) {
                         <label class="flex items-center gap-1.5 text-xs text-[#64748b]">
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Quality:</span>
                             <select
+                                id="farmer-filter-quality"
+                                name="quality"
                                 v-model="form.quality"
                                 class="h-8 rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-2.5 text-xs text-[#0f172a] outline-none transition-all focus:border-[#014d3c] focus:bg-white"
                                 @change="$emit('apply')"

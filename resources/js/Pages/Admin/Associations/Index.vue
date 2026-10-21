@@ -32,7 +32,7 @@ const form = reactive({
     status: props.filters.status ?? '',
 });
 
-const showFilters = ref(!!(form.search || form.barangay_id || form.status));
+const showFilters = ref(true);
 
 const applyFilters = () => {
     router.get(props.urls.index, form, {
@@ -119,7 +119,11 @@ const activeFilterCount = () => [form.search, form.barangay_id, form.status].fil
                             <div class="relative">
                                 <svg viewBox="0 0 20 20" class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94a3b8]" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.58 3.58a.75.75 0 1 1-1.06 1.06l-3.58-3.58A7 7 0 0 1 2 9Z" clip-rule="evenodd"/></svg>
                                 <input
+                                    id="association-search"
                                     v-model="form.search"
+                                    name="search"
+                                    aria-label="Search"
+                                    autocomplete="off"
                                     type="text"
                                     placeholder="Search association"
                                     class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] pl-9 pr-3 text-xs text-[#12372a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
@@ -130,7 +134,10 @@ const activeFilterCount = () => [form.search, form.barangay_id, form.status].fil
                         <label class="space-y-1.5">
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Barangay</span>
                             <select
+                                id="association-barangay"
                                 v-model="form.barangay_id"
+                                name="barangay_id"
+                                aria-label="Barangay"
                                 class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#12372a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                             >
                                 <option value="">All Barangays</option>
@@ -147,7 +154,10 @@ const activeFilterCount = () => [form.search, form.barangay_id, form.status].fil
                         <label class="space-y-1.5">
                             <span class="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[#64748b]">Status</span>
                             <select
+                                id="association-status"
                                 v-model="form.status"
+                                name="status"
+                                aria-label="Status"
                                 class="h-9 w-full rounded-lg border border-[#dbe3dd] bg-[#f9fbfa] px-3 text-xs text-[#12372a] outline-none transition-all duration-200 focus:border-[#014d3c] focus:bg-white focus:ring-2 focus:ring-[#014d3c]/10"
                             >
                                 <option value="">All</option>

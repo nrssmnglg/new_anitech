@@ -30,13 +30,20 @@ test.describe('Mortuary Monitoring — complete claim flow', () => {
     });
 
     test('files and releases a claim for the dedicated test farmer', async ({ page }) => {
-        await page.goto('/admin/mortuary-claims/create', { waitUntil: 'domcontentloaded' });
+        await page.goto('/admin/mortuary-claims', { waitUntil: 'domcontentloaded' });
+
+        const main = page.getByRole('main');
+        await main.getByLabel('Search').fill(farmerCode);
+        await main.getByRole('button', { name: 'Apply Filters' }).click();
+
+        const farmerRow = main.getByRole('row').filter({ hasText: farmerCode });
+        await expect(farmerRow).toContainText(farmerName, { timeout: 30_000 });
+        await Promise.all([
+            page.waitForURL(/\/admin\/mortuary-claims\/create/, { timeout: 30_000 }),
+            farmerRow.getByRole('link', { name: 'Process' }).click(),
+        ]);
 
         await expect(page.getByRole('heading', { name: 'File Mortuary Claim' })).toBeVisible();
-        const farmerSelector = page.getByRole('button', { name: new RegExp(`${farmerName}.*${farmerCode}`, 'i') });
-        await expect(farmerSelector).toBeVisible();
-        await farmerSelector.click();
-
         await expect(page.getByText(farmerName, { exact: true }).first()).toBeVisible();
         const amount = page.getByLabel('Claim Amount (PHP)');
         expect(Number(await amount.inputValue())).toBeGreaterThan(0);
