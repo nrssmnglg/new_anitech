@@ -14,7 +14,7 @@ class EnsureActiveUser
     {
         $user = $request->user();
 
-        if (! $user || $user->status === User::STATUS_ACTIVE) {
+        if (! $user || strcasecmp((string) $user->status, User::STATUS_ACTIVE) === 0) {
             return $next($request);
         }
 

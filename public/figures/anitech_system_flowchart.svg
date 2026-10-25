@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#000000" />
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #000000; stroke-width: 2.5; rx: 4px; ry: 4px; }
+      .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2.5; }
+      .line { fill: none; stroke: #000000; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+      .title-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 26px; font-weight: bold; fill: #000000; text-anchor: middle; }
+      .sub-title-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 14px; font-weight: normal; fill: #555555; text-anchor: middle; letter-spacing: 1px; }
+      .node-title { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 15px; font-weight: bold; fill: #000000; text-anchor: middle; }
+      .node-sub { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 13px; font-weight: 600; fill: #222222; text-anchor: middle; }
+      .label-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 13px; font-weight: bold; fill: #000000; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" />
+
+  <!-- Diagram Title Header -->
+  <text x="800" y="70" class="title-text">ANITECH AGRICULTURAL RECORDS MANAGEMENT SYSTEM</text>
+  <text x="800" y="98" class="sub-title-text">SYSTEM PROCESS ARCHITECTURE &amp; DATA LIFECYCLE FLOWCHART</text>
+
+  <!-- ================= CONNECTING ARROWS ================= -->
+  
+  <!-- Step 1 to Diamond 1 -->
+  <path d="M 240 430 L 268 430" class="line" marker-end="url(#arrow)" />
+  
+  <!-- Diamond 1 "No" Loop Back to Step 1 -->
+  <path d="M 330 375 L 330 310 L 150 310 L 150 388" class="line" marker-end="url(#arrow)" />
+  <text x="338" y="340" class="label-text">No</text>
+  
+  <!-- Diamond 1 "Yes" to Step 2 (Storage) -->
+  <path d="M 390 430 L 468 430" class="line" marker-end="url(#arrow)" />
+  <text x="415" y="420" class="label-text">Yes</text>
+
+  <!-- Step 2 (Storage) to Step 3 (Retrieval) -->
+  <path d="M 710 430 L 788 430" class="line" marker-end="url(#arrow)" />
+
+  <!-- Step 2 (Storage) <-> Step 5 (Monitoring) 2-Way Vertical -->
+  <path d="M 550 385 L 550 257" class="line" marker-end="url(#arrow)" />
+  <path d="M 630 255 L 630 383" class="line" marker-end="url(#arrow)" />
+
+  <!-- Step 5 (Monitoring) Alerts -> Diamond 2 (Action) -->
+  <path d="M 710 212 L 1160 212 L 1160 373" class="line" marker-end="url(#arrow)" />
+  <text x="880" y="202" class="label-text">Alerts (Pending Claims &amp; Delinquent Fees)</text>
+
+  <!-- Step 3 (Retrieval) to Diamond 2 (Action) -->
+  <path d="M 1030 430 L 1098 430" class="line" marker-end="url(#arrow)" />
+
+  <!-- Diamond 2 "View" -> Step 6 (Output) -->
+  <path d="M 1220 430 L 1298 430" class="line" marker-end="url(#arrow)" />
+  <text x="1235" y="420" class="label-text">View</text>
+
+  <!-- Diamond 2 "Update" -> Step 4 (Updating) -->
+  <path d="M 1160 485 L 1160 608" class="line" marker-end="url(#arrow)" />
+  <text x="1170" y="550" class="label-text">Update</text>
+
+  <!-- Step 4 (Updating) Return Loop -> Step 2 (Storage) -->
+  <path d="M 1040 652 L 590 652 L 590 477" class="line" marker-end="url(#arrow)" />
+  <text x="760" y="642" class="label-text">Synchronize Registry &amp; Ledgers</text>
+
+
+  <!-- ================= PROCESS BOXES & DIAMONDS ================= -->
+
+  <!-- 1. Intake Box -->
+  <rect x="60" y="390" width="180" height="80" class="box" />
+  <text x="150" y="426" class="node-title">Membership &amp;</text>
+  <text x="150" y="446" class="node-title">Claim Intake</text>
+
+  <!-- Diamond 1: Requirements Verified? -->
+  <polygon points="330,375 390,430 330,485 270,430" class="diamond" />
+  <text x="330" y="426" class="node-title">Requirements</text>
+  <text x="330" y="444" class="node-title">Verified?</text>
+
+  <!-- 2. Storage Box (Center DB) -->
+  <rect x="470" y="385" width="240" height="90" class="box" />
+  <text x="590" y="424" class="node-title">1. STORAGE</text>
+  <text x="590" y="448" class="node-sub">Farmer Registry &amp; Ledgers</text>
+
+  <!-- 3. Retrieval Box -->
+  <rect x="790" y="385" width="240" height="90" class="box" />
+  <text x="910" y="424" class="node-title">2. RETRIEVAL</text>
+  <text x="910" y="448" class="node-sub">Registry Search &amp; Lookup</text>
+
+  <!-- Diamond 2: Action Type? -->
+  <polygon points="1160,375 1220,430 1160,485 1100,430" class="diamond" />
+  <text x="1160" y="426" class="node-title">Action</text>
+  <text x="1160" y="444" class="node-title">Type?</text>
+
+  <!-- 4. Updating Box -->
+  <rect x="1040" y="610" width="240" height="85" class="box" />
+  <text x="1160" y="646" class="node-title">3. UPDATING</text>
+  <text x="1160" y="668" class="node-sub">Renewals &amp; Status Edits</text>
+
+  <!-- 5. Monitoring Box -->
+  <rect x="470" y="170" width="240" height="85" class="box" />
+  <text x="590" y="206" class="node-title">4. MONITORING</text>
+  <text x="590" y="228" class="node-sub">Mortuary &amp; Task Queues</text>
+
+  <!-- 6. Reports & Output Box -->
+  <rect x="1300" y="385" width="240" height="90" class="box" />
+  <text x="1420" y="424" class="node-title">Audit Reports &amp;</text>
+  <text x="1420" y="448" class="node-sub">Dashboard Output</text>
+
+</svg>

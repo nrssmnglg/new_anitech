@@ -9,6 +9,7 @@ use App\Models\Association;
 use App\Models\Barangay;
 use App\Models\Farmer;
 use App\Models\User;
+use App\Services\Audit\AuditTrailService;
 use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,8 +23,9 @@ class AssociationController extends Controller
     /** @var array<string, string> */
     private array $queryRouteKeys = [];
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AuditTrailService $auditTrailService,
+    ) {
         $this->middleware('role.in:' . User::ROLE_ADMIN);
     }
 
@@ -144,6 +146,21 @@ class AssociationController extends Controller
             return $association;
         }, 3);
 
+        $this->auditTrailService->record(
+            'associations',
+            'association_created',
+            "Created association {$association->name} ({$association->code}).",
+            $request->user(),
+            $association,
+            [
+                'name' => $association->name,
+                'code' => $association->code,
+                'barangay_id' => $association->barangay_id,
+                'president_name' => $association->president_name,
+                'status' => $association->status,
+            ]
+        );
+
         return redirect()
             ->route('admin.associations.show', $association)
             ->with('success', 'Association record created.');
@@ -233,6 +250,15 @@ class AssociationController extends Controller
     {
         $validated = $request->validated();
 
+        $before = [
+            'name' => $association->name,
+            'code' => $association->code,
+            'barangay_id' => $association->barangay_id,
+            'president_name' => $association->president_name,
+            'president_social_link' => $association->president_social_link,
+            'status' => $association->status,
+        ];
+
         DB::transaction(function () use ($validated, $association): void {
             $president = filled($validated['president_farmer_id'] ?? null)
                 ? Farmer::query()->find($validated['president_farmer_id'])
@@ -253,6 +279,25 @@ class AssociationController extends Controller
                 ->update(['association_id' => $association->id]);
         });
 
+        $fresh = $association->fresh();
+
+        $this->auditTrailService->recordChange(
+            'associations',
+            'association_updated',
+            "Updated association {$fresh->name}.",
+            $request->user(),
+            $fresh,
+            $before,
+            [
+                'name' => $fresh->name,
+                'code' => $fresh->code,
+                'barangay_id' => $fresh->barangay_id,
+                'president_name' => $fresh->president_name,
+                'president_social_link' => $fresh->president_social_link,
+                'status' => $fresh->status,
+            ]
+        );
+
         return redirect()
             ->route('admin.associations.show', $association)
             ->with('success', 'Association record updated.');
@@ -264,13 +309,27 @@ class AssociationController extends Controller
             'status' => ['required', Rule::in(array_keys($this->statusOptions()))],
         ]);
 
+        $oldStatus = $association->status;
+
         $association->update([
             'status' => $validated['status'],
         ]);
 
+        $fresh = $association->fresh();
+
+        $this->auditTrailService->recordChange(
+            'associations',
+            'association_status_updated',
+            "Changed association {$fresh->name} status to " . ucfirst((string) $validated['status']) . '.',
+            $request->user(),
+            $fresh,
+            ['status' => $oldStatus],
+            ['status' => $validated['status']]
+        );
+
         $message = 'Association marked as ' . $validated['status'] . '.';
         $warnings = $validated['status'] === 'inactive'
-            ? $this->dependencyWarnings($association->fresh())
+            ? $this->dependencyWarnings($fresh)
             : [];
 
         if ($warnings !== []) {

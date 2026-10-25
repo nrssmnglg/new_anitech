@@ -8,6 +8,7 @@ use App\Models\Association;
 use App\Models\AuditLog;
 use App\Models\Barangay;
 use App\Models\Farmer;
+use App\Models\FeeSchedule;
 use App\Models\MembershipApplication;
 use App\Models\MortuaryClaim;
 use App\Models\Query;
@@ -72,6 +73,9 @@ class AuditLogController extends Controller
             Farmer::class => ['profile:id,farmer_id,first_name,middle_name,last_name,suffix'],
             MembershipApplication::class => ['farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix'],
             RenewalRequest::class => ['farmer.profile:id,farmer_id,first_name,middle_name,last_name,suffix'],
+            Association::class => [],
+            Barangay::class => [],
+            FeeSchedule::class => ['memberType:id,code,name'],
         ]);
 
         $today = CarbonImmutable::today();
@@ -214,6 +218,30 @@ class AuditLogController extends Controller
             return $parts !== [] ? 'Renewal: ' . implode(' | ', $parts) : null;
         }
 
+        if ($subject instanceof Association) {
+            $parts = array_filter([
+                $subject->name,
+                $subject->code,
+            ]);
+
+            return $parts !== [] ? 'Association: ' . implode(' | ', $parts) : null;
+        }
+
+        if ($subject instanceof Barangay) {
+            $parts = array_filter([
+                $subject->name,
+                $subject->code,
+            ]);
+
+            return $parts !== [] ? 'Barangay: ' . implode(' | ', $parts) : null;
+        }
+
+        if ($subject instanceof FeeSchedule) {
+            $memberTypeName = $subject->memberType?->name;
+
+            return 'Fee Schedule: Year ' . $subject->year . ($memberTypeName ? " ({$memberTypeName})" : '');
+        }
+
         if (filled($log->subject_label)) {
             return (string) $log->subject_label;
         }
@@ -248,6 +276,7 @@ class AuditLogController extends Controller
             $subject instanceof Association => route('admin.associations.show', $subject),
             $subject instanceof Advisory => route('admin.advisories.show', $subject),
             $subject instanceof MortuaryClaim => route('admin.mortuary-claims.show', $subject),
+            $subject instanceof FeeSchedule => route('admin.fee-schedules.edit', $subject),
             default => null,
         };
     }

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreBarangayRequest;
 use App\Http\Requests\Admin\UpdateBarangayRequest;
 use App\Models\Barangay;
 use App\Models\User;
+use App\Services\Audit\AuditTrailService;
 use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,8 +19,9 @@ use Inertia\Response as InertiaResponse;
 
 class BarangayController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AuditTrailService $auditTrailService,
+    ) {
         $this->middleware('role.in:' . User::ROLE_ADMIN);
     }
 
@@ -112,6 +114,19 @@ class BarangayController extends Controller
             ]);
         }, 3);
 
+        $this->auditTrailService->record(
+            'barangays',
+            'barangay_created',
+            "Created barangay {$barangay->name} ({$barangay->code}).",
+            $request->user(),
+            $barangay,
+            [
+                'name' => $barangay->name,
+                'code' => $barangay->code,
+                'status' => $barangay->status,
+            ]
+        );
+
         return redirect()
             ->route('admin.barangays.show', $barangay)
             ->with('success', 'Barangay record created.');
@@ -180,7 +195,29 @@ class BarangayController extends Controller
 
     public function update(UpdateBarangayRequest $request, Barangay $barangay): RedirectResponse
     {
+        $before = [
+            'name' => $barangay->name,
+            'code' => $barangay->code,
+            'status' => $barangay->status,
+        ];
+
         $barangay->update($request->validated());
+
+        $fresh = $barangay->fresh();
+
+        $this->auditTrailService->recordChange(
+            'barangays',
+            'barangay_updated',
+            "Updated barangay {$fresh->name}.",
+            $request->user(),
+            $fresh,
+            $before,
+            [
+                'name' => $fresh->name,
+                'code' => $fresh->code,
+                'status' => $fresh->status,
+            ]
+        );
 
         return redirect()
             ->route('admin.barangays.show', $barangay)
@@ -204,9 +241,22 @@ class BarangayController extends Controller
         }
 
         $name = $barangay->name;
+        $code = $barangay->code;
 
         try {
             $barangay->delete();
+
+            $this->auditTrailService->record(
+                'barangays',
+                'barangay_deleted',
+                "Deleted barangay {$name} ({$code}).",
+                request()->user(),
+                null,
+                [
+                    'name' => $name,
+                    'code' => $code,
+                ]
+            );
         } catch (QueryException $exception) {
             report($exception);
 
@@ -224,13 +274,27 @@ class BarangayController extends Controller
             'status' => ['required', Rule::in(array_keys($this->statusOptions()))],
         ]);
 
+        $oldStatus = $barangay->status;
+
         $barangay->update([
             'status' => $validated['status'],
         ]);
 
+        $fresh = $barangay->fresh();
+
+        $this->auditTrailService->recordChange(
+            'barangays',
+            'barangay_status_updated',
+            "Changed barangay {$fresh->name} status to " . ucfirst((string) $validated['status']) . '.',
+            $request->user(),
+            $fresh,
+            ['status' => $oldStatus],
+            ['status' => $validated['status']]
+        );
+
         $message = 'Barangay marked as ' . $validated['status'] . '.';
         $warnings = $validated['status'] === 'inactive'
-            ? $this->dependencyWarnings($barangay->fresh())
+            ? $this->dependencyWarnings($fresh)
             : [];
 
         if ($warnings !== []) {

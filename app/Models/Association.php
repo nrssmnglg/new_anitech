@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasEncryptedPublicRouteKey;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,17 @@ class Association extends Model
         'president_social_link',
         'status',
     ];
+
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value): string => strtolower((string) $value),
+            set: fn (mixed $value): string => match (strtolower((string) $value)) {
+                'inactive' => 'Inactive',
+                default => 'Active',
+            },
+        );
+    }
 
     public function barangay(): BelongsTo
     {

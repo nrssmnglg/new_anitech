@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#000000" />
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #000000; stroke-width: 2.5; rx: 4px; ry: 4px; }
+      .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2.5; }
+      .line { fill: none; stroke: #000000; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+      .title-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 24px; font-weight: bold; fill: #000000; text-anchor: middle; }
+      .sub-title-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 14px; font-weight: normal; fill: #555555; text-anchor: middle; letter-spacing: 0.8px; }
+      .node-title { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 16px; font-weight: bold; fill: #000000; text-anchor: middle; }
+      .node-sub { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 13px; font-weight: 500; fill: #333333; text-anchor: middle; }
+      .label-text { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 13px; font-weight: bold; fill: #000000; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" />
+
+  <!-- Diagram Title Header -->
+  <text x="800" y="65" class="title-text">DECISION-MAKING &amp; MONITORING PROCESS</text>
+  <text x="800" y="92" class="sub-title-text">HOW THE SYSTEM ANALYZES RECORDS TO SUPPORT ADMINISTRATIVE ACTIONS</text>
+
+  <!-- ================= CONNECTING ARROWS ================= -->
+  
+  <!-- Step 1 to Step 2 -->
+  <path d="M 280 432.5 L 348 432.5" class="line" marker-end="url(#arrow)" />
+
+  <!-- Step 2 to Step 3 -->
+  <path d="M 600 432.5 L 658 432.5" class="line" marker-end="url(#arrow)" />
+
+  <!-- Step 3 <-> Step 4 (Status & Fund Check) 2-Way Vertical -->
+  <path d="M 740 385 L 740 257" class="line" marker-end="url(#arrow)" />
+  <path d="M 830 255 L 830 383" class="line" marker-end="url(#arrow)" />
+
+  <!-- Step 4 (Alerts) to Diamond -->
+  <path d="M 920 212.5 L 1050 212.5 L 1050 372" class="line" marker-end="url(#arrow)" />
+  <text x="935" y="202" class="label-text">Pending Issues &amp; Delays</text>
+
+  <!-- Step 3 to Diamond (Action Needed?) -->
+  <path d="M 920 432.5 L 978 432.5" class="line" marker-end="url(#arrow)" />
+
+  <!-- Diamond "Normal" to Step 6 (Reports) -->
+  <path d="M 1120 432.5 L 1228 432.5" class="line" marker-end="url(#arrow)" />
+  <text x="1135" y="420" class="label-text">Normal</text>
+
+  <!-- Diamond "Needs Action" to Step 5 (Actions) -->
+  <path d="M 1050 485 L 1050 608" class="line" marker-end="url(#arrow)" />
+  <text x="1060" y="550" class="label-text">Needs Action</text>
+
+  <!-- Step 5 (Actions) Return Loop -> Step 1 (Records) -->
+  <path d="M 920 655 L 165 655 L 165 477" class="line" marker-end="url(#arrow)" />
+  <text x="450" y="642" class="label-text">Updates Records &amp; Resolves Queues</text>
+
+
+  <!-- ================= PROCESS BOXES & DIAMONDS ================= -->
+
+  <!-- 1. Record Collection -->
+  <rect x="50" y="385" width="230" height="95" class="box" />
+  <text x="165" y="420" class="node-title">1. RECORD COLLECTION</text>
+  <text x="165" y="444" class="node-sub">Members, Payments &amp;</text>
+  <text x="165" y="462" class="node-sub">Mortuary Claims</text>
+
+  <!-- 2. Data Analysis -->
+  <rect x="350" y="385" width="250" height="95" class="box" />
+  <text x="475" y="420" class="node-title">2. DATA ANALYSIS</text>
+  <text x="475" y="444" class="node-sub">Collections, Delays &amp;</text>
+  <text x="475" y="462" class="node-sub">Processing Times</text>
+
+  <!-- 3. Dashboard Monitoring -->
+  <rect x="660" y="385" width="260" height="95" class="box" />
+  <text x="790" y="420" class="node-title">3. DASHBOARD MONITORING</text>
+  <text x="790" y="444" class="node-sub">Live Counts, Charts &amp;</text>
+  <text x="790" y="462" class="node-sub">Staff Task Queues</text>
+
+  <!-- 4. Status & Fund Check (Top) -->
+  <rect x="660" y="170" width="260" height="85" class="box" />
+  <text x="790" y="206" class="node-title">4. STATUS &amp; FUND CHECK</text>
+  <text x="790" y="228" class="node-sub">Overdue Renewals &amp;</text>
+  <text x="790" y="246" class="node-sub">Mortuary Assistance Funds</text>
+
+  <!-- Decision Diamond: Action Needed? -->
+  <polygon points="1050,375 1120,432.5 1050,490 980,432.5" class="diamond" />
+  <text x="1050" y="428" class="node-title">Action</text>
+  <text x="1050" y="446" class="node-title">Needed?</text>
+
+  <!-- 5. Administrative Actions (Bottom) -->
+  <rect x="920" y="610" width="260" height="90" class="box" />
+  <text x="1050" y="644" class="node-title">5. ADMINISTRATIVE ACTIONS</text>
+  <text x="1050" y="666" class="node-sub">Approve Claims, Send Reminders</text>
+  <text x="1050" y="684" class="node-sub">&amp; Reassign Staff</text>
+
+  <!-- 6. Summary Reports (Far Right) -->
+  <rect x="1230" y="385" width="250" height="95" class="box" />
+  <text x="1355" y="420" class="node-title">6. SUMMARY REPORTS</text>
+  <text x="1355" y="444" class="node-sub">Printable PDF &amp; Excel</text>
+  <text x="1355" y="462" class="node-sub">Records for Officers</text>
+
+</svg>

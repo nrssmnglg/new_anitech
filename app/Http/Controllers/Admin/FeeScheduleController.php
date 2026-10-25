@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateFeeScheduleRequest;
 use App\Models\FeeSchedule;
 use App\Models\MemberType;
 use App\Models\User;
+use App\Services\Audit\AuditTrailService;
 use App\Services\Routing\PublicRouteKeyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +18,9 @@ use Inertia\Response as InertiaResponse;
 
 class FeeScheduleController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AuditTrailService $auditTrailService,
+    ) {
         $this->middleware('role.in:' . User::ROLE_ADMIN);
     }
 
@@ -142,6 +144,24 @@ class FeeScheduleController extends Controller
 
         $feeSchedule = DB::transaction(fn (): FeeSchedule => $this->persistSchedule(null, $validated, $shouldActivate));
 
+        $feeSchedule->loadMissing('memberType:id,name');
+
+        $this->auditTrailService->record(
+            'fee_schedules',
+            'fee_schedule_created',
+            "Created fee schedule for year {$feeSchedule->year} ({$feeSchedule->memberType?->name}).",
+            $request->user(),
+            $feeSchedule,
+            [
+                'year' => $feeSchedule->year,
+                'member_type' => $feeSchedule->memberType?->name,
+                'membership_fee' => (float) $feeSchedule->membership_fee,
+                'annual_due' => (float) $feeSchedule->annual_due,
+                'mortuary_fee' => (float) $feeSchedule->mortuary_fee,
+                'is_active' => (bool) $feeSchedule->is_active,
+            ]
+        );
+
         return redirect()
             ->route('admin.fee-schedules.index')
             ->with('success', "Fee schedule for {$feeSchedule->year} created successfully.");
@@ -176,7 +196,43 @@ class FeeScheduleController extends Controller
                 ->exists();
         $shouldActivate = ($validated['is_active'] ?? false) || $mustRemainActive;
 
+        $feeSchedule->loadMissing('memberType:id,name');
+
+        $before = [
+            'year' => $feeSchedule->year,
+            'member_type' => $feeSchedule->memberType?->name,
+            'membership_fee' => (float) $feeSchedule->membership_fee,
+            'annual_due' => (float) $feeSchedule->annual_due,
+            'mortuary_fee' => (float) $feeSchedule->mortuary_fee,
+            'renewal_deadline' => optional($feeSchedule->renewal_deadline)->toDateString(),
+            'effective_from' => optional($feeSchedule->effective_from)->toDateString(),
+            'effective_to' => optional($feeSchedule->effective_to)->toDateString(),
+            'is_active' => (bool) $feeSchedule->is_active,
+        ];
+
         DB::transaction(fn (): FeeSchedule => $this->persistSchedule($feeSchedule, $validated, $shouldActivate));
+
+        $fresh = $feeSchedule->fresh()->loadMissing('memberType:id,name');
+
+        $this->auditTrailService->recordChange(
+            'fee_schedules',
+            'fee_schedule_updated',
+            "Updated fee schedule for year {$fresh->year} ({$fresh->memberType?->name}).",
+            $request->user(),
+            $fresh,
+            $before,
+            [
+                'year' => $fresh->year,
+                'member_type' => $fresh->memberType?->name,
+                'membership_fee' => (float) $fresh->membership_fee,
+                'annual_due' => (float) $fresh->annual_due,
+                'mortuary_fee' => (float) $fresh->mortuary_fee,
+                'renewal_deadline' => optional($fresh->renewal_deadline)->toDateString(),
+                'effective_from' => optional($fresh->effective_from)->toDateString(),
+                'effective_to' => optional($fresh->effective_to)->toDateString(),
+                'is_active' => (bool) $fresh->is_active,
+            ]
+        );
 
         $message = "Fee schedule for {$feeSchedule->year} updated successfully.";
 
@@ -206,6 +262,21 @@ class FeeScheduleController extends Controller
             ])->save();
         });
 
+        $fresh = $feeSchedule->fresh()->loadMissing('memberType:id,name');
+
+        $this->auditTrailService->record(
+            'fee_schedules',
+            'fee_schedule_activated',
+            "Activated fee schedule for year {$fresh->year} ({$fresh->memberType?->name}).",
+            request()->user(),
+            $fresh,
+            [
+                'year' => $fresh->year,
+                'member_type' => $fresh->memberType?->name,
+                'is_active' => true,
+            ]
+        );
+
         return back()->with('success', "Fee schedule for {$feeSchedule->year} is now active.");
     }
 
@@ -223,9 +294,25 @@ class FeeScheduleController extends Controller
             ]);
         }
 
+        $feeSchedule->loadMissing('memberType:id,name');
+        $year = $feeSchedule->year;
+        $memberTypeName = $feeSchedule->memberType?->name;
+
         $feeSchedule->delete();
 
-        return back()->with('success', "Fee schedule for {$feeSchedule->year} deleted.");
+        $this->auditTrailService->record(
+            'fee_schedules',
+            'fee_schedule_deleted',
+            "Deleted fee schedule for year {$year} ({$memberTypeName}).",
+            request()->user(),
+            null,
+            [
+                'year' => $year,
+                'member_type' => $memberTypeName,
+            ]
+        );
+
+        return back()->with('success', "Fee schedule for {$year} deleted.");
     }
 
     private function persistSchedule(?FeeSchedule $feeSchedule, array $validated, bool $shouldActivate): FeeSchedule
